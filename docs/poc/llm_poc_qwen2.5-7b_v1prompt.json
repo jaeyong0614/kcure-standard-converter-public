@@ -1,0 +1,799 @@
+{
+ "summary": {
+  "model": "qwen2.5:7b-instruct",
+  "samples": false,
+  "batchSize": 20,
+  "columns": 46,
+  "sent": 40,
+  "batches": 2,
+  "suggested": 39,
+  "failedBatches": 0,
+  "errors": [],
+  "jsonOk": 2,
+  "returnedTotal": 40,
+  "ruleAccSent": 30,
+  "llmAccSent": 14,
+  "finalAccSent": 15,
+  "ruleAccAll": 36,
+  "hybridAccAll": 21,
+  "totalSec": 184.8,
+  "batchSec": [
+   76.7,
+   108.1
+  ],
+  "when": "2026-10-19T04:48:41.799Z",
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/2.42304.2 Chrome/152.0.7977.149 Safari/537.36 MSIX"
+ },
+ "rows": [
+  {
+   "col": "PT_NM",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "낮음",
+   "reason": "암종 코드값",
+   "itemId": "KCURE-DIS-000126",
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "성명",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "환자 이름",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "낮음",
+   "reason": "성명",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "JUMIN_NO",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "HP_NO",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "HASH_SALT",
+   "llmConf": "낮음",
+   "reason": "환자번호",
+   "itemId": "KCURE-DIS-000127",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "GUARDIAN_TEL",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "보호자 연락처",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "EMAIL_ADDR",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "ADDR1",
+   "accept": [
+    "DELETE",
+    "MASK"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "낮음",
+   "reason": "상세주소",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "ZIP",
+   "accept": [
+    "MASK",
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "낮음",
+   "reason": "상세주소",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "ATTEND_DR",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "낮음",
+   "reason": "성명",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "INS_NO",
+   "accept": [
+    "DELETE",
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "낮음",
+   "reason": "성명",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "PT_ID",
+   "accept": [
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "HASH_SALT",
+   "llmConf": "낮음",
+   "reason": "환자번호",
+   "itemId": "KCURE-DIS-000126",
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "CHART_NO",
+   "accept": [
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "낮음",
+   "reason": "병원환자번호",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "BIRTH_YMD",
+   "accept": [
+    "YEAR_ONLY"
+   ],
+   "rule": "YEAR_ONLY",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "AGE_AT_DX",
+   "accept": [
+    "TOP_BOTTOM",
+    "BIN"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "YEAR_ONLY",
+   "llmConf": "낮음",
+   "reason": "생년월일",
+   "itemId": "KCURE-PAT-000017",
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "진단시 나이",
+   "accept": [
+    "TOP_BOTTOM",
+    "BIN"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "낮음",
+   "reason": "임상측정값",
+   "itemId": "KCURE-PAT-000003",
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "ADM_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "낮음",
+   "reason": "사건일자",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "OP_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "낮음",
+   "reason": "사건일자",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "DX_YMD",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "낮음",
+   "reason": "사건일자",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "DEATH_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_TO_INTERVAL",
+   "llmConf": "낮음",
+   "reason": "사건일자",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "내원일",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "낮음",
+   "reason": "임상측정값",
+   "itemId": "KCURE-OUT-000006",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "HOSP_CD",
+   "accept": [
+    "GROUP_RARE",
+    "KEEP",
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "낮음",
+   "reason": "성명",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "PATH_RSLT_TXT",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "낮음",
+   "reason": "자유문",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "PROGRESS_NOTE",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "낮음",
+   "reason": "자유문",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "RMK",
+   "accept": [
+    "REGEX_PII",
+    "DELETE"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "낮음",
+   "reason": "자유문",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "수술 소견",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "수술 관련 정보는 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "조직검사 결과 서술",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "MASK",
+   "llmConf": "높음",
+   "reason": "검사 결과를 부분적으로 가리기 위함",
+   "itemId": "KCURE-ASM-000163",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "FAMILY_HX_TXT",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "T_STAGE",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "TOP_BOTTOM",
+   "llmConf": "높음",
+   "reason": "기술 단위로 나누어 극단값을 제거",
+   "itemId": "KCURE-TRT-000129",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "N_STAGE",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "YEAR_ONLY",
+   "llmConf": "높음",
+   "reason": "연령 정보만 남기기 위함",
+   "itemId": "KCURE-PAT-000017",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "ER_STAT",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "호르몬 관련 정보는 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "HER2_IHC",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "MASK",
+   "llmConf": "높음",
+   "reason": "검사 결과를 부분적으로 가리기 위함",
+   "itemId": "KCURE-ASM-000202",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "CEA_VAL",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "임상 측정값이 아니므로 삭제",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "HT_CM",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "MASK",
+   "llmConf": "높음",
+   "reason": "코드명만 남기기 위함",
+   "itemId": "KCURE-TRT-000106",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "WT_KG",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "체중은 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "SMK_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "흡연 여부는 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "ALC_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "음주 여부는 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "CHEMO_REGIMEN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "항암제 치료 계획은 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "RT_DOSE_GY",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "방사선 치료 용량은 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "TUMOR_SIZE_MM",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "TOP_BOTTOM",
+   "llmConf": "높음",
+   "reason": "극단값을 제거하기 위함",
+   "itemId": "KCURE-DIS-000039",
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "RECUR_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "MASK",
+   "llmConf": "높음",
+   "reason": "여부만 남기기 위함",
+   "itemId": "KCURE-OUT-000093",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "ECOG",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "MASK",
+   "llmConf": "높음",
+   "reason": "코드와 기타 내용만 남기기 위함",
+   "itemId": "KCURE-ASM-000152",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "SEX_CD",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "HASH_SALT",
+   "llmConf": "높음",
+   "reason": "성별 코드는 개인 식별 가능 정보로 간주",
+   "itemId": "KCURE-PAT-000018",
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "진료과",
+   "accept": [
+    "KEEP",
+    "GROUP_RARE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "진료과는 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "KCD_CD",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "진단 코드는 개인 식별 가능 정보로 간주",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false
+  }
+ ],
+ "calls": [
+  {
+   "promptChars": 1243,
+   "ms": 76662,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"PT_NM\",\"item_id\":\"KCURE-DIS-000126\",\"technique\":\"KEEP\",\"reason\":\"암종 코드값\"},{\"raw\":\"환자 이름\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"성명\"},{\"raw\":\"HP_NO\",\"item_id\":\"KCURE-DIS-000127\",\"technique\":\"HASH_SALT\",\"reason\":\"환자번호\"},{\"raw\":\"ADDR1\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"상세주소\"},{\"raw\":\"ZIP\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"상세주소\"},{\"raw\":\"ATTEND_DR\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"성명\"},{\"raw\":\"INS_NO\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"성명\"},{\"raw\":\"PT_ID\",\"item_id\":\"KCURE-DIS-000126\",\"technique\":\"HASH_SALT\",\"reason\":\"환자번호\"},{\"raw\":\"CHART_NO\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"병원환자번호\"},{\"raw\":\"AGE_AT_DX\",\"item_id\":\"KCURE-PAT-000017\",\"technique\":\"YEAR_ONLY\",\"reason\":\"생년월일\"},{\"raw\":\"진단시 나이\",\"item_id\":\"KCURE-PAT-000003\",\"technique\":\"KEEP\",\"reason\":\"임상측정값\"},{\"raw\":\"ADM_DT\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"사건일자\"},{\"raw\":\"OP_DT\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"사건일자\"},{\"raw\":\"DX_YMD\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"사건일자\"},{\"raw\":\"DEATH_DT\",\"item_id\":null,\"technique\":\"DATE_TO_INTERVAL\",\"reason\":\"사건일자\"},{\"raw\":\"내원일\",\"item_id\":\"KCURE-OUT-000006\",\"technique\":\"KEEP\",\"reason\":\"임상측정값\"},{\"raw\":\"HOSP_CD\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"성명\"},{\"raw\":\"PATH_RSLT_TXT\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"자유문\"},{\"raw\":\"PROGRESS_NOTE\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"자유문\"},{\"raw\":\"RMK\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"자유문\"}]}",
+   "returned": 20
+  },
+  {
+   "promptChars": 1601,
+   "ms": 108088,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"수술 소견\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"수술 관련 정보는 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"조직검사 결과 서술\",\"item_id\":\"KCURE-ASM-000163\",\"technique\":\"MASK\",\"reason\":\"검사 결과를 부분적으로 가리기 위함\",\"confidence\":\"높음\"},{\"raw\":\" FAMILY_HX_TXT\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"가족력은 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"T_STAGE\",\"item_id\":\"KCURE-TRT-000129\",\"technique\":\"TOP_BOTTOM\",\"reason\":\"기술 단위로 나누어 극단값을 제거\",\"confidence\":\"높음\"},{\"raw\":\"N_STAGE\",\"item_id\":\"KCURE-PAT-000017\",\"technique\":\"YEAR_ONLY\",\"reason\":\"연령 정보만 남기기 위함\",\"confidence\":\"높음\"},{\"raw\":\"ER_STAT\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"호르몬 관련 정보는 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"HER2_IHC\",\"item_id\":\"KCURE-ASM-000202\",\"technique\":\"MASK\",\"reason\":\"검사 결과를 부분적으로 가리기 위함\",\"confidence\":\"높음\"},{\"raw\":\"CEA_VAL\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"임상 측정값이 아니므로 삭제\",\"confidence\":\"높음\"},{\"raw\":\"HT_CM\",\"item_id\":\"KCURE-TRT-000106\",\"technique\":\"MASK\",\"reason\":\"코드명만 남기기 위함\",\"confidence\":\"높음\"},{\"raw\":\"WT_KG\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"체중은 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"SMK_YN\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"흡연 여부는 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"ALC_YN\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"음주 여부는 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"CHEMO_REGIMEN\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"항암제 치료 계획은 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"RT_DOSE_GY\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"방사선 치료 용량은 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"TUMOR_SIZE_MM\",\"item_id\":\"KCURE-DIS-000039\",\"technique\":\"TOP_BOTTOM\",\"reason\":\"극단값을 제거하기 위함\",\"confidence\":\"높음\"},{\"raw\":\"RECUR_YN\",\"item_id\":\"KCURE-OUT-000093\",\"technique\":\"MASK\",\"reason\":\"여부만 남기기 위함\",\"confidence\":\"높음\"},{\"raw\":\"ECOG\",\"item_id\":\"KCURE-ASM-000152\",\"technique\":\"MASK\",\"reason\":\"코드와 기타 내용만 남기기 위함\",\"confidence\":\"높음\"},{\"raw\":\"SEX_CD\",\"item_id\":\"KCURE-PAT-000018\",\"technique\":\"HASH_SALT\",\"reason\":\"성별 코드는 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"진료과\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"진료과는 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"},{\"raw\":\"KCD_CD\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"진단 코드는 개인 식별 가능 정보로 간주\",\"confidence\":\"높음\"}]}",
+   "returned": 20
+  }
+ ]
+}

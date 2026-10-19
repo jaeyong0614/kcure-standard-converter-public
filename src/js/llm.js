@@ -15,26 +15,54 @@ KC.llm = (function () {
   const LOOPBACK = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?(\/|$)/;
 
   /* ---------- 프롬프트 (docs/04_맞춤형_프롬프트.md P1~P3, 소형 LLM용) ---------- */
+  // v3 (2026-10-19 실모델 PoC 반영)
+  // - v1(기법 직접 판정): 임상 변수까지 삭제·마스킹하는 과잉 판정 → 보낸 40개 중 14개 정답
+  // - v2(규칙 추천 제시 후 검토): 규칙 추천을 그대로 따라 하는 앵커링 → 개선 0
+  // - v3: LLM 은 컬럼의 '의미 범주'만 판정하고, 범주 → 가명처리 기법은 코드(CATEGORY)가 정책대로 정한다.
   const P1_SYSTEM = [
-    '당신은 한국 암 데이터(K-CURE) 표준화와 가명처리 규칙을 판정하는 데이터 엔지니어입니다.',
-    '병원 원본 데이터는 절대 수정하지 않습니다. 당신은 판단만 하고, 코드는 별도 템플릿이 만듭니다.',
-    'JSON만 출력하고 다른 문장은 쓰지 마세요. 모르면 null 과 confidence "낮음"을 쓰세요.'
+    '당신은 한국 병원 데이터의 컬럼 의미를 분류하는 데이터 엔지니어입니다.',
+    '각 컬럼이 개인을 식별하는 정보인지, 임상 변수인지를 범주 하나로 분류합니다. 가명처리 방법은 별도 규칙이 정합니다.',
+    '대부분의 컬럼(병기, 검사 결과·수치, 여부, 진단·약제·코드, 키·체중, 성별, 진료과)은 CLINICAL 입니다.',
+    'JSON만 출력하고 다른 문장은 쓰지 마세요.'
   ].join('\n');
   const TECH = ['DELETE', 'MASK', 'HASH_SALT', 'YEAR_ONLY', 'DATE_SHIFT', 'DATE_TO_INTERVAL', 'BIN', 'TOP_BOTTOM', 'GROUP_RARE', 'REGEX_PII', 'KEEP'];
+  // 범주 → 기법 (정책). 범주 정의는 프롬프트에 그대로 들어간다.
+  const CATEGORY = {
+    NAME: ['DELETE', '사람 이름(환자·보호자·의료인)'],
+    RRN: ['DELETE', '주민등록번호·외국인등록번호'],
+    CONTACT: ['DELETE', '전화번호·휴대폰·이메일·상세주소'],
+    INSURANCE_NO: ['DELETE', '건강보험증 번호 등 기관 외부 식별번호'],
+    PATIENT_ID: ['HASH_SALT', '환자번호·등록번호·차트번호·병원 내 환자 ID'],
+    BIRTH_DATE: ['YEAR_ONLY', '생년월일'],
+    EVENT_DATE: ['DATE_SHIFT', '입원·내원·수술·진단·검사·사망 등 사건 날짜'],
+    AGE: ['TOP_BOTTOM', '나이(세)'],
+    POSTCODE: ['MASK', '우편번호'],
+    INSTITUTION: ['GROUP_RARE', '병원·기관 코드나 이름'],
+    FREE_TEXT: ['REGEX_PII', '소견·기록·메모·서술 같은 자유문'],
+    CLINICAL: ['KEEP', '그 밖의 임상 변수(병기, 검사값, 여부, 코드, 약제, 키·체중, 성별, 진료과 등)']
+  };
+  const P1_EXAMPLE = '{"columns":[' +
+    '{"raw":"PATIENT_NAME","category":"NAME","item_id":null,"reason":"환자 이름","confidence":"높음"},' +
+    '{"raw":"PT_NO","category":"PATIENT_ID","item_id":null,"reason":"환자번호","confidence":"높음"},' +
+    '{"raw":"M_STAGE","category":"CLINICAL","item_id":null,"reason":"M 병기","confidence":"높음"},' +
+    '{"raw":"OPDATE","category":"EVENT_DATE","item_id":null,"reason":"수술일","confidence":"높음"}]}';
 
   function p1User(cancer, cols, withSamples) {
     return [
-      '[입력]', '- 암종: ' + (cancer || '미지정'),
-      '- 원천 컬럼' + (withSamples ? '과 샘플값(고유값 최대 3개)' : '') + ', 그리고 규칙이 고른 표준 후보:',
+      '[범주 정의]', Object.keys(CATEGORY).map(function (k) { return k + ': ' + CATEGORY[k][1]; }).join('\n'), '',
+      '[입력] 암종: ' + (cancer || '미지정') + ' · 컬럼 ' + cols.length + '개',
+      '형식: 컬럼명' + (withSamples ? ' | 샘플값' : '') + ' | 표준항목 후보',
       cols.map(function (c) {
-        return '  ' + c.col + (withSamples && c.sample.examples.length ? ' | 샘플: ' + c.sample.examples.join(', ') : '') +
-          ' | 후보: ' + (c.candidates.length ? c.candidates.map(function (x) { return x.id + ' ' + x.name + '(' + x.type + ',' + x.role + ')'; }).join('; ') : '없음');
+        return '- ' + c.col + (withSamples && c.sample.examples.length ? ' | 샘플: ' + c.sample.examples.join(', ') : '') +
+          ' | 후보: ' + (c.candidates.length ? c.candidates.map(function (x) { return x.id + ' ' + x.name; }).join('; ') : '없음');
       }).join('\n'),
-      '', '[작업] 각 컬럼마다 1) 후보 중 맞는 item_id 하나(없으면 null) 2) 가명처리 기법 하나 3) 근거 30자 이내',
-      '기법 목록: ' + TECH.join(' | '),
-      '[판정 규칙] 성명·주민번호·전화·상세주소·이메일 → DELETE / 병원 환자번호·등록번호 → HASH_SALT / 생년월일 → YEAR_ONLY /',
-      '사건 일자 → DATE_SHIFT / 자유문 → REGEX_PII / 임상 측정값·코드값 → KEEP (극단값 재식별 위험이면 TOP_BOTTOM)',
-      '[출력: JSON만] {"columns":[{"raw":"<원천컬럼>","item_id":"KCURE-...|null","technique":"<기법>","reason":"<30자 이내>","confidence":"높음|중간|낮음"}]}'
+      '', '[작업] 위 ' + cols.length + '개 컬럼 모두에 대해 하나씩 답하세요.',
+      '1) category: 범주 정의 중 하나. 컬럼명 약어(NM=이름, DT/YMD/일=날짜, NO=번호, TEL/HP=전화, DR/ATTEND/주치의=의사 이름, TXT/RMK/서술/소견/NOTE=자유문)를 해석하세요.',
+      '   주의: 나이·연령·AGE 는 CLINICAL 이 아니라 AGE 입니다. 결과 서술·소견 같은 글 컬럼은 FREE_TEXT 입니다. 이름 컬럼은 반드시 NAME 입니다.',
+      '2) item_id: 후보 목록에 있는 ID만 쓸 수 있습니다. 확실하지 않으면 null.',
+      '3) reason: 20자 이내 한국어. 4) confidence: 높음|중간|낮음',
+      '[출력 예시] ' + P1_EXAMPLE,
+      '[출력: JSON만] {"columns":[{"raw":"...","category":"...","item_id":null,"reason":"...","confidence":"..."}]}'
     ].join('\n');
   }
 
@@ -70,10 +98,16 @@ KC.llm = (function () {
     const out = {};
     obj.columns.forEach(function (r) {
       if (!r || typeof r.raw !== 'string' || !byCol[r.raw]) return;
+      // v3: 범주가 있으면 정책표로 기법을 정한다. 범주 없이 기법만 온 응답(v1 형식)도 받는다
+      const cat = r.category && CATEGORY[String(r.category).toUpperCase()] ? String(r.category).toUpperCase() : '';
+      if (cat) r.technique = CATEGORY[cat][0];
       if (TECH.indexOf(r.technique) < 0) return;
-      const id = r.item_id && r.item_id !== 'null' ? String(r.item_id) : null;
+      let id = r.item_id && r.item_id !== 'null' ? String(r.item_id) : null;
       if (id && !KC.spec.byId[id]) return;            // 존재하지 않는 항목ID(환각) 거부
-      out[r.raw] = { raw: r.raw, itemId: id, technique: r.technique, reason: String(r.reason || '').slice(0, 60),
+      // 후보로 제시하지 않은 항목ID는 받지 않는다(기법 제안은 살리고 항목만 비움)
+      const cands = byCol[r.raw].candidates;
+      if (id && cands && !cands.some(function (x) { return x.id === id; })) id = null;
+      out[r.raw] = { raw: r.raw, itemId: id, technique: r.technique, category: cat, reason: (cat ? cat + ': ' : '') + String(r.reason || '').slice(0, 60),
         confidence: ['높음', '중간', '낮음'].indexOf(r.confidence) >= 0 ? r.confidence : '낮음' };
     });
     return out;
@@ -91,7 +125,9 @@ KC.llm = (function () {
         return (await r.json()).choices[0].message.content;
       }
       const r = await fetch(url + '/api/chat', { method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: cfg.model, messages: messages, stream: false, format: 'json', options: { temperature: 0 } }) });
+        // 20개 묶음의 프롬프트·응답이 기본 문맥 길이를 넘지 않도록 num_ctx 를 넉넉히, 모델은 10분간 메모리에 유지
+        body: JSON.stringify({ model: cfg.model, messages: messages, stream: false, format: 'json', keep_alive: '10m',
+          options: { temperature: 0, num_ctx: 8192 } }) });
       if (!r.ok) throw new Error('LLM 응답 ' + r.status);
       return (await r.json()).message.content;
     };
@@ -128,10 +164,31 @@ KC.llm = (function () {
         try { got = validateP1(extractJson(await send(messages, opts.signal)), batch); }
         catch (e) { if (attempt === 1) { res.failedBatches++; res.errors.push(String(e.message || e)); } }
       }
-      if (got) batch.forEach(function (c) { if (got[c.col]) { c.llm = got[c.col]; res.suggested++; } });
+      // 응답에서 빠진 컬럼만 모아 1회 다시 묻는다(소형 모델은 긴 목록에서 일부를 건너뛰는 일이 있다)
+      const missing = got ? batch.filter(function (c) { return !got[c.col]; }) : [];
+      if (missing.length && !(opts.signal && opts.signal.aborted)) {
+        try {
+          const again = validateP1(extractJson(await send([{ role: 'system', content: P1_SYSTEM }, { role: 'user', content: p1User(plan.cancer, missing, !!opts.withSamples) }], opts.signal)), missing);
+          Object.keys(again).forEach(function (k) { got[k] = again[k]; });
+          res.refilled = (res.refilled || 0) + Object.keys(again).length;
+        } catch (e) { res.errors.push('누락 재요청 실패: ' + String(e.message || e)); }
+      }
+      if (got) batch.forEach(function (c) {
+        if (got[c.col]) { c.llm = got[c.col]; c.llm.weakens = weakens(c.technique, c.llm.technique); res.suggested++; }
+      });
       if (opts.onProgress) opts.onProgress(Math.min(i + BATCH, targets.length), targets.length);
     }
     return res;
+  }
+
+  /** LLM 제안이 규칙보다 보호 수준을 낮추는가: 규칙이 처리(삭제·가명·치환 등)하던 컬럼을 '유지'로 바꾸는 경우 */
+  function weakens(ruleTech, llmTech) { return llmTech === 'KEEP' && ruleTech !== 'KEEP'; }
+
+  /** 보호 수준을 낮추지 않는 제안만 일괄 적용 → 적용 수 */
+  function applySafe(plan) {
+    let n = 0;
+    plan.columns.forEach(function (c) { if (c.llm && !c.llm.weakens && c.llm.technique !== c.technique) { apply(c); n++; } });
+    return n;
   }
 
   /** 사람이 'LLM 제안 적용'을 누르면 기법·항목을 바꾼다 (승인은 별도) */
@@ -154,8 +211,8 @@ KC.llm = (function () {
   }
 
   return {
-    enabled: function () { return !!window.KC_LLM_BUILD; }, ADAPTERS: ADAPTERS, BATCH: BATCH,
-    extractJson: extractJson, validateP1: validateP1, suggest: suggest, apply: apply, exportPrompts: exportPrompts,
+    enabled: function () { return !!window.KC_LLM_BUILD; }, ADAPTERS: ADAPTERS, BATCH: BATCH, CATEGORY: CATEGORY,
+    extractJson: extractJson, validateP1: validateP1, suggest: suggest, apply: apply, applySafe: applySafe, weakens: weakens, exportPrompts: exportPrompts,
     transportFor: transportFor, prompts: { P1_SYSTEM: P1_SYSTEM, p1User: p1User, P2: P2_TEMPLATE, P3: P3_TEMPLATE }
   };
 })();

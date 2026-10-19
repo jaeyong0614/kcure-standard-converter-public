@@ -1,0 +1,956 @@
+{
+ "summary": {
+  "model": "qwen2.5:7b-instruct",
+  "samples": true,
+  "batchSize": 20,
+  "columns": 46,
+  "sent": 40,
+  "batches": 4,
+  "suggested": 40,
+  "failedBatches": 0,
+  "errors": [],
+  "jsonOk": 4,
+  "returnedTotal": 52,
+  "ruleAccSent": 30,
+  "llmAccSent": 38,
+  "finalAccSent": 38,
+  "ruleAccAll": 36,
+  "hybridAccAll": 44,
+  "safeAccAll": 46,
+  "weakened": 2,
+  "refilled": 12,
+  "totalSec": 301.8,
+  "batchSec": [
+   106,
+   26.6,
+   122.5,
+   46.6
+  ],
+  "when": "2026-10-19T05:06:55.126Z",
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/2.42304.2 Chrome/152.0.7977.149 Safari/537.36 MSIX"
+ },
+ "rows": [
+  {
+   "col": "PT_NM",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "NAME: 환자 이름",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "NAME",
+   "safeOk": true
+  },
+  {
+   "col": "성명",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true,
+   "weakens": false,
+   "category": "",
+   "safeOk": true
+  },
+  {
+   "col": "환자 이름",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "NAME: 환자 이름",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "NAME",
+   "safeOk": true
+  },
+  {
+   "col": "JUMIN_NO",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true,
+   "weakens": false,
+   "category": "",
+   "safeOk": true
+  },
+  {
+   "col": "HP_NO",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "CONTACT: 휴대폰 번호",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CONTACT",
+   "safeOk": true
+  },
+  {
+   "col": "GUARDIAN_TEL",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true,
+   "weakens": false,
+   "category": "",
+   "safeOk": true
+  },
+  {
+   "col": "보호자 연락처",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true,
+   "weakens": false,
+   "category": "",
+   "safeOk": true
+  },
+  {
+   "col": "EMAIL_ADDR",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true,
+   "weakens": false,
+   "category": "",
+   "safeOk": true
+  },
+  {
+   "col": "ADDR1",
+   "accept": [
+    "DELETE",
+    "MASK"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "CONTACT: 주소",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CONTACT",
+   "safeOk": true
+  },
+  {
+   "col": "ZIP",
+   "accept": [
+    "MASK",
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "CONTACT: 우편번호",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CONTACT",
+   "safeOk": true
+  },
+  {
+   "col": "ATTEND_DR",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "NAME: 주치의 이름",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "NAME",
+   "safeOk": true
+  },
+  {
+   "col": "INS_NO",
+   "accept": [
+    "DELETE",
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "INSURANCE_NO: 건강보험증 번호",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "INSURANCE_NO",
+   "safeOk": true
+  },
+  {
+   "col": "PT_ID",
+   "accept": [
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "HASH_SALT",
+   "llmConf": "높음",
+   "reason": "PATIENT_ID: 환자번호",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "PATIENT_ID",
+   "safeOk": true
+  },
+  {
+   "col": "CHART_NO",
+   "accept": [
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "HASH_SALT",
+   "llmConf": "높음",
+   "reason": "PATIENT_ID: 차트 번호",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "PATIENT_ID",
+   "safeOk": true
+  },
+  {
+   "col": "BIRTH_YMD",
+   "accept": [
+    "YEAR_ONLY"
+   ],
+   "rule": "YEAR_ONLY",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true,
+   "weakens": false,
+   "category": "",
+   "safeOk": true
+  },
+  {
+   "col": "AGE_AT_DX",
+   "accept": [
+    "TOP_BOTTOM",
+    "BIN"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "TOP_BOTTOM",
+   "llmConf": "중간",
+   "reason": "AGE: 진단시 나이",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "AGE",
+   "safeOk": true
+  },
+  {
+   "col": "진단시 나이",
+   "accept": [
+    "TOP_BOTTOM",
+    "BIN"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "TOP_BOTTOM",
+   "llmConf": "높음",
+   "reason": "AGE: 진단시 나이",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "AGE",
+   "safeOk": true
+  },
+  {
+   "col": "ADM_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "EVENT_DATE: 입원일",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "EVENT_DATE",
+   "safeOk": true
+  },
+  {
+   "col": "OP_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "EVENT_DATE: 수술일",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "EVENT_DATE",
+   "safeOk": true
+  },
+  {
+   "col": "DX_YMD",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "EVENT_DATE: 진단일",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "EVENT_DATE",
+   "safeOk": true
+  },
+  {
+   "col": "DEATH_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "EVENT_DATE: 사망일",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "EVENT_DATE",
+   "safeOk": true
+  },
+  {
+   "col": "내원일",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "EVENT_DATE: 내원일",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "EVENT_DATE",
+   "safeOk": true
+  },
+  {
+   "col": "HOSP_CD",
+   "accept": [
+    "GROUP_RARE",
+    "KEEP",
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "GROUP_RARE",
+   "llmConf": "높음",
+   "reason": "INSTITUTION: 병원 코드",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "INSTITUTION",
+   "safeOk": true
+  },
+  {
+   "col": "PATH_RSLT_TXT",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "FREE_TEXT: 진단 결과",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "FREE_TEXT",
+   "safeOk": true
+  },
+  {
+   "col": "PROGRESS_NOTE",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "FREE_TEXT: 진단 소견",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "FREE_TEXT",
+   "safeOk": true
+  },
+  {
+   "col": "RMK",
+   "accept": [
+    "REGEX_PII",
+    "DELETE"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "FREE_TEXT: 비고",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "FREE_TEXT",
+   "safeOk": true
+  },
+  {
+   "col": "수술 소견",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 수술 결과",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false,
+   "weakens": true,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "조직검사 결과 서술",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "FREE_TEXT: 자유문",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "FREE_TEXT",
+   "safeOk": true
+  },
+  {
+   "col": "FAMILY_HX_TXT",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 가족력",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": false,
+   "weakens": true,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "T_STAGE",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 대장암 병기",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "N_STAGE",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 대장암 N 병기",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "ER_STAT",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: ER 상태",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "HER2_IHC",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: HER2 IHC 결과",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "CEA_VAL",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: CEA 값",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "HT_CM",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 신장 농도",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "WT_KG",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 체중",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "SMK_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 흡연 여부",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "ALC_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 음주 여부",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "CHEMO_REGIMEN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 화학요법 종류",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "RT_DOSE_GY",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 방사선 치료 용량",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "TUMOR_SIZE_MM",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 암 종瘤大小",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "RECUR_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 재발 여부",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "ECOG",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: ECOG 점수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "SEX_CD",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 성별 코드",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "진료과",
+   "accept": [
+    "KEEP",
+    "GROUP_RARE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 진료과",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  },
+  {
+   "col": "KCD_CD",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "CLINICAL: 진단 코드",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true,
+   "weakens": false,
+   "category": "CLINICAL",
+   "safeOk": true
+  }
+ ],
+ "calls": [
+  {
+   "promptChars": 2926,
+   "ms": 106003,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"PT_NM\",\"category\":\"NAME\",\"item_id\":null,\"reason\":\"환자 이름\",\"confidence\":\"높음\"},{\"raw\":\"환자 이름\",\"category\":\"NAME\",\"item_id\":null,\"reason\":\"환자 이름\",\"confidence\":\"높음\"},{\"raw\":\"HP_NO\",\"category\":\"CONTACT\",\"item_id\":null,\"reason\":\"휴대폰 번호\",\"confidence\":\"높음\"},{\"raw\":\"ADDR1\",\"category\":\"CONTACT\",\"item_id\":null,\"reason\":\"주소\",\"confidence\":\"높음\"},{\"raw\":\"ZIP\",\"category\":\"CONTACT\",\"item_id\":null,\"reason\":\"우편번호\",\"confidence\":\"높음\"},{\"raw\":\"ATTEND_DR\",\"category\":\"NAME\",\"item_id\":null,\"reason\":\"주치의 이름\",\"confidence\":\"높음\"},{\"raw\":\"INS_NO\",\"category\":\"INSURANCE_NO\",\"item_id\":null,\"reason\":\"건강보험증 번호\",\"confidence\":\"높음\"},{\"raw\":\"PT_ID\",\"category\":\"PATIENT_ID\",\"item_id\":\"KCURE-DIS-000126 pT\",\"reason\":\"환자 ID\",\"confidence\":\"높음\"},{\"raw\":\"CHART_NO\",\"category\":\"PATIENT_ID\",\"item_id\":null,\"reason\":\"차트 번호\",\"confidence\":\"높음\"},{\"raw\":\"AGE_AT_DX\",\"category\":\"AGE\",\"item_id\":\"KCURE-PAT-000017 age\",\"reason\":\"진단시 나이\",\"confidence\":\"높음\"},{\"raw\":\"진단시 나이\",\"category\":\"AGE\",\"item_id\":\"KCURE-PAT-000003 나이\",\"reason\":\"진단시 나이\",\"confidence\":\"높음\"},{\"raw\":\"ADM_DT\",\"category\":\"EVENT_DATE\",\"item_id\":null,\"reason\":\"입원일\",\"confidence\":\"높음\"},{\"raw\":\"OP_DT\",\"category\":\"EVENT_DATE\",\"item_id\":null,\"reason\":\"수술일\",\"confidence\":\"높음\"},{\"raw\":\"DX_YMD\",\"category\":\"EVENT_DATE\",\"item_id\":null,\"reason\":\"진단일\",\"confidence\":\"높음\"},{\"raw\":\"DEATH_DT\",\"category\":\"EVENT_DATE\",\"item_id\":null,\"reason\":\"사망일\",\"confidence\":\"높음\"},{\"raw\":\"내원일\",\"category\":\"EVENT_DATE\",\"item_id\":\"KCURE-OUT-000006 내원일자\",\"reason\":\"내원일\",\"confidence\":\"높음\"},{\"raw\":\"HOSP_CD\",\"category\":\"INSTITUTION\",\"item_id\":null,\"reason\":\"병원 코드\",\"confidence\":\"높음\"},{\"raw\":\"PATH_RSLT_TXT\",\"category\":\"FREE_TEXT\",\"item_id\":null,\"reason\":\"진단 결과\",\"confidence\":\"높음\"},{\"raw\":\"PROGRESS_NOTE\",\"category\":\"FREE_TEXT\",\"item_id\":null,\"reason\":\"진단 소견\",\"confidence\":\"높음\"},{\"raw\":\"RMK\",\"category\":\"FREE_TEXT\",\"item_id\":null,\"reason\":\"비고\",\"confidence\":\"높음\"}]}",
+   "returned": 20
+  },
+  {
+   "promptChars": 1678,
+   "ms": 26575,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"PT_ID\",\"category\":\"PATIENT_ID\",\"item_id\":null,\"reason\":\"환자번호\",\"confidence\":\"높음\"},{\"raw\":\"AGE_AT_DX\",\"category\":\"AGE\",\"item_id\":null,\"reason\":\"진단시 나이\",\"confidence\":\"중간\"},{\"raw\":\"진단시 나이\",\"category\":\"AGE\",\"item_id\":null,\"reason\":\"진단시 나이\",\"confidence\":\"높음\"},{\"raw\":\"내원일\",\"category\":\"EVENT_DATE\",\"item_id\":null,\"reason\":\"내원일\",\"confidence\":\"높음\"}]}",
+   "returned": 4
+  },
+  {
+   "promptChars": 2969,
+   "ms": 122524,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"수술 소견\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"수술 결과\",\"confidence\":\"높음\"},{\"raw\":\"조직검사 결과 서술\",\"category\":\"FREE_TEXT\",\"item_id\":null,\"reason\":\"자유문\",\"confidence\":\"높음\"},{\"raw\":\"FAMILY_HX_TXT\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"가족력\",\"confidence\":\"높음\"},{\"raw\":\"T_STAGE\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-PAT-000017 age\",\"reason\":\"T 병기\",\"confidence\":\"중간\"},{\"raw\":\"N_STAGE\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-PAT-000017 age\",\"reason\":\"N 병기\",\"confidence\":\"중간\"},{\"raw\":\"ER_STAT\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"ER 상태\",\"confidence\":\"높음\"},{\"raw\":\"HER2_IHC\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-DIS-000160 HER-2; KCURE-ASM-000202 조직검사 HER2 IHC\",\"reason\":\"HER2 IHC 결과\",\"confidence\":\"높음\"},{\"raw\":\"CEA_VAL\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"CEA 값\",\"confidence\":\"높음\"},{\"raw\":\"HT_CM\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-TRT-000106 cM\",\"reason\":\"신장\",\"confidence\":\"중간\"},{\"raw\":\"WT_KG\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"체중\",\"confidence\":\"높음\"},{\"raw\":\"SMK_YN\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"흡연 여부\",\"confidence\":\"높음\"},{\"raw\":\"ALC_YN\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"음주 여부\",\"confidence\":\"높음\"},{\"raw\":\"CHEMO_REGIMEN\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"화학요법 종류\",\"confidence\":\"높음\"},{\"raw\":\"RT_DOSE_GY\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"방사선 치료 용량\",\"confidence\":\"높음\"},{\"raw\":\"TUMOR_SIZE_MM\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-DIS-000039 Tumor Size\",\"reason\":\"종양 크기\",\"confidence\":\"높음\"},{\"raw\":\"RECUR_YN\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-OUT-000093 recur_yn\",\"reason\":\"재발 여부\",\"confidence\":\"높음\"},{\"raw\":\"ECOG\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-ASM-000026 ECOG SCORE; KCURE-ASM-000152 ECOG코드기타내용; KCURE-OUT-000075 ECOG_postCTX\",\"reason\":\"ECOG 점수\",\"confidence\":\"높음\"},{\"raw\":\"SEX_CD\",\"category\":\"CLINICAL\",\"item_id\":\"KCURE-PAT-000018 sex\",\"reason\":\"성별\",\"confidence\":\"높음\"},{\"raw\":\"진료과\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"진료과\",\"confidence\":\"높음\"},{\"raw\":\"KCD_CD\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"진단 코드\",\"confidence\":\"높음\"}]}",
+   "returned": 20
+  },
+  {
+   "promptChars": 2043,
+   "ms": 46639,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"T_STAGE\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"대장암 병기\",\"confidence\":\"높음\"},{\"raw\":\"N_STAGE\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"대장암 N 병기\",\"confidence\":\"높음\"},{\"raw\":\"HER2_IHC\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"HER2 IHC 결과\",\"confidence\":\"높음\"},{\"raw\":\"HT_CM\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"신장 농도\",\"confidence\":\"높음\"},{\"raw\":\"TUMOR_SIZE_MM\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"암 종瘤大小\",\"confidence\":\"높음\"},{\"raw\":\"RECUR_YN\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"재발 여부\",\"confidence\":\"높음\"},{\"raw\":\"ECOG\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"ECOG 점수\",\"confidence\":\"높음\"},{\"raw\":\"SEX_CD\",\"category\":\"CLINICAL\",\"item_id\":null,\"reason\":\"성별 코드\",\"confidence\":\"높음\"}]}",
+   "returned": 8
+  }
+ ]
+}

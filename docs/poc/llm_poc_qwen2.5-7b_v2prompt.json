@@ -1,0 +1,799 @@
+{
+ "summary": {
+  "model": "qwen2.5:7b-instruct",
+  "samples": false,
+  "batchSize": 20,
+  "columns": 46,
+  "sent": 40,
+  "batches": 2,
+  "suggested": 40,
+  "failedBatches": 0,
+  "errors": [],
+  "jsonOk": 2,
+  "returnedTotal": 40,
+  "ruleAccSent": 30,
+  "llmAccSent": 30,
+  "finalAccSent": 30,
+  "ruleAccAll": 36,
+  "hybridAccAll": 36,
+  "totalSec": 195,
+  "batchSec": [
+   104.5,
+   90.5
+  ],
+  "when": "2026-10-19T04:53:07.714Z",
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Claude/2.42304.2 Chrome/152.0.7977.149 Safari/537.36 MSIX"
+ },
+ "rows": [
+  {
+   "col": "PT_NM",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "환자 이름(직접식별자)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "성명",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "환자 이름",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "환자 이름(직접식별자)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "JUMIN_NO",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "HP_NO",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DELETE",
+   "llmConf": "높음",
+   "reason": "보험증번호(직접식별자)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "GUARDIAN_TEL",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "보호자 연락처",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "EMAIL_ADDR",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "DELETE",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "ADDR1",
+   "accept": [
+    "DELETE",
+    "MASK"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "상세주소(자유문)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "ZIP",
+   "accept": [
+    "MASK",
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "우편번호(임상 변수)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "ATTEND_DR",
+   "accept": [
+    "DELETE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "의료인 이름(직접식별자)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "INS_NO",
+   "accept": [
+    "DELETE",
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "보험번호(임상 변수)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "PT_ID",
+   "accept": [
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "환자 식별자(임상 변수)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "CHART_NO",
+   "accept": [
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "차트번호(임상 변수)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "BIRTH_YMD",
+   "accept": [
+    "YEAR_ONLY"
+   ],
+   "rule": "YEAR_ONLY",
+   "ruleConf": "높음",
+   "sent": false,
+   "llm": "",
+   "llmConf": "",
+   "reason": "",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": false,
+   "finalOk": true
+  },
+  {
+   "col": "AGE_AT_DX",
+   "accept": [
+    "TOP_BOTTOM",
+    "BIN"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "진단시 나이(임상 변수)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "진단시 나이",
+   "accept": [
+    "TOP_BOTTOM",
+    "BIN"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "진단시 나이(임상 변수)",
+   "itemId": null,
+   "ruleOk": false,
+   "llmOk": false,
+   "finalOk": false
+  },
+  {
+   "col": "ADM_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "입원일(임상 변수)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "OP_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "수술일(임상 변수)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "DX_YMD",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "진단일(임상 변수)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "DEATH_DT",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "사망일(임상 변수)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "내원일",
+   "accept": [
+    "DATE_SHIFT",
+    "DATE_TO_INTERVAL"
+   ],
+   "rule": "DATE_SHIFT",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "DATE_SHIFT",
+   "llmConf": "높음",
+   "reason": "내원일(임상 변수)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "HOSP_CD",
+   "accept": [
+    "GROUP_RARE",
+    "KEEP",
+    "HASH_SALT"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "기관 코드(임상 변수)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "PATH_RSLT_TXT",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "검사 결과(자유문)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "PROGRESS_NOTE",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "진료 기록(자유문)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "RMK",
+   "accept": [
+    "REGEX_PII",
+    "DELETE"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "비고(자유문)",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "수술 소견",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "자유문에서 이름·번호·날짜 가명화",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "조직검사 결과 서술",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "자유문에서 이름·번호·날짜 가명화",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "FAMILY_HX_TXT",
+   "accept": [
+    "REGEX_PII"
+   ],
+   "rule": "REGEX_PII",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "REGEX_PII",
+   "llmConf": "높음",
+   "reason": "자유문에서 이름·번호·날짜 가명화",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "T_STAGE",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "N_STAGE",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "ER_STAT",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "HER2_IHC",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "CEA_VAL",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "HT_CM",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "WT_KG",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "SMK_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "ALC_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "CHEMO_REGIMEN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "RT_DOSE_GY",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "TUMOR_SIZE_MM",
+   "accept": [
+    "KEEP",
+    "TOP_BOTTOM"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "RECUR_YN",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "중간",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "ECOG",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "SEX_CD",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "진료과",
+   "accept": [
+    "KEEP",
+    "GROUP_RARE"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  },
+  {
+   "col": "KCD_CD",
+   "accept": [
+    "KEEP"
+   ],
+   "rule": "KEEP",
+   "ruleConf": "낮음",
+   "sent": true,
+   "llm": "KEEP",
+   "llmConf": "높음",
+   "reason": "임상 변수",
+   "itemId": null,
+   "ruleOk": true,
+   "llmOk": true,
+   "finalOk": true
+  }
+ ],
+ "calls": [
+  {
+   "promptChars": 2391,
+   "ms": 104535,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"PT_NM\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"환자 이름(직접식별자)\",\"confidence\":\"높음\"},{\"raw\":\"환자 이름\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"환자 이름(직접식별자)\",\"confidence\":\"높음\"},{\"raw\":\"HP_NO\",\"item_id\":null,\"technique\":\"DELETE\",\"reason\":\"보험증번호(직접식별자)\",\"confidence\":\"높음\"},{\"raw\":\"ADDR1\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"상세주소(자유문)\",\"confidence\":\"높음\"},{\"raw\":\"ZIP\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"우편번호(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"ATTEND_DR\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"의료인 이름(직접식별자)\",\"confidence\":\"높음\"},{\"raw\":\"INS_NO\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"보험번호(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"PT_ID\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"환자 식별자(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"CHART_NO\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"차트번호(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"AGE_AT_DX\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"진단시 나이(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"진단시 나이\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"진단시 나이(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"ADM_DT\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"입원일(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"OP_DT\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"수술일(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"DX_YMD\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"진단일(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"DEATH_DT\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"사망일(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"내원일\",\"item_id\":null,\"technique\":\"DATE_SHIFT\",\"reason\":\"내원일(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"HOSP_CD\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"기관 코드(임상 변수)\",\"confidence\":\"높음\"},{\"raw\":\"PATH_RSLT_TXT\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"검사 결과(자유문)\",\"confidence\":\"높음\"},{\"raw\":\"PROGRESS_NOTE\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"진료 기록(자유문)\",\"confidence\":\"높음\"},{\"raw\":\"RMK\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"비고(자유문)\",\"confidence\":\"높음\"}]}",
+   "returned": 20
+  },
+  {
+   "promptChars": 2599,
+   "ms": 90451,
+   "ok": true,
+   "raw": "{\"columns\":[{\"raw\":\"수술 소견\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"자유문에서 이름·번호·날짜 가명화\",\"confidence\":\"높음\"},{\"raw\":\"조직검사 결과 서술\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"자유문에서 이름·번호·날짜 가명화\",\"confidence\":\"높음\"},{\"raw\":\"FAMILY_HX_TXT\",\"item_id\":null,\"technique\":\"REGEX_PII\",\"reason\":\"자유문에서 이름·번호·날짜 가명화\",\"confidence\":\"높음\"},{\"raw\":\"T_STAGE\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"N_STAGE\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"ER_STAT\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"HER2_IHC\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"CEA_VAL\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"HT_CM\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"WT_KG\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"SMK_YN\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"ALC_YN\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"CHEMO_REGIMEN\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"RT_DOSE_GY\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"TUMOR_SIZE_MM\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"RECUR_YN\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"ECOG\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"SEX_CD\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"진료과\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"},{\"raw\":\"KCD_CD\",\"item_id\":null,\"technique\":\"KEEP\",\"reason\":\"임상 변수\",\"confidence\":\"높음\"}]}",
+   "returned": 20
+  }
+ ]
+}

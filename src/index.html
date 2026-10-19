@@ -154,7 +154,7 @@
       <div class="tbl-wrap" id="dzTableWrap" style="max-height:560px"></div>
       <pre class="view hidden" id="dzView"></pre>
       <details style="margin-top:12px" id="dzLlmBox">
-        <summary><b>LLM 보조 (선택)</b> — 로컬 소형 LLM(7B~14B, Ollama·LM Studio)에 신뢰도 '중간·낮음' 컬럼의 매핑·기법 제안을 받습니다</summary>
+        <summary><b>LLM 보조 (선택)</b> — 로컬 소형 LLM(7B~14B, Ollama·LM Studio)이 신뢰도 '중간·낮음' 컬럼의 의미 범주를 판정하고, 범주에 맞는 기법을 제안합니다</summary>
         <div id="dzLlmOff" class="note small">이 배포본은 네트워크 연결이 차단되어 있습니다(CSP <code>connect-src 'none'</code>). LLM 보조는 <code>python tools/build.py --llm</code>으로 만든 <b>KCURE_표준변환기_LLM.html</b>에서만 동작하며, 이 PC(127.0.0.1)의 LLM에만 연결합니다. 아래 버튼으로 프롬프트를 내보내 수동으로 쓸 수 있습니다.</div>
         <div class="grid2" id="dzLlmForm" style="margin:8px 0">
           <label class="f"><span>어댑터</span><select id="dzLlmAdapter"></select></label>
@@ -165,6 +165,7 @@
         <div class="row">
           <button class="btn sm" id="dzLlmRun">LLM 제안 받기</button>
           <button class="btn sm" id="dzLlmStop">중단</button>
+          <button class="btn sm" id="dzLlmSafe" title="규칙보다 보호 수준을 낮추는 제안(예: 정규식 치환 → 유지)은 빼고 적용합니다. 적용된 컬럼은 후보 상태가 되어 승인이 필요합니다.">안전한 제안 일괄 적용</button>
           <button class="btn sm" id="dzLlmPrompts">프롬프트 내보내기 (.md)</button>
           <span class="muted small" id="dzLlmMsg"></span>
         </div>

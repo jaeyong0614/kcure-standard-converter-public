@@ -314,7 +314,12 @@
     let calls = 0;
     const mock = async function () { calls++; return calls === 1 ? '응답 형식 오류' : JSON.stringify({ columns: [{ raw: 'XYZ_CODE', item_id: null, technique: 'GROUP_RARE', reason: '희귀 코드', confidence: '중간' }] }); };
     const sr = await KC.llm.suggest(lp, { transport: mock });
-    ok('LLM 1회 재시도 후 제안', calls === 2 && sr.suggested === 1 && sr.failedBatches === 0, JSON.stringify(sr));
+    // 1회차 형식 오류 → 재시도(2회차) → 응답에 빠진 '환자메모'만 다시 묻기(3회차)
+    ok('LLM 1회 재시도 + 누락 컬럼 재요청 후 제안', calls === 3 && sr.suggested === 1 && sr.failedBatches === 0, JSON.stringify(sr) + ' calls=' + calls);
+    const cv = KC.llm.validateP1({ columns: [{ raw: 'XYZ_CODE', category: 'patient_id', reason: '환자번호' }, { raw: '환자메모', category: 'FREE_TEXT', item_id: 'KCURE-PAT-000013' }] }, lp.columns);
+    eq('LLM 범주 → 기법 정책표(대소문자 무시)', cv.XYZ_CODE.technique + '/' + cv['환자메모'].technique, 'HASH_SALT/REGEX_PII');
+    eq('LLM 후보에 없는 항목ID는 비움', cv['환자메모'].itemId, null);
+    ok('보호 수준 낮춤 판정', KC.llm.weakens('REGEX_PII', 'KEEP') && !KC.llm.weakens('KEEP', 'DELETE') && !KC.llm.weakens('KEEP', 'KEEP'));
     const xc = lp.columns.find(function (c) { return c.col === 'XYZ_CODE'; });
     ok('LLM 제안은 자동 적용하지 않음', xc.technique !== 'GROUP_RARE' && xc.llm.technique === 'GROUP_RARE');
     KC.llm.apply(xc);

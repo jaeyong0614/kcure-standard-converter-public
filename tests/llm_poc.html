@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>K-CURE 로컬 LLM PoC</title>
+<style>
+  body { font-family: "Malgun Gothic", sans-serif; margin: 24px; font-size: 14px; color: #17221e; }
+  table { border-collapse: collapse; margin: 8px 0 18px; }
+  th, td { border: 1px solid #d9e0dc; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #f4f6f4; }
+  .ok { color: #1f7a3f; } .bad { color: #b3261e; font-weight: 600; } .muted td { color: #8a968f; }
+  input[type=text] { width: 220px; }
+</style>
+</head>
+<body>
+<h1>K-CURE 로컬 LLM PoC (S5)</h1>
+<p>합성 병원 추출 컬럼 <b id="n"></b>개(샘플 10행)를 실제 앱과 같은 경로로 추천한 뒤, 규칙 신뢰도 '높음'이 아닌 컬럼을 20개 단위로 Ollama에 보냅니다. 데이터는 모두 가상값입니다.</p>
+<p>
+  <label>Ollama 주소 <input type="text" id="url" value="http://127.0.0.1:11434"></label>
+  <label>모델 <input type="text" id="model" value="qwen2.5:7b-instruct"></label>
+  <label><input type="checkbox" id="samples"> 샘플값도 보내기</label>
+  <button id="go">실행</button> <span id="status"></span>
+</p>
+<div id="sum"></div>
+<div id="rows"></div>
+<script src="../spec/kcure_spec.js"></script>
+<script src="../spec/deid_rules.js"></script>
+<script src="../src/js/util.js"></script>
+<script src="../src/js/sha256.js"></script>
+<script src="../src/js/spec.js"></script>
+<script src="../src/js/values.js"></script>
+<script src="../src/js/mapper.js"></script>
+<script src="../src/js/metadata.js"></script>
+<script src="../src/js/deid.js"></script>
+<script src="../src/js/llm.js"></script>
+<script>KC.APP_VERSION = 'poc';</script>
+<script src="llm_poc.js"></script>
+</body>
+</html>

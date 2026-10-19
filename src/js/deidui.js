@@ -88,7 +88,8 @@ KC.deidUi = (function () {
           '<td class="small">' + smp + '</td><td>' + sel + '</td><td>' + (params || '<span class="muted small">—</span>') + '</td>' +
           '<td class="small">' + esc(c.reason) + ' <span class="muted mono">' + c.ruleId + '</span></td><td><span class="pill ' + pc + '">' + esc(c.confidence) + '</span></td>' +
           '<td class="small">' + (c.llm ? esc((KC.deid.techniques()[c.llm.technique] || {}).label || c.llm.technique) + (c.llm.itemId ? ' · ' + esc(c.llm.itemId) : '') +
-            '<div class="l2">' + esc(c.llm.reason) + ' (' + esc(c.llm.confidence) + ')</div><button class="btn sm" data-dzl="' + i + '">적용</button>' : '<span class="muted">—</span>') + '</td></tr>';
+            '<div class="l2">' + esc(c.llm.reason) + ' (' + esc(c.llm.confidence) + ')</div>' +
+            (c.llm.weakens ? '<div class="l2"><span class="pill warn">보호 수준 낮춤 — 확인 필요</span></div>' : '') + '<button class="btn sm" data-dzl="' + i + '">적용</button>' : '<span class="muted">—</span>') + '</td></tr>';
       }).join('') + '</tbody></table>';
   }
 
@@ -110,13 +111,20 @@ KC.deidUi = (function () {
   function initLlm() {
     const on = KC.llm.enabled();
     $('#dzLlmOff').classList.toggle('hidden', on);
-    ['#dzLlmForm', '#dzLlmRun', '#dzLlmStop'].forEach(function (s) { $(s).classList.toggle('hidden', !on); });
+    ['#dzLlmForm', '#dzLlmRun', '#dzLlmStop', '#dzLlmSafe'].forEach(function (s) { $(s).classList.toggle('hidden', !on); });
     $('#dzLlmAdapter').innerHTML = Object.keys(KC.llm.ADAPTERS).map(function (k) { return '<option value="' + k + '">' + esc(KC.llm.ADAPTERS[k].label) + '</option>'; }).join('');
     const setDef = function () { const a = KC.llm.ADAPTERS[$('#dzLlmAdapter').value]; $('#dzLlmUrl').value = a.url; $('#dzLlmModel').value = a.model; };
     setDef();
     $('#dzLlmAdapter').addEventListener('change', setDef);
     $('#dzLlmRun').addEventListener('click', llmRun);
     $('#dzLlmStop').addEventListener('click', function () { if (llmCtl) llmCtl.abort(); });
+    $('#dzLlmSafe').addEventListener('click', function () {
+      if (!st.plan) return;
+      const n = KC.llm.applySafe(st.plan);
+      KC.audit.log('deid.llm_apply_safe', { count: n, by: by() });
+      $('#dzLlmMsg').textContent = '보호 수준을 낮추지 않는 제안 ' + n + '건을 적용했습니다(모두 후보 상태 — 승인 필요).';
+      render();
+    });
     $('#dzLlmPrompts').addEventListener('click', function () { U.download('KCURE_맞춤형_프롬프트.md', KC.llm.exportPrompts(st.plan), 'text/markdown'); });
   }
 
