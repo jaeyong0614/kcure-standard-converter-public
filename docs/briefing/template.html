@@ -107,6 +107,14 @@ td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: now
 .growth .n { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
 .growth .c { font-size: 11.5px; color: var(--muted); padding-bottom: 6px; white-space: nowrap; }
 
+.pocchart { display: grid; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); background: var(--surface); }
+.pocrow { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 13px; }
+.pocrow .lab { color: var(--muted); }
+.pocbars { display: grid; gap: 3px; min-width: 0; }
+.pocbar { position: relative; height: 14px; background: var(--seg5); border-radius: 2px; }
+.pocbar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+.pocbar b { position: absolute; right: 6px; top: -1px; font-size: 11px; font-weight: 600; font-family: var(--font-mono); color: var(--ink); }
+.pocbar .base { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: 0.55; }
 .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .tools input[type=search], .tools select { font: inherit; font-size: 14px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); min-width: 0; }
 .tools input[type=search] { flex: 1 1 220px; }
@@ -143,10 +151,10 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
     <span>테스트 실행 __WHEN__</span>
   </div>
   <div class="strip">
-    <div><span class="k">브라우저 자동 테스트</span><span class="v ok">__PASS__ / __TOTAL__</span><span class="s">실패 __FAIL__건 · v0.1 대비 +70</span></div>
+    <div><span class="k">브라우저 자동 테스트</span><span class="v ok">__PASS__ / __TOTAL__</span><span class="s">실패 __FAIL__건 · v0.1 대비 +__DELTA__</span></div>
     <div><span class="k">생성 코드 실제 실행 검증</span><span class="v ok">4 / 4</span><span class="s">Python 정형 2 · DICOM 1 · 원본 해시 1</span></div>
     <div><span class="k">앱 내장 자체 점검</span><span class="v ok">통과</span><span class="s">9개 암종 패키지 + 합성 환자 2종</span></div>
-    <div><span class="k">개발 단계</span><span class="v">S0–S4 완료</span><span class="s">S5 더미 PoC · S6 병원 인터뷰 남음</span></div>
+    <div><span class="k">로컬 LLM 실모델 PoC</span><span class="v ok">36 → 44</span><span class="s">46개 컬럼 정답 · 규칙만 → 규칙+LLM(샘플 포함 46)</span></div>
   </div>
 </header>
 
@@ -164,7 +172,8 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
           <li>ARGO Core 충족은 45에서 48로 늘었고, 파생·지정값은 따로 집계합니다.</li>
         </ul>
       </li>
-      <li>로컬 소형 LLM 연동은 별도 빌드로 분리했습니다. 이 PC(127.0.0.1)에만 연결하고, 제안은 사람이 적용해야 반영됩니다. 실제 LLM 서버로는 아직 시험하지 않았습니다.</li>
+      <li>로컬 소형 LLM 연동은 별도 빌드로 분리했습니다. 이 PC(127.0.0.1)에만 연결하고, 제안은 사람이 적용해야 반영됩니다.</li>
+      <li><b>S5 1차:</b> Ollama + qwen2.5 7B로 실제 시험했습니다(CPU, 20개 묶음당 1~2분). 46개 컬럼 중 정답이 규칙만으로는 36개, LLM 안전 병합으로는 44개(샘플값 포함 시 46개)였습니다. 7B 모델에는 기법 대신 '의미 범주'만 판정하게 해야 정확합니다.</li>
       <li>모든 단계는 git에 단계별 커밋으로 남겼고 GitHub 비공개 저장소에 올렸습니다.</li>
     </ul>
   </div>
@@ -182,7 +191,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
         <tr><td class="mono">FR-03</td><td>정형·비정형 샘플 분석 → 코드</td><td>정형 앞 10행 패턴 탐지, 비정형 PII 정규식 9종, Python·SQL 3방언·Regex 생성</td><td><span class="pill ok">구현</span></td></tr>
         <tr><td class="mono">FR-04</td><td>DICOM 헤더 비식별화</td><td>PS3.15 주요 태그 58개 기반 pydicom 스크립트, 합성 DICOM 실행 검증</td><td><span class="pill ok">구현</span></td></tr>
         <tr><td class="mono">NFR-01</td><td>폐쇄망 완결</td><td>기본 배포본 CSP <code>connect-src 'none'</code>, LLM 연동본은 loopback만 허용</td><td><span class="pill ok">구현</span></td></tr>
-        <tr><td class="mono">NFR-02</td><td>CPU/GPU 소형 LLM</td><td>Ollama·LM Studio 어댑터, 20개 단위 비동기 요청. 실제 모델로는 미시험</td><td><span class="pill warn">부분</span></td></tr>
+        <tr><td class="mono">NFR-02</td><td>CPU/GPU 소형 LLM</td><td>Ollama + qwen2.5 7B로 CPU 실측(20개 묶음 68~122초, JSON 오류 0). GPU 가속은 미확인</td><td><span class="pill ok">구현(CPU)</span></td></tr>
         <tr><td class="mono">NFR-03</td><td>경량 패키지</td><td>무설치 단일 HTML 약 2.6MB(LLM 엔진은 별도 설치)</td><td><span class="pill ok">구현</span></td></tr>
         <tr><td class="mono">NFR-04</td><td>환경 무의존 실행 코드</td><td>Python 실행 검증 완료. SQL 3방언은 문법 자체검사만, 실제 DB 미실행</td><td><span class="pill warn">부분</span></td></tr>
         <tr><td class="mono">6.1</td><td>Human-in-the-loop</td><td>후보·승인·반려(가명처리), 후보·승인·수정·반려(매핑). 신뢰도 '높음'만 일괄 승인</td><td><span class="pill ok">구현</span></td></tr>
@@ -203,7 +212,9 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
       <div class="tl done"><span class="t">S2 가명처리 코드 추천</span><span class="r">bda7b19 · 테스트 169</span><span class="d">④ 탭 신설. 샘플 10행 분석 → 기법 추천 → 승인 컬럼만 Python·SQL·Regex 생성. 원본 수정 구문 자체검사, 실행 검증 도구 추가.</span></div>
       <div class="tl done"><span class="t">S3 DICOM · 로컬 LLM 어댑터</span><span class="r">5e5076f · 테스트 184</span><span class="d">DICOM 스크립트 생성(58태그), LLM 연동본 별도 빌드(loopback 전용), 응답 JSON 검증·재시도·규칙 유지.</span></div>
       <div class="tl done"><span class="t">S4 승인 · 감사 이력 · 규칙팩</span><span class="r">efd36bb · 테스트 195</span><span class="d">3·4단계 검토 상태, 해시 체인 감사 이력, 규칙팩 검증·비교·교체, 통합 엑셀 '검토 상태' 열.</span></div>
-      <div class="tl todo"><span class="t">S5 더미 데이터 PoC</span><span class="r">예정</span><span class="d">P4 프롬프트로 더미 생성 → 로컬 소형 LLM 입력 → 매핑 정확도·PII 재현율·코드 실행률 측정.</span></div>
+      <div class="tl done"><span class="t">브리핑 페이지</span><span class="r">3fa328a</span><span class="d">진행 상황과 테스트 결과를 한 페이지로 정리.</span></div>
+      <div class="tl done"><span class="t">S5(1차) 로컬 LLM 실모델 PoC</span><span class="r">c2f2acc · 테스트 198</span><span class="d">Ollama + qwen2.5 7B 설치·시험. 프롬프트 v1~v3.1 비교, 의미 범주 판정 방식 채택, 누락 재요청·안전 병합, 127.0.0.1 실행기.</span></div>
+      <div class="tl todo"><span class="t">S5(2차) 실제 병원 컬럼으로 재측정</span><span class="r">예정</span><span class="d">가명 처리된 실제 헤더로 정답셋 구성, 14B 모델 비교, PII 재현율·코드 실행률 측정.</span></div>
       <div class="tl todo"><span class="t">S6 병원 인터뷰·보완</span><span class="r">예정</span><span class="d">현장 피드백 반영 목록과 v0.3 범위 확정.</span></div>
     </div>
     <div>
@@ -226,8 +237,56 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
   </div>
 </section>
 
+<section id="llm">
+  <div class="head"><span class="no">05</span><h2>로컬 LLM 실모델 PoC</h2><p class="note">S5 1차 · 2026-10-19</p></div>
+  <div class="body">
+    <p>실제 로컬 모델로 '20개 단위 비동기 요청'을 시험했습니다. 앱과 같은 코드 경로(가명처리 추천 → LLM 제안)를 썼고, 합성 병원 추출 컬럼 46개(가상값 10행)로 측정했습니다. 규칙 신뢰도가 '높음'인 6개를 뺀 40개가 LLM으로 갔습니다.</p>
+    <div class="tbl"><table>
+      <tbody>
+        <tr><th>모델</th><td>Ollama 0.40.5 · <span class="mono">qwen2.5:7b-instruct</span> (7.6B, Q4_K_M, 4.7GB)</td></tr>
+        <tr><th>실행 환경</th><td>Intel Core Ultra 7 258V · RAM 32GB · <b>CPU 추론</b>(내장 GPU Arc 140V는 Ollama 기본 미지원)</td></tr>
+        <tr><th>정답 기준</th><td>컬럼별 허용 기법 목록(예: 날짜 = 날짜 이동 또는 경과일). 규칙 엔진만 쓰면 46개 중 36개 정답</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>프롬프트 단계별 정확도</h3>
+    <div class="pocchart" id="pocChart" role="img" aria-label="프롬프트 단계별 정확도 막대"></div>
+    <div class="legend"><span><i class="s5"></i>규칙만 (36)</span><span><i class="s2"></i>규칙 + LLM 제안 그대로</span><span><i class="s1"></i>안전 병합(보호 수준을 낮추는 제안 제외)</span></div>
+    <div class="tbl"><table id="pocRuns">
+      <thead><tr><th>단계</th><th>방식</th><th class="num">보낸 40개 중 LLM 정답</th><th class="num">전체 46개</th><th class="num">안전 병합</th><th class="num">소요</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <ul class="facts note">
+      <li><b>v1</b> 기법을 직접 고르게 하자 병기·검사값·Y/N까지 "식별 정보"로 보고 삭제했습니다(과잉 판정).</li>
+      <li><b>v2</b> 규칙 추천을 보여 주자 근거에는 "환자 이름"이라고 쓰고도 규칙의 '유지'를 그대로 따랐습니다(앵커링).</li>
+      <li><b>v3</b> LLM은 컬럼의 <b>의미 범주 12종</b>만 판정하고, 범주 → 기법은 코드의 정책표가 정합니다. 이 방식에서 크게 좋아졌습니다.</li>
+      <li><b>v3.1(최종)</b> 약어·나이·자유문 힌트를 넣고, 응답에서 빠진 컬럼만 1회 다시 묻습니다. 보호 수준을 낮추는 제안은 '주의'로 표시하고 일괄 적용에서 뺍니다.</li>
+    </ul>
+
+    <h3>컬럼별 결과 (최종 v3.1)</h3>
+    <div class="tools">
+      <label><input type="radio" name="pocMode" id="pocNo" value="final" checked> 샘플값 미전송(기본)</label>
+      <label><input type="radio" name="pocMode" id="pocYes" value="samples"> 샘플값 전송</label>
+      <label><input type="checkbox" id="pocDiff"> 규칙과 LLM이 다른 행만</label>
+      <span class="count" id="pocCount"></span>
+    </div>
+    <div class="tbl listbox"><table id="pocRows">
+      <thead><tr><th>컬럼</th><th>정답(허용)</th><th>규칙</th><th>LLM 범주 → 기법</th><th>안전 병합</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <div class="verify">
+      <div class="card"><div class="top"><h3>속도 (CPU)</h3><span class="pill neutral">실측</span></div>
+        <ul><li>20개 묶음 1회 68~122초, 누락 재요청 24~47초</li><li>46개 컬럼 전체: 미전송 2분 54초 · 전송 5분 2초</li><li>JSON 형식 오류 0회, 실패 묶음 0회</li></ul></div>
+      <div class="card"><div class="top"><h3>브라우저 연결 조건</h3><span class="pill warn">주의</span></div>
+        <ul><li>HTML 파일을 더블클릭해 열면 출처가 <code>null</code>이라 Ollama가 거부(403)합니다.</li><li><span class="mono">dist/LLM연동_실행.bat</span>이 127.0.0.1로 띄워 해결합니다.</li><li><code>OLLAMA_ORIGINS=null</code>은 다른 웹페이지도 호출할 수 있게 되므로 권장하지 않습니다.</li></ul></div>
+    </div>
+    <p class="note">남은 측정: 실제 병원 컬럼 목록(헤더만, 가명 처리)으로 재측정, 14B 모델·EXAONE 비교, GPU 가속 가능 여부.</p>
+  </div>
+</section>
+
 <section id="tests">
-  <div class="head"><span class="no">05</span><h2>SW 테스트 결과</h2><p class="note">tests/test.html 자동 테스트 __TOTAL__건</p></div>
+  <div class="head"><span class="no">06</span><h2>SW 테스트 결과</h2><p class="note">tests/test.html 자동 테스트 __TOTAL__건</p></div>
   <div class="body">
     <div class="tbl"><table id="groupTable">
       <thead><tr><th>영역</th><th>도입</th><th class="num">통과</th><th class="num">전체</th><th>결과</th></tr></thead>
@@ -267,12 +326,12 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
 </section>
 
 <section id="next">
-  <div class="head"><span class="no">06</span><h2>남은 과제</h2><p class="note">결정·확인이 필요한 사항</p></div>
+  <div class="head"><span class="no">07</span><h2>남은 과제</h2><p class="note">결정·확인이 필요한 사항</p></div>
   <div class="body">
     <div class="tbl"><table>
       <thead><tr><th>구분</th><th>내용</th><th>현재 상태</th></tr></thead>
       <tbody>
-        <tr><td><span class="pill warn">검증</span></td><td>실제 소형 LLM(7B~14B)으로 S5 더미 PoC</td><td>모의 응답으로만 시험</td></tr>
+        <tr><td><span class="pill warn">검증</span></td><td>실제 병원 컬럼(가명 헤더)으로 LLM 재측정, 14B·EXAONE 비교, GPU 가속 확인</td><td>7B·CPU·합성 컬럼 46개로 1차 완료</td></tr>
         <tr><td><span class="pill warn">검증</span></td><td>생성 SQL을 실제 DB에서 실행(이 PC에 SQL Server Express 있음)</td><td>문법 자체검사만</td></tr>
         <tr><td><span class="pill warn">검증</span></td><td>KR Core 추정 프로파일 ID 2종(영상·병리 DiagnosticReport) 공식 패키지 대조</td><td>52항목이 추정 URL 사용</td></tr>
         <tr><td><span class="pill neutral">결정</span></td><td>매핑 수정안 171건의 승인 주체·절차</td><td>전건 '후보'</td></tr>
@@ -287,7 +346,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
 </section>
 
 <section id="files">
-  <div class="head"><span class="no">07</span><h2>산출물 위치</h2></div>
+  <div class="head"><span class="no">08</span><h2>산출물 위치</h2></div>
   <div class="body">
     <div class="tbl"><table>
       <thead><tr><th>산출물</th><th>경로 (KCURE_표준변환기_프로토타입/)</th></tr></thead>
@@ -296,6 +355,8 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
         <tr><td>LLM 연동 배포본</td><td class="mono">dist/KCURE_표준변환기_LLM.html</td></tr>
         <tr><td>수정개발계획서 · 맞춤형 프롬프트</td><td class="mono">docs/03_수정개발계획서.md · docs/04_맞춤형_프롬프트.md</td></tr>
         <tr><td>변경 이력</td><td class="mono">CHANGELOG.md</td></tr>
+        <tr><td>LLM PoC 결과 · 시험 페이지</td><td class="mono">docs/05_LLM_PoC결과.md · docs/poc/*.json · tests/llm_poc.html</td></tr>
+        <tr><td>LLM 연동본 실행기</td><td class="mono">dist/LLM연동_실행.bat · tools/serve_llm.py</td></tr>
         <tr><td>가명처리 규칙 · 매핑 수정안</td><td class="mono">spec/deid_rules.json · spec/corrections.json</td></tr>
         <tr><td>자동 테스트 · 실행 검증 도구</td><td class="mono">tests/test.html · tools/verify_generated.py · tools/verify_dicom.py</td></tr>
         <tr><td>GitHub (비공개)</td><td><a href="https://github.com/jaeyong0614/kcure-standard-converter" target="_blank" rel="noopener">github.com/jaeyong0614/kcure-standard-converter</a></td></tr>
@@ -312,8 +373,8 @@ const DATA = /*__DATA__*/null;
   const $ = function (s) { return document.querySelector(s); };
 
   /* 단계별 테스트 수 */
-  const steps = [['v0.1', 125], ['S0', 125], ['S1', 139], ['S2', 169], ['S3', 184], ['S4', 195]];
-  const max = 195;
+  const steps = [['v0.1', 125], ['S0', 125], ['S1', 139], ['S2', 169], ['S3', 184], ['S4', 195], ['S5', 198]];
+  const max = 198;
   $('#growth').innerHTML = steps.map(function (s, i) {
     return '<div class="col' + (i === steps.length - 1 ? ' new' : '') + '"><span class="n">' + s[1] + '</span><span class="colbar" style="height:' + Math.round(s[1] / max * 90) + 'px"></span><span class="c">' + s[0] + '</span></div>';
   }).join('');
@@ -355,6 +416,32 @@ const DATA = /*__DATA__*/null;
   }
   ['#q', '#grp', '#failOnly'].forEach(function (s) { $(s).addEventListener('input', renderList); $(s).addEventListener('change', renderList); });
   renderList();
+
+  /* LLM PoC */
+  const P = DATA.poc;
+  $('#pocRuns tbody').innerHTML = P.runs.map(function (r) {
+    const s = r.s;
+    return '<tr><td>' + esc(r.label) + '</td><td>' + esc(r.how) + '</td><td class="num">' + s.llmAccSent + ' / ' + s.sent + '</td><td class="num">' + s.hybridAccAll + ' / ' + s.columns +
+      '</td><td class="num">' + (s.safeAccAll != null ? s.safeAccAll + ' / ' + s.columns : '—') + '</td><td class="num">' + Math.floor(s.totalSec / 60) + '분 ' + Math.round(s.totalSec % 60) + '초</td></tr>';
+  }).join('');
+  $('#pocChart').innerHTML = P.runs.map(function (r) {
+    const s = r.s, W = function (n) { return (n / s.columns * 100).toFixed(1) + '%'; };
+    const base = '<i class="base" style="left:' + W(s.ruleAccAll) + '" title="규칙만 ' + s.ruleAccAll + '"></i>';
+    return '<div class="pocrow"><span class="lab">' + esc(r.label) + '</span><div class="pocbars">' +
+      '<div class="pocbar"><span class="s2" style="width:' + W(s.hybridAccAll) + '"></span>' + base + '<b>' + s.hybridAccAll + '</b></div>' +
+      (s.safeAccAll != null ? '<div class="pocbar"><span class="s1" style="width:' + W(s.safeAccAll) + '"></span>' + base + '<b>' + s.safeAccAll + '</b></div>' : '') + '</div></div>';
+  }).join('');
+  function renderPoc() {
+    const rows = ($('#pocYes').checked ? P.samples : P.final).filter(function (x) { return !$('#pocDiff').checked || (x.sent && x.llm && x.llm !== x.rule); });
+    $('#pocCount').textContent = rows.length + '개 컬럼 표시';
+    $('#pocRows tbody').innerHTML = rows.map(function (x) {
+      const llm = !x.sent ? '<span class="note">보내지 않음(규칙 높음)</span>' : x.llm ? esc((x.category ? x.category + ' → ' : '') + x.llm) + (x.weakens ? ' <span class="pill warn">보호 수준 낮춤</span>' : '') : '<span class="note">제안 없음</span>';
+      return '<tr><td>' + esc(x.col) + '</td><td class="mono">' + esc(x.accept.join(' / ')) + '</td><td><span class="pill ' + (x.ruleOk ? 'ok' : 'bad') + '">' + esc(x.rule) + '</span></td><td>' + llm +
+        '</td><td><span class="pill ' + (x.safeOk ? 'ok' : 'bad') + '">' + (x.safeOk ? '정답' : '오답') + '</span></td></tr>';
+    }).join('');
+  }
+  ['#pocNo', '#pocYes', '#pocDiff'].forEach(function (s) { $(s).addEventListener('change', renderPoc); });
+  renderPoc();
 
   $('#vlog').textContent = DATA.verifyLog;
   $('#selftest tbody').innerHTML = DATA.selftest.map(function (s) {
