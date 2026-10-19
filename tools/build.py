@@ -30,6 +30,13 @@ def main():
         subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_spec.py")])
         subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "make_samples.py")])
 
+    # 가명처리 규칙(JSON) → file:// 에서도 읽히는 JS 래퍼
+    import json
+    with open(os.path.join(ROOT, "spec", "deid_rules.json"), encoding="utf-8") as f:
+        deid = json.load(f)
+    with open(os.path.join(ROOT, "spec", "deid_rules.js"), "w", encoding="utf-8", newline="\n") as f:
+        f.write("window.KCURE_DEID=" + json.dumps(deid, ensure_ascii=False, separators=(",", ":")) + ";\n")
+
     html = read(os.path.join(SRC, "index.html"))
 
     def css_block(m):

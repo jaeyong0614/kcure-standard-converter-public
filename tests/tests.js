@@ -249,6 +249,55 @@
     const cmM2 = KC.artifacts.toMcode(CONF, KC.spec.items);
     ok('mCODE ConceptMap 리소스 상이 주석', cmM2.group.some(function (g) { return g.element.some(function (e) { return /리소스 상이/.test(e.target[0].comment); }); }));
 
+    /* 8. Level 2 가명처리 코드 추천 (v0.2 S2) */
+    const dp = KC.deid.plan(crc.table.headers, crc.table.rows, '대장암');
+    const dcol = function (col) { return dp.columns.find(function (c) { return c.col === col; }); };
+    eq('가명처리 샘플 최대 10행', dp.sampleRows, 10);
+    eq('no_patient → 가명키(DR-11)', dcol('no_patient').technique + '/' + dcol('no_patient').ruleId, 'HASH_SALT/DR-11');
+    eq('환자 식별 컬럼 = no_patient', dp.patientCol, 'no_patient');
+    eq('dt_birth → 연도만', dcol('dt_birth').technique, 'YEAR_ONLY');
+    eq('dt_op → 날짜 이동', dcol('dt_op').technique, 'DATE_SHIFT');
+    eq('dt_op 샘플 패턴 DATE', dcol('dt_op').sample.pattern, 'DATE');
+    eq('sex → 유지', dcol('sex').technique, 'KEEP');
+    eq('memo_internal(미매핑 자유문) → 정규식', dcol('memo_internal').technique, 'REGEX_PII');
+    ok('신뢰도 높음만 자동 승인', dp.columns.every(function (c) { return (c.status === '승인') === (c.confidence === '높음'); }));
+    eq('주민번호 샘플 패턴', KC.deid.detectPattern(['900101-1234567', '8501022345678']).pattern, 'RRN');
+    eq('TNM 복합 컬럼 전개 제안', KC.deid.expandColumn('stage', ['pT2N1M0'])[0].kind, 'TNM');
+    // 전부 승인(memo 1개만 미승인)해 코드 생성
+    dp.columns.forEach(function (c) { c.status = c.col === 'memo_internal' ? '후보' : '승인'; });
+    const dopts = { table: 'kcure.crc_source', input: 'C:\\kcure\\in\\crc.csv', output: 'C:\\kcure\\out\\crc_deid.csv', operator: 'test' };
+    const py = KC.codegen.python(dp, dopts);
+    eq('Python 자체검사 통과', KC.codegen.selfCheck(py, 'python').length, 0);
+    ok('Python: 원본 읽기 전용·새 파일·솔트 환경변수', /OUTPUT\.resolve\(\) == INPUT\.resolve\(\)/.test(py) && /os\.environ\.get\("KCURE_SALT"/.test(py) && py.indexOf('test-salt') < 0);
+    ok('Python: Windows raw 경로', py.indexOf('INPUT = Path(r"C:\\kcure\\in\\crc.csv")') >= 0, py.split('\n').find(function (l) { return /^INPUT/.test(l); }));
+    ok('Python: 미승인 컬럼 제외', !/out\["memo_internal"\]/.test(py) && /skipped = \["memo_internal"\]/.test(py));
+    ['postgres', 'mssql', 'oracle'].forEach(function (d) {
+      const q = KC.codegen.sql(dp, Object.assign({}, dopts, { dialect: d }));
+      eq('SQL ' + d + ' 자체검사 통과', KC.codegen.selfCheck(q, 'sql').length, 0);
+      ok('SQL ' + d + ' 뷰 생성·원천 읽기', /CREATE (OR REPLACE|OR ALTER) VIEW/.test(q) && /FROM /.test(q) && !/^\s*UPDATE/m.test(q));
+    });
+    ok('자체검사가 UPDATE 를 잡음', KC.codegen.selfCheck('UPDATE t SET a = 1;', 'sql').length === 1);
+    ok('자체검사가 주석 속 단어는 무시', KC.codegen.selfCheck('-- UPDATE 금지 안내', 'sql').length === 0);
+    ok('자체검사가 원본 덮어쓰기를 잡음', KC.codegen.selfCheck('df.to_csv(INPUT)', 'python').length === 1);
+    const dpkg = KC.codegen.buildPackage(dp, Object.assign({ dialect: 'postgres' }, dopts));
+    eq('가명처리 패키지 파일 8개', dpkg.files.map(function (f) { return f.path; }).join(','), 'deid.py,deid_postgres.sql,regex_pii.py,requirements.txt,run.bat,README_실행안내.md,매핑_가명처리_요약.json,감사이력.jsonl');
+    ok('run.bat CRLF·UTF-8 코드페이지', /\r\n/.test(dpkg.files[4].content) && /chcp 65001/.test(dpkg.files[4].content));
+    eq('감사이력 = 컬럼 + 패키지 1행', dpkg.files[7].content.trim().split('\n').length, dp.columns.length + 1);
+    const sc = KC.deid.scanText('환자명: 홍길동, 등록번호 0012345, 2026.03.02 내원. 연락처 010-1234-5678. Hodgkin lymphoma 의증');
+    ok('PII 탐지: 이름·환자번호·날짜·전화', ['NAME', 'PATIENT_NO', 'DATE', 'PHONE'].every(function (k) { return sc.counts[k]; }), JSON.stringify(sc.counts));
+    ok('PII 치환: 원문 미노출·예외어 보존', ['홍길동', '0012345', '010-1234-5678'].every(function (x) { return sc.redacted.indexOf(x) < 0; }) && sc.redacted.indexOf('Hodgkin') >= 0, sc.redacted);
+    // 개발 서버(tools/devserver.py)면 패키지를 tests/_out 에 저장 → tools/verify_generated.py 로 실행 검증
+    const bp = KC.deid.plan(brc.table.headers, brc.table.rows, '유방암');
+    bp.columns.forEach(function (c) { c.status = '승인'; });
+    const bpkg = KC.codegen.buildPackage(bp, { dialect: 'mssql', table: 'dbo.brc' });
+    eq('유방암(CP949) 환자 식별 컬럼', bp.patientCol, '병원번호');
+    window.TEST_DEID = { crc: dpkg, brc: bpkg };
+    for (const [nm, pk] of [['deid_pkg_crc.zip', dpkg], ['deid_pkg_brc.zip', bpkg]]) {
+      try {
+        await fetch('/__save/' + encodeURIComponent(nm), { method: 'POST', body: KC.writers.zip(pk.files.map(function (f) { return { name: f.path, content: f.content }; })) });
+      } catch (e) { /* 정적 서버에서는 저장하지 않음 */ }
+    }
+
     /* 5. 항목정의 변환 */
     const all = KC.dcat.fromSpec(CONF, KC.spec.data.meta.cancers);
     eq('명세 DCAT 필수속성 오류 0', all.issues.filter(function (x) { return x.level === '오류'; }).length, 0);

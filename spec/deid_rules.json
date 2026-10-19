@@ -1,0 +1,56 @@
+{
+  "version": "0.2.0",
+  "note": "K-CURE 가명처리 기법 추천 규칙. 위에서부터 처음 일치하는 규칙을 채택한다. 판정 입력: 컬럼명·표준항목명(name), 항목 의미역할(role), 자료형(type), 샘플값 패턴(sample). 정규식은 대소문자를 무시한다.",
+  "techniques": {
+    "DELETE": { "label": "컬럼 삭제", "desc": "결과에서 컬럼을 뺀다" },
+    "MASK": { "label": "마스킹", "desc": "앞 n자리만 남기고 *로 가린다", "params": { "keep": 1 } },
+    "HASH_SALT": { "label": "솔트 + SHA-256 가명키", "desc": "sha256(솔트 + '|' + 값)의 앞 32자. 변환기 FHIR·KR CDI 가명키와 같은 방식", "params": {} },
+    "YEAR_ONLY": { "label": "연도만", "desc": "YYYY만 남긴다", "params": {} },
+    "DATE_SHIFT": { "label": "날짜 이동", "desc": "환자별로 일정한 일수(±range일)를 더한다. 환자 안의 날짜 간격은 보존된다", "params": { "range": 30 } },
+    "DATE_TO_INTERVAL": { "label": "기준일 경과일", "desc": "기준일(예: 진단일)부터의 일수로 바꾼다(ARGO 호환)", "params": { "ref": "" } },
+    "BIN": { "label": "구간화", "desc": "폭 width 구간의 시작값으로 바꾼다", "params": { "width": 5 } },
+    "TOP_BOTTOM": { "label": "상·하단 코딩", "desc": "upper 이상은 upper, lower 이하는 lower로 바꾼다", "params": { "lower": null, "upper": 90 } },
+    "GROUP_RARE": { "label": "희귀 범주 통합", "desc": "빈도가 k 미만인 값을 '기타'로 묶는다", "params": { "k": 5 } },
+    "REGEX_PII": { "label": "정규식 PII 치환", "desc": "자유문에서 PII를 [ANONYMIZED:유형]으로 바꾼다", "params": {} },
+    "KEEP": { "label": "유지", "desc": "값을 그대로 둔다", "params": {} }
+  },
+  "rules": [
+    { "id": "DR-01", "when": { "name": "^(성명|이름|환자명|환자\\s*성명|보호자(명)?|name|patient_?name|nm_patient)$" }, "technique": "DELETE", "reason": "직접식별자(성명)", "confidence": "높음" },
+    { "id": "DR-02", "when": { "name": "주민(등록)?번호|^rrn$|ssn|jumin" }, "technique": "DELETE", "reason": "직접식별자(주민등록번호)", "confidence": "높음" },
+    { "id": "DR-03", "when": { "sample": "RRN" }, "technique": "DELETE", "reason": "샘플값이 주민등록번호 형식", "confidence": "높음" },
+    { "id": "DR-04", "when": { "name": "전화|휴대폰|핸드폰|연락처|phone|tel$|mobile" }, "technique": "DELETE", "reason": "직접식별자(전화번호)", "confidence": "높음" },
+    { "id": "DR-05", "when": { "sample": "PHONE" }, "technique": "DELETE", "reason": "샘플값이 전화번호 형식", "confidence": "중간" },
+    { "id": "DR-06", "when": { "name": "이메일|e-?mail" }, "technique": "DELETE", "reason": "직접식별자(이메일)", "confidence": "높음" },
+    { "id": "DR-07", "when": { "sample": "EMAIL" }, "technique": "DELETE", "reason": "샘플값이 이메일 형식", "confidence": "중간" },
+    { "id": "DR-08", "when": { "name": "^(주소|상세\\s*주소|address|addr)$|도로명|번지" }, "technique": "DELETE", "reason": "직접식별자(상세주소)", "confidence": "높음" },
+    { "id": "DR-09", "when": { "name": "우편\\s*번호|zip_?code|postal" }, "technique": "MASK", "params": { "keep": 3 }, "reason": "준식별자(우편번호) — 앞 3자리만", "confidence": "중간" },
+    { "id": "DR-10", "when": { "name": "(의사|의료인|담당의|주치의|집도의|판독의|진료의)\\s*(명|성명|이름|id|번호)?$|doctor|physician" }, "technique": "DELETE", "reason": "의료인 식별자", "confidence": "중간" },
+    { "id": "DR-11", "when": { "name": "^(병원번호|환자등록번호|환자번호|등록번호|병록번호|차트번호|no_patient|patient_?id|pid|pt_?no|mrn)$" }, "technique": "HASH_SALT", "reason": "기관 환자번호 → 가명키", "confidence": "높음" },
+    { "id": "DR-12", "when": { "role": ["식별·인구학"], "name": "번호|등록|식별|id$|^no_" }, "technique": "HASH_SALT", "reason": "식별자 항목 → 가명키", "confidence": "중간" },
+    { "id": "DR-13", "when": { "name": "생년월일|생일|birth|dob|dt_birth" }, "technique": "YEAR_ONLY", "reason": "생년월일은 연도만 보존", "confidence": "높음" },
+    { "id": "DR-14", "when": { "name": "^(나이|연령|age|진단시\\s*연령|진단\\s*나이)$" }, "technique": "TOP_BOTTOM", "params": { "lower": null, "upper": 90 }, "reason": "고령(90세 이상) 상단 코딩", "confidence": "중간" },
+    { "id": "DR-15", "when": { "type": ["DATE"] }, "technique": "DATE_SHIFT", "params": { "range": 30 }, "reason": "사건 일자 → 환자별 날짜 이동(간격 보존)", "confidence": "중간" },
+    { "id": "DR-16", "when": { "sample": "DATE" }, "technique": "DATE_SHIFT", "params": { "range": 30 }, "reason": "샘플값이 날짜 형식", "confidence": "중간" },
+    { "id": "DR-17", "when": { "name": "(병원|기관|의료기관)\\s*(명|코드)$|hospital|institution|no_hospital" }, "technique": "GROUP_RARE", "params": { "k": 5 }, "reason": "기관 정보 — 소수 기관은 묶음", "confidence": "낮음" },
+    { "id": "DR-18", "when": { "role": ["소견", "기타내용", "기술"] }, "technique": "REGEX_PII", "reason": "자유문 → PII 정규식 치환", "confidence": "중간" },
+    { "id": "DR-19", "when": { "name": "소견|판독|기록|메모|memo|비고|코멘트|comment|note|remark|내용$" }, "technique": "REGEX_PII", "reason": "자유문(명칭 기준) → PII 정규식 치환", "confidence": "중간" },
+    { "id": "DR-20", "when": { "sample": "FREETEXT" }, "technique": "REGEX_PII", "reason": "샘플값이 긴 자유문", "confidence": "낮음" },
+    { "id": "DR-99", "when": {}, "technique": "KEEP", "reason": "임상 값 — 유지", "confidence": "중간" }
+  ],
+  "pii": [
+    { "type": "RRN", "label": "주민등록번호", "regex": "(?<!\\d)\\d{6}[- ]?[1-8]\\d{6}(?!\\d)", "risk": "낮음" },
+    { "type": "PHONE", "label": "전화번호", "regex": "(?<!\\d)0\\d{1,2}[-. )]?\\d{3,4}[-. ]?\\d{4}(?!\\d)", "risk": "낮음" },
+    { "type": "EMAIL", "label": "이메일", "regex": "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "risk": "낮음" },
+    { "type": "PATIENT_NO", "label": "환자번호(문맥)", "regex": "(?:등록번호|병록번호|환자번호|차트번호|병원번호|MRN|ID)\\s*[:：]?\\s*[A-Za-z]?\\d{5,10}", "risk": "낮음" },
+    { "type": "DATE", "label": "날짜", "regex": "(?<!\\d)(?:19|20)\\d{2}\\s?[-./년]\\s?\\d{1,2}\\s?[-./월]\\s?\\d{1,2}일?(?!\\d)|(?<!\\d)(?:19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])(?!\\d)|'\\d{2}\\.\\d{1,2}\\.\\d{1,2}", "risk": "중간" },
+    { "type": "NAME", "label": "이름(문맥)", "regex": "(?:환자명|성명|이름|보호자|환자)\\s*[:：]?\\s*[가-힣]{2,4}(?=\\s|$|[,.()님씨])|[가-힣]{2,4}(?=\\s?(?:님|씨|환자분))", "risk": "높음" },
+    { "type": "DOCTOR", "label": "의료인(문맥)", "regex": "(?:Dr\\.?|의사|교수|전공의|담당의|주치의|집도의)\\s*[가-힣]{2,4}", "risk": "중간" },
+    { "type": "ADDRESS", "label": "주소", "regex": "[가-힣]+(?:특별시|광역시|특별자치시|도|시)\\s[가-힣]+(?:구|군|시)\\s[가-힣0-9]+(?:로|길|동|읍|면)(?:\\s?\\d+(?:-\\d+)?)?", "risk": "중간" },
+    { "type": "HOSPITAL", "label": "의료기관명", "regex": "[가-힣]{2,}(?:대학교병원|대학병원|의료원|병원|의원)", "risk": "높음" }
+  ],
+  "exceptions": ["Hodgkin", "Crohn", "Wilms", "Ewing", "Kaposi", "Burkitt", "Paget", "Bowen", "Gleason", "Fuhrman", "Breslow", "Clark", "Bethesda"],
+  "forbidden": {
+    "sql": ["\\bUPDATE\\s", "\\bDELETE\\s+FROM\\b", "\\bDROP\\s+(TABLE|DATABASE|SCHEMA|INDEX|USER)\\b", "\\bALTER\\s+(TABLE|DATABASE|SCHEMA|INDEX|USER)\\b", "\\bTRUNCATE\\s", "\\bMERGE\\s", "\\bINSERT\\s+INTO\\s+(?!deid\\.)", "\\bGRANT\\s", "\\bEXEC(UTE)?\\s+(?!\\('CREATE SCHEMA deid'\\))"],
+    "python": ["inplace\\s*=\\s*True", "os\\.remove\\(", "\\.unlink\\(", "shutil\\.rmtree", "to_(csv|excel)\\(\\s*INPUT", "open\\(\\s*INPUT\\s*,\\s*['\"][wa]"]
+  }
+}

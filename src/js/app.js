@@ -1,6 +1,6 @@
 /* 화면 제어 */
 window.KC = window.KC || {};
-KC.APP_VERSION = 'v0.1.0 (프로토타입)';
+KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
 
 (function () {
   'use strict';
@@ -50,6 +50,7 @@ KC.APP_VERSION = 'v0.1.0 (프로토타입)';
     $$('.panel').forEach(function (p) { p.classList.toggle('active', p.id === 'p-' + name); });
     if (name === 'mmap') renderMm();
     if (name === 'mout') renderMout();
+    if (name === 'deid') KC.deidUi.render();
     window.scrollTo(0, 0);
   }
   function markDone(name) { const t = $('.tab[data-tab="' + name + '"]'); if (t) t.classList.add('done'); }
@@ -893,6 +894,7 @@ KC.APP_VERSION = 'v0.1.0 (프로토타입)';
     renderSpec();
     renderConf();
     bind();
+    KC.deidUi.init({ entries: function () { return usedEntries(); }, cancer: function () { return st.msel ? st.msel.cancer || '' : ''; } });
     if (typeof DecompressionStream === 'undefined') {
       $('#loadErr').innerHTML = note('이 브라우저는 XLSX 읽기를 지원하지 않습니다(CSV는 가능). Edge 또는 Chrome 최신 버전을 권장합니다.', 'warn');
     }

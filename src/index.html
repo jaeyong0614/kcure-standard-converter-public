@@ -25,11 +25,12 @@
     <button class="tab active" data-tab="sel"><span class="n">1</span>암종·항목 선택</button>
     <button class="tab" data-tab="mmap"><span class="n">2</span>메타데이터 매핑</button>
     <button class="tab" data-tab="mout"><span class="n">3</span>메타데이터 내려받기</button>
+    <button class="tab" data-tab="deid"><span class="n">4</span>가명처리 코드</button>
     <span class="tab-sep"></span>
     <button class="tab" data-tab="spec">명세 조회</button>
     <button class="tab" data-tab="conf">카탈로그·변환 설정</button>
     <span class="tab-sep"></span>
-    <span class="tab-group">부가: 환자 데이터 변환</span>
+    <span class="tab-group" title="합성·더미 데이터 검증용. 실데이터는 ④ 가명처리 코드로 처리하세요">부가: 환자 데이터 변환(더미 검증)</span>
     <button class="tab sub" data-tab="load">불러오기</button>
     <button class="tab sub" data-tab="map">컬럼 매핑</button>
     <button class="tab sub" data-tab="run">변환·검증</button>
@@ -116,11 +117,56 @@
     </div>
   </section>
 
+  <!-- ④ 가명처리 코드 (Level 2) -->
+  <section class="panel" id="p-deid">
+    <div class="card">
+      <h2>④ 가명처리 코드 추천 (원본 미수정)</h2>
+      <p class="desc">원천 데이터의 컬럼과 샘플(앞 <b>10행</b>)을 분석해 컬럼별 가명처리 기법을 추천합니다. 승인한 컬럼에 대해 <b>Python·SQL·정규식 실행 코드</b>를 만듭니다. 이 SW는 원본을 바꾸지 않습니다. 담당자가 코드를 검토한 뒤 병원 내부에서 직접 실행합니다.</p>
+      <div class="row">
+        <button class="btn primary sm" id="dzFileBtn">원천 샘플 파일 불러오기 (CSV·XLSX)</button>
+        <input type="file" id="dzFile" accept=".csv,.tsv,.txt,.xlsx,.xlsm" hidden>
+        <button class="btn sm" id="dzFromSel">① 선택 항목으로 추천 (샘플 없이)</button>
+        <span class="muted small" id="dzSource"></span>
+      </div>
+      <div id="dzMsg"></div>
+    </div>
+    <div class="card hidden" id="dzCard">
+      <div class="stats" id="dzStats"></div>
+      <div class="grid2" style="margin:10px 0">
+        <label class="f"><span>원천 테이블 (SQL)</span><input type="text" id="dzTable" class="mono" placeholder="schema.table"></label>
+        <label class="f"><span>SQL 방언</span><select id="dzDialect"></select></label>
+        <label class="f"><span>입력 파일 경로 (Python, 읽기 전용)</span><input type="text" id="dzIn" class="mono" placeholder="C:\kcure\in\source.csv"></label>
+        <label class="f"><span>출력 파일 경로 (Python, 새 파일)</span><input type="text" id="dzOut" class="mono" placeholder="C:\kcure\out\source_deid.csv"></label>
+        <label class="f"><span>환자 식별 컬럼 (날짜 이동 기준)</span><select id="dzPid"></select></label>
+        <label class="f"><span>작업자 (감사이력 기록용)</span><input type="text" id="dzOperator" placeholder="예: 정보팀 홍OO"></label>
+      </div>
+      <div class="row" style="margin:6px 0">
+        <button class="btn sm" id="dzAll">신뢰도 '높음' 일괄 승인</button>
+        <button class="btn sm" id="dzNone">모두 승인 해제</button>
+        <div class="grow"></div>
+        <button class="btn sm" id="dzPy">Python 미리보기</button>
+        <button class="btn sm" id="dzSql">SQL 미리보기</button>
+        <button class="btn sm" id="dzRx">정규식 모듈 미리보기</button>
+        <button class="btn primary" id="dzZip">코드 패키지 내려받기 (.zip)</button>
+      </div>
+      <div class="note warn small">추천은 규칙 기반 후보입니다. 신뢰도 '높음'만 자동으로 승인되고, 나머지는 담당자가 확인한 뒤 승인해야 코드에 들어갑니다. 가명처리 수준은 「가명정보 처리 가이드라인」과 기관 심의 기준으로 최종 판단하세요.</div>
+      <div class="tbl-wrap" id="dzTableWrap" style="max-height:560px"></div>
+      <pre class="view hidden" id="dzView"></pre>
+    </div>
+    <div class="card">
+      <h2>비정형 텍스트 PII 시험</h2>
+      <p class="desc">경과기록·판독소견 샘플(1쪽 이내)을 붙여 넣으면 내장 정규식으로 PII를 찾아 치환 결과를 보여 줍니다. 텍스트는 이 화면에서만 쓰고 저장하지 않습니다.</p>
+      <textarea id="dzText" rows="6" style="width:100%" placeholder="예: 환자명: 홍길동, 등록번호 0012345, 2026.03.02 내원. 연락처 010-1234-5678"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn sm" id="dzScanBtn">PII 탐지</button></div>
+      <div id="dzScan"></div>
+    </div>
+  </section>
+
   <!-- 부가: 환자 데이터 변환 — 데이터 불러오기 -->
   <section class="panel" id="p-load">
     <div class="card">
       <h2>원천 데이터 불러오기</h2>
-      <p class="desc">K-CURE 원천 데이터(1행 = 1환자 또는 1건, 1열 = 1항목)를 선택하세요. CSV(UTF-8·CP949)·TSV·XLSX를 지원합니다. 파일은 이 PC 밖으로 전송되지 않습니다.</p>
+      <p class="desc"><b>합성·더미 데이터 검증용</b>입니다. 병원 실데이터는 원본을 바꾸지 않도록 <b>④ 가명처리 코드</b>로 처리하세요. K-CURE 원천 데이터(1행 = 1환자 또는 1건, 1열 = 1항목)를 선택하세요. CSV(UTF-8·CP949)·TSV·XLSX를 지원합니다. 파일은 이 PC 밖으로 전송되지 않습니다.</p>
       <div class="drop" id="drop">
         <strong>파일을 여기에 끌어다 놓거나 클릭해서 선택</strong><br>
         <span class="small">.csv · .tsv · .txt · .xlsx</span>
@@ -279,6 +325,7 @@
 <!--BUILD:JS-->
 <script src="../spec/kcure_spec.js"></script>
 <script src="../spec/samples.js"></script>
+<script src="../spec/deid_rules.js"></script>
 <script src="js/util.js"></script>
 <script src="js/sha256.js"></script>
 <script src="js/readers.js"></script>
@@ -292,6 +339,9 @@
 <script src="js/artifacts.js"></script>
 <script src="js/writers.js"></script>
 <script src="js/metadata.js"></script>
+<script src="js/deid.js"></script>
+<script src="js/codegen.js"></script>
+<script src="js/deidui.js"></script>
 <script src="js/app.js"></script>
 <!--/BUILD:JS-->
 </body>
