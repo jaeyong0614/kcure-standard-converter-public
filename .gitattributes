@@ -1,0 +1,10 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.xlsx binary
+*.zip binary
+*.png binary
+# 원본 바이트를 보존해야 하는 파일 (CP949·CRLF 샘플, 배포본)
+*.csv -text
+samples/** -text
+dist/** -text
+spec/*.js -text

@@ -1,0 +1,172 @@
+﻿점검코드,문제,항목ID,항목명,데이터타입,KR_Core_FHIR_Path,KR_Core_판정,심사등급,출현암종,변환기 처리
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000002,음주량,NUMERIC,Observation.valueCodeableConcept,확장필요,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000003,음주횟수,NUMERIC,Observation.valueCodeableConcept,확장필요,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000004,음주기간년수,NUMERIC,Observation.valueCodeableConcept,확장필요,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000006,흡연량,NUMERIC,Observation.valueCodeableConcept,확장필요,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000007,흡연기간년수,NUMERIC,Observation.valueCodeableConcept,확장필요,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000008,과거력_기타질환여부,CODE,Condition.verificationStatus,제약재사용,C,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-PAT-000003,나이,INTEGER,Patient.birthDate,제약재사용,B,"간암,신장암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 날짜로 해석 불가 시 확장으로 보존
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-PAT-000004,직업분류,INTEGER,Observation.valueCodeableConcept,확장필요,C,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암",변환기: valueQuantity로 표현
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-PAT-000013,생년월일,VARCHAR,Patient.birthDate,직접재사용,A,위암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000017,과거력 간질환여부,CODE,Condition.verificationStatus,제약재사용,C,"간암,신장암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000018,과거력 고혈압여부,CODE,Condition.verificationStatus,제약재사용,C,"간암,신장암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000019,과거력 당뇨여부,CODE,Condition.verificationStatus,제약재사용,C,"간암,신장암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000020,과거력 암여부,CODE,Condition.verificationStatus,제약재사용,C,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-ASM-000031,영상검사 검사일자,DATE,DiagnosticReport.code,직접재사용,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 해당 리소스 일자 요소로 자동보정
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000037,음주시작연령,INTEGER,Observation.valueCodeableConcept,확장필요,A,"신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000039,흡연시작연령,INTEGER,Observation.valueCodeableConcept,확장필요,A,"신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000040,금연시작시기년수,INTEGER,Observation.valueCodeableConcept,확장필요,A,"신장암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: valueQuantity로 표현
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000041,과거력 여부,CODE,Condition.verificationStatus,제약재사용,C,"신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000042,과거력 결핵여부,CODE,Condition.verificationStatus,제약재사용,C,"신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000043,과거력 우울증여부,CODE,Condition.verificationStatus,제약재사용,C,"신장암,유방암,자궁경부암,전립선암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000044,과거력 불면증여부,CODE,Condition.verificationStatus,제약재사용,C,"신장암,유방암,자궁경부암,전립선암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000045,과거력 심장질환여부,CODE,Condition.verificationStatus,제약재사용,C,"신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000055,현병력 여부,CODE,Condition.verificationStatus,제약재사용,C,"위암,유방암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000056,현병력 고혈압여부,CODE,Condition.verificationStatus,제약재사용,C,"위암,유방암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000057,현병력 당뇨여부,CODE,Condition.verificationStatus,제약재사용,C,"위암,유방암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000058,현병력 간질환여부,CODE,Condition.verificationStatus,제약재사용,C,"위암,유방암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000059,현병력 결핵여부,CODE,Condition.verificationStatus,제약재사용,C,"위암,유방암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000060,현병력 기타질환여부,CODE,Condition.verificationStatus,제약재사용,C,"위암,유방암",변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000063,현병력 우울증여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000064,현병력 불면증여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000065,현병력 심장질환여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000010,수술소요시간,VARCHAR,Procedure.performedPeriod,제약재사용,B,"신장암,자궁경부암,췌장암",변환기: 날짜로 해석 불가 시 확장으로 보존
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-OUT-000007,사망일자,DATE,Patient.identifier,직접재사용,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 해당 리소스 일자 요소로 자동보정
+C1,식별자가 아닌 항목이 Patient.identifier에 배정,KCURE-OUT-000007,사망일자,DATE,Patient.identifier,직접재사용,A,"간암,신장암,위암,유방암,자궁경부암,전립선암,췌장암,혈액암",변환기: 확장으로 보존(사망일자는 deceasedDateTime 보정)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-OUT-000016,방사선치료후부작용시기,VARCHAR,AdverseEvent.date,제약재사용,A,"신장암,자궁경부암,전립선암,췌장암",변환기: 날짜로 해석 불가 시 확장으로 보존
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-PAT-000017,age,VARCHAR,Patient.birthDate,제약재사용,B,대장암,변환기: 날짜로 해석 불가 시 확장으로 보존
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-PAT-000020,진단시연령,INTEGER,Patient.birthDate,제약재사용,B,위암,변환기: 날짜로 해석 불가 시 확장으로 보존
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-PAT-000043,최종자연 유산일,DATE,Observation.valueInteger,제약재사용,A,자궁경부암,변환기: 해당 리소스 일자 요소로 자동보정
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-PAT-000045,최종인공 유산일,DATE,Observation.valueInteger,제약재사용,A,자궁경부암,변환기: 해당 리소스 일자 요소로 자동보정
+B1,여부 항목이 status 경로에 배정,KCURE-PAT-000052,HPV 백신 접종여부,CODE,Immunization.status,직접재사용,A,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000066,고주파열치료 여부,CODE,Procedure.status,제약재사용,B,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000067,방사선치료 여부,CODE,Procedure.status,제약재사용,B,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000078,병리학적병기연도내용,INTEGER,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: valueQuantity로 표현
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000114,간내전이여부,CODE,Condition.verificationStatus,제약재사용,C,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000143,Fuhrmann's nuclear grade,INTEGER,Observation.valueCodeableConcept,제약재사용,B,신장암,변환기: valueQuantity로 표현
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000164,전신전이 다발성 여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000170,CT scan 전신 전이 여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000171,Bone scan 전신 전이 여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000172,PET-CT 전신 전이 여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000199,외과병리 ER(%),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000201,외과병리 PR(%),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000208,외과병리 AR(%),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000209,외과병리 PD-L1(SP142),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000210,외과병리 PD-L1(22C3),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000229,생체검사 Gleason score 1st,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000230,생체검사 Gleason score 2nd,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000231,생체검사 Gleason score sum,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000236,Gleason score 1st,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000237,Gleason score 2nd,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-DIS-000238,Gleason score sum,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+B1,여부 항목이 status 경로에 배정,KCURE-DIS-000258,고환 침범여부,CODE,Condition.verificationStatus,제약재사용,C,혈액암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000071,금주기간년수,INTEGER,Observation.valueCodeableConcept,확장필요,A,간암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000073,금연기간년수,INTEGER,Observation.valueCodeableConcept,확장필요,A,간암,변환기: valueQuantity로 표현
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000074,과거력 고지혈증여부,CODE,Condition.verificationStatus,제약재사용,C,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000081,MELD score,INTEGER,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000083,MELD-Na score,INTEGER,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000085,ALBI score,NUMERIC,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000087,FIB-4 score,NUMERIC,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000089,HSI score,NUMERIC,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: valueQuantity로 표현
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000130,만성신장질환 여부,CODE,Condition.verificationStatus,제약재사용,C,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-ASM-000133,투석 여부,CODE,Condition.verificationStatus,제약재사용,C,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-ASM-000140,DTPA 날짜,DATE,DiagnosticReport.code,직접재사용,A,신장암,변환기: 해당 리소스 일자 요소로 자동보정
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-ASM-000166,MMG 검사일자,DATE,DiagnosticReport.code,직접재사용,A,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-ASM-000172,USG 검사일자,DATE,DiagnosticReport.code,직접재사용,A,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-ASM-000178,MRI 검사일자,DATE,DiagnosticReport.code,직접재사용,A,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-ASM-000185,CT scan 검사일자,DATE,DiagnosticReport.code,직접재사용,A,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-ASM-000189,PET-CT 검사일자,DATE,DiagnosticReport.code,직접재사용,A,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000196,조직검사 ER(allred score),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000197,조직검사 ER(%),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000199,조직검사 PR(allred score),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000200,조직검사 PR(%),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000204,조직검사 Ki67 %,INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000208,조직검사 AR(allred score),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000209,조직검사 AR(%),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000210,조직검사 PD-L1(SP142),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000211,조직검사 PD-L1(22C3),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000235,외과병리 ER(allred score),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000236,외과병리 PR(allred score),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000237,외과병리 AR(allred score),INTEGER,Observation.valueCodeableConcept,제약재사용,B,유방암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000244,Total I-PSS Score,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000246,IPSS Q1,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000247,IPSS Q2,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000248,IPSS Q3,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000249,IPSS Q4,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000250,IPSS Q5,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000251,IPSS Q6,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000252,IPSS Q7,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000253,Quality of Life assessment index L,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+D1,수치 항목이 valueCodeableConcept에 배정,KCURE-ASM-000255,Total IIEF-5 Score,INTEGER,Observation.valueCodeableConcept,제약재사용,B,전립선암,변환기: valueQuantity로 표현
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-GEN-000017,NGS패널 검사결과내용,DATE,Observation.valueString,제약재사용,B,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000045,소요시간,CODE,Procedure.performedPeriod,제약재사용,B,간암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000047,수술시동반장기절제여부,CODE,Procedure.status,제약재사용,B,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000049,PRINGLEMANEUVER여부,CODE,Procedure.status,제약재사용,B,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000052,PRINGLEMANEUVER소요시간,VARCHAR,Procedure.performedPeriod,제약재사용,B,간암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000053,해부학적절제여부,CODE,Procedure.status,제약재사용,B,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000072,전신항암제 용량 감량 여부,CODE,MedicationRequest.status,제약재사용,B,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-TRT-000074,전신항암제 일시중단 여부,DATE,MedicationRequest.status,제약재사용,B,간암,변환기: 해당 리소스 일자 요소로 자동보정
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000074,전신항암제 일시중단 여부,DATE,MedicationRequest.status,제약재사용,B,간암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000169,immuno_yn,CODE,MedicationRequest.status,제약재사용,B,대장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000179,신이식 여부,CODE,Condition.verificationStatus,제약재사용,C,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000185,Ice slush 여부,CODE,Procedure.status,제약재사용,B,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000186,Ischemic time (허혈시간),INTEGER,Procedure.performedPeriod,제약재사용,B,신장암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000188,개복전환여부,CODE,Procedure.status,제약재사용,B,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000190,복강경수술전환여부 (Conventional Lapa 전환),VARCHAR,Procedure.status,제약재사용,B,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000204,표적항암제 여부,CODE,MedicationRequest.status,제약재사용,B,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000205,면역항암제 여부,CODE,MedicationRequest.status,제약재사용,B,신장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000219,궤양 유무_내시경소견,VARCHAR,Procedure.status,제약재사용,B,위암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000220,시술시작시간,VARCHAR,Procedure.performedDateTime,직접재사용,A,위암,변환기: 날짜로 해석 불가 시 확장으로 보존
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000221,시술종료시간,VARCHAR,Procedure.performedDateTime,직접재사용,A,위암,변환기: 날짜로 해석 불가 시 확장으로 보존
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000225,수술시작시각,VARCHAR,Procedure.performedPeriod,제약재사용,B,위암,변환기: 날짜로 해석 불가 시 확장으로 보존
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000226,수술종료시각,VARCHAR,Procedure.performedPeriod,제약재사용,B,위암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000232,진단적 복강경 검사 여부,CODE,Procedure.status,제약재사용,B,위암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000233,복수 여부,CODE,Procedure.status,제약재사용,B,위암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000234,세포병리검사여부,CODE,Procedure.status,제약재사용,B,위암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000243,수술장 내시경 사용 여부,CODE,Procedure.status,제약재사용,B,위암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000244,형광영상 사용 여부,CODE,Procedure.status,제약재사용,B,위암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000246,유착방지제 사용유무,VARCHAR,Procedure.status,제약재사용,B,위암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000289,전신전이 수술 여부,CODE,Procedure.status,제약재사용,B,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B2,자유문/상태값 항목이 status(code) 경로에 배정,KCURE-TRT-000295,전신전이 치료 반응,VARCHAR,Procedure.status,제약재사용,C,유방암,변환기: status=unknown + note 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000311,호르몬제 투여 여부,CODE,MedicationRequest.status,제약재사용,B,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000315,호르몬제 투여일,VARCHAR,MedicationRequest.authoredOn,직접재사용,B,유방암,변환기: 날짜로 해석 불가 시 확장으로 보존
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000316,약제 투약기간,VARCHAR,MedicationRequest.authoredOn,직접재사용,A,유방암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000318,Robotic 여부,CODE,Procedure.status,제약재사용,B,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000319,Laparotomy 여부,CODE,Procedure.status,제약재사용,B,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000323,BSO 여부,CODE,Procedure.status,제약재사용,B,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000325,PLND 여부,CODE,Procedure.status,제약재사용,B,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000326,PaLND 여부,CODE,Procedure.status,제약재사용,B,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000327,CCRT 여부,CODE,Procedure.status,제약재사용,B,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000329,호르몬 반응성 전이성 전립선암 여부,CODE,Procedure.status,제약재사용,B,전립선암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000331,HIFU 시행여부,CODE,Procedure.status,제약재사용,B,전립선암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000335,TURP 동반 여부,CODE,Procedure.status,제약재사용,B,전립선암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000336,calcification 여부,CODE,Procedure.status,제약재사용,B,전립선암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000337,호르몬치료제 여부,CODE,MedicationRequest.status,제약재사용,B,전립선암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000338,차세데호르몬치료제 여부,CODE,MedicationRequest.status,제약재사용,B,전립선암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000340,약제 치료기간,VARCHAR,MedicationRequest.authoredOn,직접재사용,A,전립선암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000341,거세저항성 전립선암 치료 여부,CODE,Procedure.status,제약재사용,B,전립선암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-TRT-000345,수술 후 재원기간,VARCHAR,Encounter.period.end,직접재사용,A,췌장암,변환기: 날짜로 해석 불가 시 확장으로 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000355,PGA mesh 사용여부,CODE,Procedure.status,제약재사용,B,췌장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000356,Glue 사용여부,CODE,Procedure.status,제약재사용,B,췌장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000357,동시항함화학요법 여부,CODE,Procedure.status,제약재사용,B,췌장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B2,자유문/상태값 항목이 status(code) 경로에 배정,KCURE-TRT-000379,이식 당시 골수질환의 상태,VARCHAR,Procedure.status,제약재사용,C,혈액암,변환기: status=unknown + note 보존
+B2,자유문/상태값 항목이 status(code) 경로에 배정,KCURE-TRT-000380,이식 당시 골수 외 질환의 상태,VARCHAR,Procedure.status,제약재사용,C,혈액암,변환기: status=unknown + note 보존
+B1,여부 항목이 status 경로에 배정,KCURE-TRT-000383,이식 전처치요법 방사선 여부,CODE,Procedure.status,제약재사용,B,혈액암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+E1,FHIR R4에 없는 경로,KCURE-TRT-000390,만성이식편대숙주병 severity,VARCHAR,AdverseEvent.description,제약재사용,B,혈액암,변환기: 확장으로 보존
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-OUT-000033,치료평가,DATE,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: 해당 리소스 일자 요소로 자동보정
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-OUT-000038,전신항암제 치료반응평가,DATE,Observation.valueCodeableConcept,제약재사용,B,간암,변환기: 해당 리소스 일자 요소로 자동보정
+C1,식별자가 아닌 항목이 Patient.identifier에 배정,KCURE-OUT-000040,사망여부,CODE,Patient.identifier,직접재사용,A,간암,변환기: 확장으로 보존(사망일자는 deceasedDateTime 보정)
+A2,비날짜 항목(나이·기간·시각 등)이 날짜 경로에 배정,KCURE-OUT-000054,hospital_stay,VARCHAR,Encounter.period.end,직접재사용,A,대장암,변환기: 날짜로 해석 불가 시 확장으로 보존
+C1,식별자가 아닌 항목이 Patient.identifier에 배정,KCURE-OUT-000061,mortality_op,CODE,Patient.identifier,직접재사용,A,대장암,변환기: 확장으로 보존(사망일자는 deceasedDateTime 보정)
+B1,여부 항목이 status 경로에 배정,KCURE-OUT-000064,reop_yn,CODE,Procedure.status,제약재사용,B,대장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-OUT-000069,postCTX_yn,CODE,MedicationRequest.status,제약재사용,B,대장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+B1,여부 항목이 status 경로에 배정,KCURE-OUT-000082,postRT_yn,CODE,Procedure.status,제약재사용,B,대장암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+C1,식별자가 아닌 항목이 Patient.identifier에 배정,KCURE-OUT-000101,survival_status,CODE,Patient.identifier,직접재사용,A,대장암,변환기: 확장으로 보존(사망일자는 deceasedDateTime 보정)
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-OUT-000104,dt_death,DATE,Patient.identifier,직접재사용,A,대장암,변환기: 해당 리소스 일자 요소로 자동보정
+C1,식별자가 아닌 항목이 Patient.identifier에 배정,KCURE-OUT-000104,dt_death,DATE,Patient.identifier,직접재사용,A,대장암,변환기: 확장으로 보존(사망일자는 deceasedDateTime 보정)
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-OUT-000124,국소 재발 치료 기간,DATE,Observation.valueQuantity,제약재사용,A,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+B1,여부 항목이 status 경로에 배정,KCURE-OUT-000125,전신전이 여부,CODE,Condition.verificationStatus,제약재사용,C,유방암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-OUT-000126,수술 후 합병증 발생일자,DATE,Procedure.complication,제약재사용,C,유방암,변환기: 해당 리소스 일자 요소로 자동보정
+B2,자유문/상태값 항목이 status(code) 경로에 배정,KCURE-OUT-000138,퇴원시 상태,VARCHAR,Encounter.status,직접재사용,A,유방암,변환기: status=unknown + note 보존
+B1,여부 항목이 status 경로에 배정,KCURE-OUT-000142,Laparoscopy 여부,CODE,Procedure.status,제약재사용,B,자궁경부암,변환기: 별도 리소스로 분리(주 리소스 상태 보호)
+A1,날짜 항목이 비날짜 경로에 배정,KCURE-OUT-000152,합병증 날짜,DATE,Procedure.complication,제약재사용,C,전립선암,변환기: 해당 리소스 일자 요소로 자동보정

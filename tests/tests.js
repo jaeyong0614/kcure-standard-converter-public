@@ -1,0 +1,249 @@
+/* 브라우저 자동 테스트 — 결과는 window.TEST_RESULTS 와 화면에 기록 */
+(async function () {
+  'use strict';
+  const results = [];
+  window.TEST_RESULTS = results;
+  function ok(name, cond, detail) {
+    results.push({ name: name, pass: !!cond, detail: detail === undefined ? '' : String(detail) });
+  }
+  function eq(name, a, b) { ok(name, a === b, 'expected ' + JSON.stringify(b) + ', got ' + JSON.stringify(a)); }
+
+  KC.spec.init(window.KCURE_SPEC);
+  const OPTS = { pseudonymize: true, salt: 'test-salt-1234', birthYearOnly: true, autoFix: true, traceItems: true, metaProfile: true, bundleType: 'transaction', datasetId: 't' };
+  const CONF = { base: 'https://portal.example.kr/', catalogTitle: 'T', catalogDesc: 'D', publisherName: 'P', publisherBizNo: '000-00-00000', contactName: 'C',
+    license: 'L', accessRights: 'A', endpointURL: 'https://portal.example.kr/fhir', ndiNs: 'https://ndi.example/ns#', kcureBase: 'http://khis.kr/fhir/kcure/' };
+
+  async function fileOf(path) {
+    const r = await fetch(path);
+    const b = await r.blob();
+    return new File([b], decodeURIComponent(path.split('/').pop()));
+  }
+  async function convert(file, cancer) {
+    const f = await KC.readers.readFile(file);
+    const rows = f.sheets[0].rows;
+    const table = { headers: rows[0].map(String), rows: rows.slice(1) };
+    const mapping = KC.mapper.autoMap(table.headers, cancer);
+    const opts = Object.assign({}, OPTS, { patientCol: KC.mapper.guessPatientColumn(mapping), cancer: cancer });
+    const run = await KC.pipeline.run(table, mapping, opts);
+    return { f: f, table: table, mapping: mapping, run: run };
+  }
+
+  try {
+    /* 1. 기본 단위 */
+    eq('SHA-256 빈 문자열', KC.sha256(''), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+    eq('SHA-256 "abc"', KC.sha256('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    // 기대값: Python hashlib 으로 계산
+    eq('SHA-256 한글(UTF-8)', KC.sha256('한국 K-CURE 표준'), '85e6471fb174936dbbde411ae743b19e674a7883602795ff3defd5c4a798b29e');
+    eq('SHA-256 300KB', KC.sha256('가'.repeat(100000)), '1505395253632016504f33e1bd89fe686dac4ed145a0db771c27aea1b33cea9b');
+    eq('날짜 YYYYMMDD', KC.values.parseDate('20240229').date, '2024-02-29');
+    eq('날짜 윤년 아님', KC.values.parseDate('20230229'), null);
+    eq('날짜 13월 거부', KC.values.parseDate('20211340'), null);
+    eq('날짜 점 구분', KC.values.parseDate('2020.3.5').date, '2020-03-05');
+    eq('날짜 연월', KC.values.parseDate('202403').date, '2024-03');
+    eq('CSV 따옴표·줄바꿈', JSON.stringify(KC.readers.parseCsv('a,b\n"x,1","y\n2"\n', ',')), JSON.stringify([['a', 'b'], ['x,1', 'y\n2']]));
+    eq('명세 항목 수', KC.spec.items.length, 1255);
+    eq('KR CDI 80항목', KC.spec.krcdi.length, 80);
+    ok('별칭 색인', KC.spec.aliasIndex.size > 1000, KC.spec.aliasIndex.size);
+    eq('별칭 매칭 no_patient', KC.mapper.matchOne('no_patient', '대장암').itemId, 'KCURE-PAT-000016');
+    eq('정규화 매칭(공백·대소문자)', KC.mapper.matchOne(' K-RAS ', '대장암').itemId, KC.mapper.matchOne('K-ras', '대장암').itemId);
+
+    /* 2. 대장암 CSV(UTF-8 BOM) */
+    const crc = await convert(await fileOf('../samples/%ED%95%A9%EC%84%B1%EC%83%98%ED%94%8C_%EB%8C%80%EC%9E%A5%EC%95%94_%EC%9B%90%EC%B2%9C%EC%98%81%EB%AC%B8%EC%BB%AC%EB%9F%BC.csv'), '대장암');
+    eq('CRC 인코딩', crc.f.encoding, 'UTF-8(BOM)');
+    eq('CRC 매핑 39/40', crc.mapping.filter(function (m) { return m.itemId; }).length, 39);
+    eq('CRC 환자 수', crc.run.meta.patients, 15);
+    eq('CRC FHIR 구조오류 0', crc.run.fhirErrors, 0);
+    const codes = crc.run.log.entries.map(function (e) { return e.code; });
+    ok('CRC 잘못된 날짜 탐지', codes.indexOf('DATE_INVALID') >= 0);
+    ok('CRC 성별 코드 오류 탐지', codes.indexOf('GENDER_MAP') >= 0);
+    ok('CRC 수치 아닌 키 탐지', crc.run.log.entries.some(function (e) { return e.code === 'TYPE_MISMATCH' && e.col === 'height'; }));
+    ok('CRC 사망일자 경로 자동보정', crc.run.log.entries.some(function (e) { return e.code === 'PATH_AUTOFIX' && e.col === 'dt_death'; }));
+    const ents = crc.run.bundle.entry;
+    const pats = ents.filter(function (e) { return e.resource.resourceType === 'Patient'; });
+    eq('CRC Patient 15', pats.length, 15);
+    ok('가명처리: 원 식별자 미포함', JSON.stringify(crc.run.bundle).indexOf('CRC00001') < 0);
+    ok('가명처리: 식별자 해시 32자', pats.every(function (p) { return /^[0-9a-f]{32}$/.test(p.resource.identifier[0].value); }));
+    ok('생년월일 연도만', pats.every(function (p) { return !p.resource.birthDate || /^\d{4}$/.test(p.resource.birthDate); }));
+    ok('survival_status 식별자 미사용', pats.every(function (p) { return p.resource.identifier.length === 1; }), pats[0].resource.identifier.length);
+    ok('KR Core Patient 프로파일', pats[0].resource.meta.profile[0] === 'http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-patient');
+    ok('모든 리소스 후보 태그', ents.every(function (e) { return e.resource.meta.tag[0].code === 'rule-approved-candidate'; }));
+    ok('transaction request', ents.every(function (e) { return e.request && e.request.method === 'POST'; }));
+    const cond = ents.filter(function (e) { return e.resource.resourceType === 'Condition'; }).map(function (e) { return e.resource; });
+    ok('Condition 코드 "Y" 없음(여부→verificationStatus)', cond.every(function (c) { return !c.code || c.code.text !== 'Y'; }));
+    ok('여부 Condition verificationStatus', cond.some(function (c) { return c.verificationStatus; }));
+    const procs = ents.filter(function (e) { return e.resource.resourceType === 'Procedure'; }).map(function (e) { return e.resource; });
+    ok('부가 Procedure partOf 연결', procs.some(function (p) { return p.partOf; }));
+    ok('Procedure status 유효값', procs.every(function (p) { return ['completed', 'not-done', 'unknown', 'in-progress'].indexOf(p.status) >= 0; }));
+    const obs = ents.filter(function (e) { return e.resource.resourceType === 'Observation'; }).map(function (e) { return e.resource; });
+    ok('키 LOINC 8302-2 + UCUM cm', obs.some(function (o) { return o.code.coding[0].code === '8302-2' && o.valueQuantity && o.valueQuantity.code === 'cm'; }));
+    ok('참조 무결성(subject)', obs.every(function (o) { return ents.some(function (e) { return e.fullUrl === o.subject.reference; }); }));
+    const ae = ents.filter(function (e) { return e.resource.resourceType === 'AdverseEvent'; });
+    ok('AdverseEvent 개념명 보존', ae.every(function (e) { return /grade_neuropathy/.test(e.resource.event.text); }), ae.length && ae[0].resource.event.text);
+
+    /* KR CDI */
+    ok('CRC KR CDI 값 존재', crc.run.krcdi.summary.values > 0, crc.run.krcdi.summary.values);
+    ok('KR CDI 환자ID 가명', crc.run.krcdi.csvRows.slice(1).every(function (r) { return r[4] !== '환자 ID' || /^[0-9a-f]{32}$/.test(r[8]); }));
+    ok('KR CDI 성명 R 누락 보고', crc.run.krcdi.conformance.some(function (c) { return c.el === '성명'; }));
+
+    /* DCAT */
+    const dc = KC.dcat.fromRun(CONF, crc.run, { fileName: 'crc.csv', encoding: 'UTF-8', cancer: '대장암', pseudonymized: true },
+      [{ id: 'fhir', title: 'F', fileName: 'f.json', mediaType: 'application/fhir+json', format: 'JSON', bytes: 10, sha256: KC.sha256('x'), conformsTo: 'krcore' }]);
+    const errs = dc.issues.filter(function (x) { return x.level === '오류'; });
+    eq('DCAT 필수속성 오류 0', errs.length, 0);
+    const xml = KC.dcat.toRdfXml(dc.graph);
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    ok('RDF/XML 정형(well-formed)', !doc.getElementsByTagName('parsererror').length);
+    ok('RDF/XML 클래스 5종', ['dcat:Catalog', 'dcat:Dataset', 'dcat:Distribution', 'dcat:DataService', 'dcat:CatalogRecord'].every(function (t) { return xml.indexOf('<' + t + ' ') >= 0; }));
+    ok('NDI 필수 확장', ['ndi:viewCnt', 'ndi:downloadCnt', 'ndi:srvcType', 'ndi:pltfrmAccessToken'].every(function (t) { return xml.indexOf('<' + t) >= 0; }));
+    const jl = JSON.parse(KC.dcat.toJsonLd(dc.graph));
+    ok('JSON-LD 파싱', jl['@graph'].length >= 5, jl['@graph'].length);
+    const prof = JSON.parse(jl['@graph'].find(function (n) { return n['@type'] === 'dcat:Dataset'; })['ndi:profile']);
+    ok('ndi:profile 변수 사전', Object.keys(prof.data.variables).length === 39, Object.keys(prof.data.variables).length);
+    ok('ndi:profile 식별자 min/max 비노출', prof.data.variables.no_patient.min === null);
+    ok('Turtle 접두어', /@prefix dcat: <http:\/\/www\.w3\.org\/ns\/dcat#>/.test(KC.dcat.toTurtle(dc.graph)));
+    ok('DCAT IRI ASCII', dc.graph.nodes.every(function (n) { return /^[\x21-\x7e]+$/.test(n.iri); }), dc.graph.nodes.map(function (n) { return n.iri; }).join(' '));
+
+    /* 3. 유방암 XLSX */
+    const brx = await convert(await fileOf('../samples/%ED%95%A9%EC%84%B1%EC%83%98%ED%94%8C_%EC%9C%A0%EB%B0%A9%EC%95%94_%ED%95%9C%EA%B8%80%EC%BB%AC%EB%9F%BC.xlsx'), '유방암');
+    eq('XLSX 인코딩 표기', brx.f.encoding, 'XLSX');
+    eq('XLSX 행 수(헤더 포함)', brx.f.sheets[0].rows.length, 16);
+    ok('XLSX 매핑 ≥ 38/40', brx.mapping.filter(function (m) { return m.itemId; }).length >= 38, brx.mapping.filter(function (m) { return m.itemId; }).length);
+    eq('XLSX 환자 수', brx.run.meta.patients, 15);
+    eq('XLSX FHIR 구조오류 0', brx.run.fhirErrors, 0);
+    ok('XLSX 허용값 외 진단경로 탐지', brx.run.log.entries.some(function (e) { return e.code === 'CODE_NOT_ALLOWED' && e.col === '진단경로'; }));
+    ok('XLSX 존재하지 않는 날짜 탐지', brx.run.log.entries.some(function (e) { return e.code === 'DATE_INVALID' && e.col === '수술일자'; }));
+    ok('영상검사일자 → DiagnosticReport 일자 보정', brx.run.log.entries.some(function (e) { return e.code === 'PATH_AUTOFIX' && e.col === 'MMG 검사일자'; }));
+
+    /* 4. 유방암 CP949 CSV */
+    const brc = await convert(await fileOf('../samples/%ED%95%A9%EC%84%B1%EC%83%98%ED%94%8C_%EC%9C%A0%EB%B0%A9%EC%95%94_%ED%95%9C%EA%B8%80%EC%BB%AC%EB%9F%BC_CP949.csv'), '유방암');
+    eq('CP949 인코딩 감지', brc.f.encoding, 'CP949(EUC-KR)');
+    eq('CP949 헤더 한글', brc.table.headers[0], '병원번호');
+    eq('CP949 = XLSX 결과(리소스 수)', brc.run.bundle.entry.length, brx.run.bundle.entry.length);
+
+    /* 4-1. 항목정의서 형식 파일: 빈 행이 있어도 엑셀 행 번호 유지 */
+    const specFile = await KC.readers.readFile(await fileOf('../' + encodeURIComponent('항목정의 테스트.xlsx')));
+    eq('항목정의서 4행 = 헤더(빈 3행 유지)', specFile.sheets[0].rows[3][0], '항목ID');
+    eq('항목정의서 5행 = 첫 항목', specFile.sheets[0].rows[4][0], 'KCURE-PAT-000001');
+
+    /* 4-2. 입력 양식: 표준항목명 열 제목 → 자기 자신으로 매핑 */
+    const selfMiss = [];
+    KC.spec.data.meta.cancers.forEach(function (c) {
+      KC.spec.items.filter(function (it) { return it.cancers.indexOf(c) >= 0; }).forEach(function (it) {
+        if (KC.mapper.matchOne(it.name, c).itemId !== it.id) selfMiss.push(c + ':' + it.name + '→' + KC.mapper.matchOne(it.name, c).itemId);
+      });
+    });
+    eq('표준항목명 열 제목 자기매핑 실패 0', selfMiss.length, 0);
+    if (selfMiss.length) ok('자기매핑 실패 목록', false, selfMiss.slice(0, 20).join(', '));
+    eq('원문 표기 우선: 위암 "검사 결과" → 위내시경', KC.mapper.matchOne('검사 결과', '위암').itemId, 'KCURE-ASM-000160');
+    eq('원문 표기 우선: 위암 "검사결과" → EUS', KC.mapper.matchOne('검사결과', '위암').itemId, 'KCURE-ASM-000163');
+
+    /* 6. 메타데이터 변환 (주 기능) */
+    ok('ARGO 사전 245필드', Object.keys(KC.spec.data.argo.fields).length === 245, Object.keys(KC.spec.data.argo.fields).length);
+    const crcE = KC.meta.entriesForCancer('대장암');
+    eq('대장암 항목 수', crcE.length, KC.spec.items.filter(function (i) { return i.cancers.indexOf('대장암') >= 0; }).length);
+    const pkg = KC.meta.build(CONF, '대장암', crcE);
+    eq('패키지 DCAT 필수 오류 0', pkg.dcatIssues.filter(function (x) { return x.level === '오류'; }).length, 0);
+    ok('패키지 파일 ≥ 18', pkg.files.length >= 18, pkg.files.map(function (f) { return f.path; }).join(', '));
+    ['00_통합_메타데이터.xlsx', 'KR_CDI/ConceptMap_KCURE-KRCDI.json', 'KR_Core/LogicalModel_colorectal.json', 'DCAT/catalog_colorectal.rdf', 'ARGO/ARGO_컬럼매핑.csv', 'ARGO/submission_templates/donor.tsv'].forEach(function (p) {
+      ok('패키지에 ' + p, pkg.files.some(function (f) { return f.path === p; }));
+    });
+    const lm = JSON.parse(pkg.files.find(function (f) { return /LogicalModel/.test(f.path); }).content);
+    eq('논리모델 요소 = 컬럼+1', lm.differential.element.length, crcE.length + 1);
+    ok('논리모델 5개 표준 mapping 선언', ['krcore', 'krcdi', 'mcode', 'omop', 'argo'].every(function (id) { return lm.mapping.some(function (m) { return m.identity === id; }); }));
+    const sexEl = lm.differential.element.find(function (e) { return e.label === 'sex'; });
+    ok('sex 요소 mapping(krcore·krcdi·mcode·omop·argo)', sexEl && ['krcore', 'krcdi', 'mcode', 'omop', 'argo'].every(function (id) { return sexEl.mapping.some(function (m) { return m.identity === id; }); }), JSON.stringify(sexEl && sexEl.mapping));
+    ['mCODE/mCODE_컬럼매핑.csv', 'mCODE/mCODE_프로파일커버리지.csv', 'mCODE/ConceptMap_KCURE-mCODE.json', 'OMOP/OMOP_ETL매핑.csv', 'OMOP/OMOP_필드커버리지.csv',
+      'OMOP/source_to_concept_map_템플릿.csv', 'OMOP/ConceptMap_KCURE-OMOP.json'].forEach(function (p) {
+      ok('패키지에 ' + p, pkg.files.some(function (f) { return f.path === p; }));
+    });
+    // mCODE
+    ok('mCODE 사전 프로파일 38', KC.spec.data.mcode.profiles.length === 38, KC.spec.data.mcode.profiles.length);
+    const sexItem = KC.spec.byId['KCURE-PAT-000018'];
+    eq('sex mCODE 프로파일 URL', sexItem.mcode.url, 'http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-patient');
+    const mcov = KC.meta.mcodeCoverage(crcE);
+    eq('mCODE 프로파일 충족표 행', mcov.profiles.length, 39);
+    ok('대장암 mCODE 프로파일 충족 ≥ 10', mcov.profilesCovered >= 10, mcov.profilesCovered);
+    const cmM = JSON.parse(pkg.files.find(function (f) { return /ConceptMap_KCURE-mCODE/.test(f.path); }).content);
+    eq('mCODE ConceptMap 요소 = 컬럼 수', cmM.group.reduce(function (s, g) { return s + g.element.length; }, 0), crcE.length);
+    // OMOP
+    ok('OMOP 사전 필드 ≥ 250', Object.keys(KC.spec.data.omop.fields).length >= 250, Object.keys(KC.spec.data.omop.fields).length);
+    eq('OMOP 모든 항목 대응 후보', KC.spec.items.filter(function (i) { return !i.omop; }).length, 0);
+    eq('sex → OMOP', KC.meta.omopOf({ item: sexItem }).key, 'person.gender_concept_id');
+    eq('pT → OMOP Cancer Modifier', KC.meta.omopOf({ item: KC.spec.items.find(function (i) { return i.name === 'pT'; }) }).key, 'measurement.value_as_concept_id');
+    eq('dt_op → OMOP', KC.meta.omopOf({ item: KC.spec.items.find(function (i) { return i.name === 'dt_op'; }) }).key, 'procedure_occurrence.procedure_date');
+    eq('약제성분명 → OMOP', KC.meta.omopOf({ item: KC.spec.items.find(function (i) { return i.name === '약제성분명'; }) }).key, 'drug_exposure.drug_concept_id');
+    ok('OMOP 필드가 모두 공식 명세에 존재', KC.spec.items.every(function (i) { return KC.spec.data.omop.fields[i.omop.table + '.' + i.omop.field]; }));
+    const cmO = JSON.parse(pkg.files.find(function (f) { return /ConceptMap_KCURE-OMOP/.test(f.path); }).content);
+    eq('OMOP ConceptMap 요소 = OMOP 대응 수', cmO.group.reduce(function (s, g) { return s + g.element.length; }, 0), pkg.summary.omop);
+    const stcm = KC.meta.omopStcm(crcE);
+    ok('STCM 9열·source_code ≤ 50자', stcm.every(function (r) { return r.length === 9; }) && stcm.slice(1).every(function (r) { return String(r[0]).length <= 50; }), stcm.length);
+    const oc = KC.meta.omopCoverage(crcE);
+    ok('OMOP 사용 테이블 ≥ 6', oc.tables >= 6, oc.tables);
+    const eo = Object.assign({}, crcE.find(function (x) { return x.col === 'sex'; }), { omopKey: 'observation.value_as_concept_id' });
+    eq('OMOP 수동 지정', KC.meta.omopOf(eo).key + '/' + KC.meta.omopOf(eo).conf, 'observation.value_as_concept_id/수동');
+    eq('OMOP 수동: 대응 없음', KC.meta.omopOf(Object.assign({}, eo, { omopKey: '' })), null);
+    const cmA = JSON.parse(pkg.files.find(function (f) { return /ConceptMap_KCURE-ARGO/.test(f.path); }).content);
+    eq('ARGO ConceptMap 요소 = ARGO 대응 수', cmA.group.reduce(function (s, g) { return s + g.element.length; }, 0), pkg.summary.argo);
+    const rdf = pkg.files.find(function (f) { return /\.rdf$/.test(f.path); }).content;
+    ok('DCAT RDF/XML 정형', !new DOMParser().parseFromString(rdf, 'application/xml').getElementsByTagName('parsererror').length);
+    const jl2 = JSON.parse(pkg.files.find(function (f) { return /\.jsonld$/.test(f.path); }).content);
+    const vars = JSON.parse(jl2['@graph'].find(function (n) { return n['@type'] === 'dcat:Dataset'; })['ndi:profile']).data.variables;
+    eq('ndi:profile 변수 = 컬럼 수', Object.keys(vars).length, crcE.length);
+    ok('ndi:profile sex → KR CDI·KR Core·mCODE·OMOP·ARGO', vars.sex.krcdi && vars.sex.krcore.path === 'Patient.gender' && vars.sex.argo.field === 'gender' &&
+      vars.sex.mcode.profile === 'Cancer Patient Profile' && vars.sex.omop.table === 'person', JSON.stringify(vars.sex));
+    ok('DCAT conformsTo ARGO·mCODE·OMOP', ['https://docs.icgc-argo.org/dictionary', 'http://hl7.org/fhir/us/mcode/', 'https://ohdsi.github.io/CommonDataModel/cdm54.html'].every(function (u) { return rdf.indexOf(u) >= 0; }));
+    // XLSX: 자체 리더로 다시 읽어 시트·값 확인
+    const xs = await KC.readers.readXlsx(pkg.files[0].content.buffer.slice(0));
+    eq('통합 엑셀 시트 12개', xs.length, 12);
+    eq('통합 엑셀 01 시트 행 = 제목+머리+컬럼', xs[1].rows.length, crcE.length + 2);
+    const hdr = xs[1].rows[1];
+    const ci = function (n) { return hdr.indexOf(n); };
+    ok('통합 엑셀 sex 행 ARGO·OMOP·mCODE', xs[1].rows.some(function (r) {
+      return r[1] === 'sex' && r[ci('ARGO 필드')] === 'gender' && r[ci('OMOP 필드')] === 'gender_concept_id' && r[ci('mCODE 프로파일')] === 'Cancer Patient Profile';
+    }), JSON.stringify(hdr));
+    // ZIP: 자체 압축해제로 목록 확인
+    const z = await KC.readers.unzip(KC.meta.toZip([pkg]).buffer);
+    eq('ZIP 파일 수', z.names.length, pkg.files.length);
+    ok('ZIP 한글 파일명', z.names.indexOf('ARGO/ARGO_컬럼매핑.csv') >= 0);
+    eq('ZIP 내용 무결', await z.read('README.txt'), pkg.files.find(function (f) { return f.path === 'README.txt'; }).content);
+    // ARGO 수동 수정 반영
+    const e2 = crcE.map(function (x) { return Object.assign({}, x); });
+    const iSex = e2.findIndex(function (x) { return x.col === 'sex'; });
+    e2[iSex].argoKey = '';
+    const iAge = e2.findIndex(function (x) { return x.col === 'age'; });
+    e2[iAge].argoKey = 'donor.survival_time';
+    eq('ARGO 수동: 대응 없음', KC.meta.argoOf(e2[iSex]), null);
+    eq('ARGO 수동: 지정 필드', KC.meta.argoOf(e2[iAge]).key + '/' + KC.meta.argoOf(e2[iAge]).conf, 'donor.survival_time/수동');
+    // 컬럼 목록 → 항목
+    const fe = KC.meta.entriesFromColumns(['sex', 'dt_birth', '내부메모'], '대장암');
+    eq('컬럼 목록 매핑', fe.map(function (x) { return x.item ? x.item.id : '-'; }).join(','), 'KCURE-PAT-000018,KCURE-PAT-000019,-');
+    const pk2 = KC.meta.build(CONF, '대장암', fe);
+    eq('미매핑 컬럼 포함 패키지 DCAT 오류 0', pk2.dcatIssues.filter(function (x) { return x.level === '오류'; }).length, 0);
+    // 항목정의서 형식 시트 → 항목
+    const se = KC.meta.entriesFromSpecSheet(specFile.sheets[0].rows);
+    eq('항목정의서 → 1255 항목', se.filter(function (x) { return x.item; }).length, 1255);
+    // 9개 암종 일괄
+    const all9 = KC.spec.data.meta.cancers.map(function (c) { return KC.meta.build(CONF, c, KC.meta.entriesForCancer(c)); });
+    eq('9개 암종 DCAT 오류 0', all9.reduce(function (s, p) { return s + p.dcatIssues.filter(function (x) { return x.level === '오류'; }).length; }, 0), 0);
+    window.TEST_XLSX_SAMPLE = KC.meta.build(CONF, '대장암', fe).files[0].content;
+
+    /* 5. 항목정의 변환 */
+    const all = KC.dcat.fromSpec(CONF, KC.spec.data.meta.cancers);
+    eq('명세 DCAT 필수속성 오류 0', all.issues.filter(function (x) { return x.level === '오류'; }).length, 0);
+    eq('명세 DCAT 데이터셋 수', all.graph.nodes.filter(function (n) { return n.types[0] === 'dcat:Dataset'; }).length, KC.spec.data.meta.cancers.length);
+    const cm1 = KC.artifacts.toKrcdi(CONF, KC.spec.items);
+    eq('ConceptMap KR CDI 대응 186', cm1.group[0].element.length, 186);
+    const cm2 = KC.artifacts.toKrcore(CONF, KC.spec.items);
+    eq('ConceptMap KR Core 1255', cm2.group.reduce(function (s, g) { return s + g.element.length; }, 0), 1255);
+    ok('매핑 명세 CSV 행', KC.artifacts.specCsv(KC.spec.items).split('\r\n').length === 1256);
+  } catch (e) {
+    ok('예외 없이 실행', false, e.stack || e.message);
+  }
+
+  const pass = results.filter(function (r) { return r.pass; }).length;
+  document.getElementById('summary').innerHTML = '<b class="' + (pass === results.length ? 'pass' : 'fail') + '">' + pass + ' / ' + results.length + ' 통과</b>';
+  document.getElementById('results').innerHTML = results.map(function (r) {
+    return '<li class="' + (r.pass ? 'pass' : 'fail') + '">' + (r.pass ? '✔ ' : '✘ ') + r.name + (r.pass ? '' : ' — <code>' + r.detail.replace(/</g, '&lt;') + '</code>') + '</li>';
+  }).join('');
+  window.TEST_DONE = true;
+})();

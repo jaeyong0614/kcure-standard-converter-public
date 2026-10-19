@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 외부 전송 원천 차단: 네트워크 요청(connect), 외부 스크립트·폼 전송 불가. 모든 처리는 이 PC 브라우저 안에서만 수행 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' file:; style-src 'self' 'unsafe-inline' file:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>K-CURE 표준변환기</title>
+<!--BUILD:CSS--><link rel="stylesheet" href="css/app.css"><!--/BUILD:CSS-->
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand">
+      <h1>K-CURE 표준변환기 <span class="muted small" id="appVersion"></span></h1>
+      <p>K-CURE 9개 암종 항목(컬럼) → KR CDI V3 · KR Core V2(FHIR) · mCODE STU4 · OMOP CDM v5.4 · DCAT 2.0(국가 데이터 카탈로그) · ICGC ARGO 메타데이터 변환</p>
+    </div>
+    <div class="badges">
+      <span class="badge ok" title="Content-Security-Policy connect-src 'none' — 네트워크 전송 차단">● 오프라인 실행 · 외부 전송 차단</span>
+      <span class="badge" id="specBadge">명세 로딩 중</span>
+      <span class="badge warn" title="KR CDI·KR Core: 항목별 전문가 의미검증(L3) 0건 / ARGO: 규칙 기반 자동 후보">매핑: 후보 단계</span>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="sel"><span class="n">1</span>암종·항목 선택</button>
+    <button class="tab" data-tab="mmap"><span class="n">2</span>메타데이터 매핑</button>
+    <button class="tab" data-tab="mout"><span class="n">3</span>메타데이터 내려받기</button>
+    <span class="tab-sep"></span>
+    <button class="tab" data-tab="spec">명세 조회</button>
+    <button class="tab" data-tab="conf">카탈로그·변환 설정</button>
+    <span class="tab-sep"></span>
+    <span class="tab-group">부가: 환자 데이터 변환</span>
+    <button class="tab sub" data-tab="load">불러오기</button>
+    <button class="tab sub" data-tab="map">컬럼 매핑</button>
+    <button class="tab sub" data-tab="run">변환·검증</button>
+    <button class="tab sub" data-tab="out">결과</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ① 암종·항목 선택 -->
+  <section class="panel active" id="p-sel">
+    <div class="card">
+      <h2>① 암종과 변환할 항목(컬럼) 선택</h2>
+      <p class="desc">암종을 고르면 그 암종의 K-CURE 항목 전체가 선택됩니다. 특정 컬럼만 변환하려면 컬럼 목록 파일을 불러오세요. 원천 데이터의 헤더 행, 컬럼명 한 줄 목록, 항목정의서(항목ID·표준항목명 열) 모두 가능합니다.</p>
+      <div class="row" id="selCancers"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sm" id="selFileBtn">컬럼 목록 파일 불러오기 (CSV·XLSX)</button>
+        <input type="file" id="selFileInput" accept=".csv,.tsv,.txt,.xlsx,.xlsm" hidden>
+        <span class="muted small" id="selSource"></span>
+      </div>
+      <div id="selMsg"></div>
+    </div>
+    <div class="card hidden" id="selCard">
+      <div class="row">
+        <h2 class="grow" id="selTitle">선택 항목</h2>
+        <label class="f" style="width:220px"><span>카탈로그·파일 이름에 쓸 암종</span><select id="selCancerLabel"></select></label>
+      </div>
+      <div class="stats" id="selStats"></div>
+      <div class="row" style="margin:10px 0">
+        <input type="search" id="selQ" placeholder="컬럼명·항목ID·표준항목명 검색" style="max-width:320px">
+        <select id="selDomain" style="width:160px"></select>
+        <button class="btn sm" id="selAll">표시된 항목 모두 선택</button>
+        <button class="btn sm" id="selNone">표시된 항목 모두 해제</button>
+      </div>
+      <div class="tbl-wrap" id="selTable"></div>
+      <div class="row" style="margin-top:14px; justify-content:flex-end">
+        <button class="btn primary" id="toMmap">다음: 메타데이터 매핑 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 메타데이터 매핑 -->
+  <section class="panel" id="p-mmap">
+    <div class="card">
+      <h2>② 컬럼별 메타데이터 매핑 (KR CDI · KR Core · mCODE · OMOP · DCAT · ARGO)</h2>
+      <p class="desc">KR CDI·KR Core·mCODE 대응은 항목정의서(규칙승인)를 따릅니다. OMOP·ARGO 대응은 규칙 기반 자동 후보이며 해당 칸에서 직접 고칠 수 있습니다(비우면 "대응 없음"). 표가 넓으면 가로로 스크롤하세요.</p>
+      <div id="mmEmpty" class="note">먼저 ① 에서 암종이나 컬럼을 선택하세요.</div>
+      <div class="stats" id="mmStats"></div>
+      <div class="row" style="margin:10px 0">
+        <input type="search" id="mmQ" placeholder="컬럼·항목·FHIR 경로·mCODE·OMOP·ARGO 검색" style="max-width:320px">
+        <select id="mmView" style="width:220px">
+          <option value="all">전체</option><option value="cdi">KR CDI 대응만</option><option value="ext">KR Core 확장필요만</option>
+          <option value="argo">ARGO 대응만</option><option value="noargo">ARGO 미대응만</option><option value="low">ARGO 신뢰도 낮음·중간</option><option value="unmapped">표준항목 미매핑 컬럼</option>
+        </select>
+      </div>
+      <datalist id="argoList"></datalist>
+      <datalist id="omopList"></datalist>
+      <div class="tbl-wrap" id="mmTable" style="max-height:640px"></div>
+      <div class="pager" id="mmPager"></div>
+      <div class="row" style="margin-top:14px; justify-content:flex-end">
+        <button class="btn primary" id="toMout">다음: 메타데이터 내려받기 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 메타데이터 내려받기 -->
+  <section class="panel" id="p-mout">
+    <div class="card">
+      <h2>③ 메타데이터 내려받기</h2>
+      <p class="desc">선택한 컬럼의 표준별 메타데이터를 만듭니다. <b>패키지(zip)</b>에는 아래 파일이 모두 들어 있고, <b>통합 엑셀</b>은 컬럼별 6개 표준(KR CDI·KR Core·mCODE·OMOP·DCAT·ARGO) 대응을 한 시트에 정리하고 표준별 상세·충족 현황 시트를 더한 정의서입니다.</p>
+      <div id="moEmpty" class="note">먼저 ① 에서 암종이나 컬럼을 선택하세요.</div>
+      <div class="row" id="moActions" style="margin-bottom:12px">
+        <button class="btn primary" id="moZip">패키지 내려받기 (.zip)</button>
+        <button class="btn" id="moXlsx">통합 메타데이터 엑셀 (.xlsx)</button>
+        <button class="btn" id="moAll">9개 암종 일괄 패키지 (.zip)</button>
+        <span class="muted small" id="moMsg"></span>
+      </div>
+      <div class="stats" id="moStats"></div>
+      <div class="outs" id="moOuts"></div>
+      <pre class="view hidden" id="moView"></pre>
+    </div>
+    <div class="card hidden" id="moIssuesCard">
+      <h2>DCAT 카탈로그 검증 (NIA 가이드 [표 5])</h2>
+      <div class="tbl-wrap" id="moIssues"></div>
+    </div>
+  </section>
+
+  <!-- 부가: 환자 데이터 변환 — 데이터 불러오기 -->
+  <section class="panel" id="p-load">
+    <div class="card">
+      <h2>원천 데이터 불러오기</h2>
+      <p class="desc">K-CURE 원천 데이터(1행 = 1환자 또는 1건, 1열 = 1항목)를 선택하세요. CSV(UTF-8·CP949)·TSV·XLSX를 지원합니다. 파일은 이 PC 밖으로 전송되지 않습니다.</p>
+      <div class="drop" id="drop">
+        <strong>파일을 여기에 끌어다 놓거나 클릭해서 선택</strong><br>
+        <span class="small">.csv · .tsv · .txt · .xlsx</span>
+        <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xlsm" hidden>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <span class="muted small">합성(가상) 샘플로 시험:</span>
+        <button class="btn sm" data-sample="crc">대장암 (원천 영문 컬럼)</button>
+        <button class="btn sm" data-sample="brc">유방암 (한글 컬럼)</button>
+      </div>
+      <div id="loadErr"></div>
+    </div>
+
+    <div class="card hidden" id="loadInfo">
+      <h2 id="fileTitle">파일 정보</h2>
+      <div class="grid2" style="margin-top:10px">
+        <label class="f"><span>시트</span><select id="sheetSel"></select></label>
+        <label class="f"><span>헤더 행 번호</span><input type="number" id="headerRow" min="1" value="1"></label>
+        <label class="f"><span>암종 (별칭 우선순위·카탈로그 제목에 사용)</span><select id="cancerSel"></select></label>
+      </div>
+      <div class="stats" id="fileStats"></div>
+      <h3>미리보기 (처음 5행)</h3>
+      <div class="tbl-wrap" id="preview"></div>
+      <div class="row" style="margin-top:14px; justify-content:flex-end">
+        <button class="btn primary" id="toMap">다음: 컬럼 매핑 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 컬럼 매핑 -->
+  <section class="panel" id="p-map">
+    <div class="card">
+      <h2>원천 컬럼 → K-CURE 표준항목 매핑</h2>
+      <p class="desc">표준항목명 → 암종별 원천 항목명(별칭) 순으로 자동 매핑했습니다. 항목 칸에 항목ID 또는 이름을 입력해 수정하고, 비우면 변환에서 제외됩니다.</p>
+      <div class="stats" id="mapStats"></div>
+      <div class="row" style="margin:10px 0">
+        <label class="f grow" style="max-width:420px"><span>환자 식별 컬럼 (환자 단위 묶음·가명키)</span><select id="patientCol"></select></label>
+        <label class="f" style="width:200px"><span>표시</span>
+          <select id="mapFilter"><option value="all">전체</option><option value="mapped">매핑됨</option><option value="unmapped">미매핑</option></select></label>
+        <div class="grow"></div>
+        <button class="btn sm" id="loadMapCfg">매핑 설정 불러오기</button>
+        <button class="btn sm" id="saveMapCfg">매핑 설정 저장</button>
+        <input type="file" id="mapCfgInput" accept=".json" hidden>
+      </div>
+      <datalist id="itemList"></datalist>
+      <div class="tbl-wrap" id="mapTable"></div>
+      <div class="row" style="margin-top:14px; justify-content:flex-end">
+        <button class="btn primary" id="toRun">다음: 변환·검증 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 변환·검증 -->
+  <section class="panel" id="p-run">
+    <div class="card">
+      <h2>변환 옵션</h2>
+      <div class="grid2">
+        <div>
+          <label class="chk"><input type="checkbox" id="optPseudo" checked><span>환자 식별자 가명처리
+            <small>식별자(병원번호·등록번호)를 솔트+SHA-256 해시로 치환. FHIR·KR CDI 양쪽에 동일 적용</small></span></label>
+          <label class="f" style="margin:4px 0 8px 24px"><span>솔트(기관 내부 비밀값 — 같은 값을 쓰면 동일 환자는 동일 가명키)</span><input type="text" id="optSalt" class="mono"></label>
+          <label class="chk"><input type="checkbox" id="optBirthYear" checked><span>생년월일은 연도만 (가명처리 시)</span></label>
+        </div>
+        <div>
+          <label class="chk"><input type="checkbox" id="optAutoFix" checked><span>자료형 불일치 자동보정
+            <small>날짜 항목이 비날짜 경로에 배정된 경우 해당 리소스의 일자 요소로 보정(로그에 기록)</small></span></label>
+          <label class="chk"><input type="checkbox" id="optTrace" checked><span>원천 항목 추적 확장 포함
+            <small>각 리소스에 source-item 확장(K-CURE 항목ID) 기록</small></span></label>
+          <label class="chk"><input type="checkbox" id="optProfile" checked><span>meta.profile 표기 (KR Core / KR-mCODE 후보)</span></label>
+          <label class="f" style="margin-top:6px"><span>FHIR Bundle 유형</span>
+            <select id="optBundle"><option value="transaction">transaction (FHIR 서버 적재용)</option><option value="collection">collection (파일 교환용)</option></select></label>
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="runBtn">변환 실행</button>
+        <span class="muted small" id="runMsg"></span>
+      </div>
+      <div class="progress hidden" id="runProg"><div></div></div>
+    </div>
+
+    <div id="runResult" class="hidden">
+      <div class="card">
+        <h2>변환 결과 요약</h2>
+        <div class="stats" id="runStats"></div>
+        <div class="note warn small">출력물의 매핑은 <b>규칙승인(후보)</b> 단계입니다. 항목별 전문가 의미검증(L3)은 아직 하지 않았으므로 "검증 완료" 데이터로 쓰면 안 됩니다. FHIR 구조검증은 내장 점검(필수요소·날짜형식·참조)까지만 수행했고, 공식 검증은 HL7 FHIR Validator와 KR Core 패키지로 따로 해야 합니다.</div>
+        <div class="grid2">
+          <div><h3>FHIR 리소스 (KR Core)</h3><div class="tbl-wrap" id="resTable"></div></div>
+          <div><h3>KR CDI V3 커버리지</h3><div class="tbl-wrap" id="cdiTable"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>변환·검증 로그</h2>
+        <div class="row" style="margin-bottom:8px">
+          <select id="logLevel" style="width:140px"><option value="">전체 수준</option><option>오류</option><option>경고</option><option>정보</option></select>
+          <select id="logCode" style="width:240px"><option value="">전체 코드</option></select>
+          <input type="search" id="logSearch" placeholder="컬럼·항목ID·메시지 검색" style="max-width:300px">
+        </div>
+        <div class="tbl-wrap" id="logTable"></div>
+        <div class="pager" id="logPager"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 결과 내려받기 -->
+  <section class="panel" id="p-out">
+    <div class="card">
+      <h2>결과 내려받기</h2>
+      <p class="desc">변환을 실행하면 표준별 산출물이 생성됩니다. 미리보기는 앞부분만 표시합니다.</p>
+      <div id="outEmpty" class="note">아직 변환 결과가 없습니다. ③ 변환·검증에서 실행하세요.</div>
+      <div class="outs" id="outs"></div>
+      <pre class="view hidden" id="outView"></pre>
+    </div>
+    <div class="card hidden" id="dcatIssuesCard">
+      <h2>DCAT 카탈로그 검증 (NIA 가이드 [표 5] 필수·권장 속성)</h2>
+      <div class="tbl-wrap" id="dcatIssues"></div>
+    </div>
+  </section>
+
+  <!-- 명세 조회 -->
+  <section class="panel" id="p-spec">
+    <div class="card">
+      <h2>내장 명세 조회</h2>
+      <p class="desc" id="specDesc"></p>
+      <div class="row" style="margin-bottom:10px">
+        <input type="search" id="specQ" placeholder="항목ID·항목명·원천별칭·FHIR 경로 검색" style="max-width:360px">
+        <select id="specCancer" style="width:140px"></select>
+        <select id="specDomain" style="width:150px"></select>
+        <select id="specCdi" style="width:160px"><option value="">KR CDI 전체</option><option value="Y">KR CDI 대응만</option><option value="N">KR CDI 미대응</option></select>
+        <select id="specJudge" style="width:150px"><option value="">KR Core 판정 전체</option><option>직접재사용</option><option>제약재사용</option><option>확장필요</option></select>
+        <div class="grow"></div>
+        <button class="btn sm" id="specReload">개정 항목정의서(xlsx) 불러오기</button>
+        <input type="file" id="specInput" accept=".xlsx" hidden>
+      </div>
+      <div id="specMsg"></div>
+      <div class="tbl-wrap" id="specTable"></div>
+      <div class="pager" id="specPager"></div>
+    </div>
+    <div class="card hidden detail" id="specDetail"></div>
+  </section>
+
+  <!-- 설정 -->
+  <section class="panel" id="p-conf">
+    <div class="card">
+      <h2>카탈로그(DCAT)·변환 설정</h2>
+      <p class="desc">DCAT 카탈로그의 제공기관·담당자·라이선스·엔드포인트 등을 설정합니다. 설정은 이 브라우저에만 저장됩니다. <b>[확인 필요]</b> 표시 값은 실제 값으로 바꿔야 합니다.</p>
+      <div class="grid2" id="confForm"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="confSave">저장</button>
+        <button class="btn" id="confReset">기본값으로</button>
+        <span class="muted small" id="confMsg"></span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!--BUILD:JS-->
+<script src="../spec/kcure_spec.js"></script>
+<script src="../spec/samples.js"></script>
+<script src="js/util.js"></script>
+<script src="js/sha256.js"></script>
+<script src="js/readers.js"></script>
+<script src="js/spec.js"></script>
+<script src="js/values.js"></script>
+<script src="js/mapper.js"></script>
+<script src="js/fhir.js"></script>
+<script src="js/krcdi.js"></script>
+<script src="js/pipeline.js"></script>
+<script src="js/dcat.js"></script>
+<script src="js/artifacts.js"></script>
+<script src="js/writers.js"></script>
+<script src="js/metadata.js"></script>
+<script src="js/app.js"></script>
+<!--/BUILD:JS-->
+</body>
+</html>
