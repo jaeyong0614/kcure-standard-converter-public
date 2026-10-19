@@ -18,6 +18,12 @@ SAFE = re.compile(r"^[\w\-.가-힣]+$")
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    # 문서에 charset 선언이 없어도 한글이 깨지지 않도록 텍스트 형식은 UTF-8로 보낸다
+    extensions_map = dict(http.server.SimpleHTTPRequestHandler.extensions_map, **{
+        ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
+        ".json": "application/json; charset=utf-8", ".md": "text/markdown; charset=utf-8", ".txt": "text/plain; charset=utf-8",
+        ".csv": "text/csv", ".py": "text/plain; charset=utf-8"})
+
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(ROOT), **kw)
 

@@ -38,6 +38,15 @@ def group_of(i):
     return GROUPS[-1][0]
 
 
+def git_head():
+    """페이지를 만든 시점의 커밋(짧은 해시)."""
+    import subprocess
+    try:
+        return subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "확인 불가"
+
+
 def selftest_rows(msg):
     rows = []
     for part in msg.split(" / "):
@@ -93,7 +102,8 @@ def main():
     html = (HERE / "template.html").read_text(encoding="utf-8")
     html = (html.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False).replace("</", "<\\/"))
             .replace("__WHEN__", when.strftime("%Y-%m-%d %H:%M"))
-            .replace("__PASS__", str(p)).replace("__TOTAL__", str(n)).replace("__FAIL__", str(n - p)).replace("__DELTA__", str(n - 125)))
+            .replace("__PASS__", str(p)).replace("__TOTAL__", str(n)).replace("__FAIL__", str(n - p)).replace("__DELTA__", str(n - 125))
+            .replace("__COMMIT__", git_head()))
     out = HERE / "briefing.html"
     out.write_text(html, encoding="utf-8", newline="\n")
     print(f"{out} · 테스트 {p}/{n} · 영역 {len(GROUPS)} · 자체점검 {len(data['selftest'])}행")
