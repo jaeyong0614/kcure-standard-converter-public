@@ -119,6 +119,25 @@ td input[type=text] { padding: 4px 7px; min-width: 260px; }
 .out .m { color: var(--muted); font-size: 12px; }
 .out .std { font-size: 11.5px; color: var(--accent); font-weight: 600; letter-spacing: .2px; }
 .out .act { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; }
+/* 엑셀 같은 표 미리보기 */
+.sheetview { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--card, #fff); }
+.sheetview > pre.view { margin: 0; border: 0; border-radius: 0; }
+.xl-bar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--line2, #f3f4f6); }
+.xl-bar .xl-q { margin-left: auto; width: 200px; max-width: 100%; padding: 4px 8px; font-size: 12.5px; }
+.xl-wrap { max-height: 520px; overflow: auto; }
+table.xl { border-collapse: separate; border-spacing: 0; font-size: 12.5px; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+table.xl th, table.xl td { border-right: 1px solid #d4d7dc; border-bottom: 1px solid #d4d7dc; padding: 3px 8px; white-space: nowrap; max-width: 340px; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+table.xl td { background: #fff; color: #1f2328; }
+table.xl td.n { text-align: right; font-variant-numeric: tabular-nums; }
+table.xl tr.cols th { position: sticky; top: 0; z-index: 3; background: #eef0f3; color: #57606a; font-weight: 500; text-align: center; height: 22px; }
+table.xl tr.hdr th { position: sticky; top: 23px; z-index: 2; background: #e7f0e9; color: #1f2328; font-weight: 600; }
+table.xl th.rn, table.xl th.corner { position: sticky; left: 0; z-index: 1; background: #eef0f3; color: #57606a; font-weight: 500; text-align: right; min-width: 38px; }
+table.xl tr.cols th.corner { z-index: 4; }
+table.xl tr.hdr th.rn { z-index: 3; background: #eef0f3; }
+table.xl tbody tr:hover td { background: #f3f8ff; }
+.xl-tabs { display: flex; gap: 2px; overflow-x: auto; border-top: 1px solid var(--line); background: #eef0f3; padding: 0 6px; }
+.xl-tabs button { border: 0; background: transparent; padding: 6px 12px; font-size: 12.5px; cursor: pointer; color: #57606a; border-bottom: 3px solid transparent; white-space: nowrap; }
+.xl-tabs button.on { background: #fff; color: #1a7f37; font-weight: 600; border-bottom-color: #1a7f37; }
 pre.view { background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; max-height: 480px; overflow: auto; white-space: pre-wrap; word-break: break-all; margin: 10px 0 0; }
 .pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 8px; font-size: 12.5px; color: var(--ink2); }
 .detail dl { display: grid; grid-template-columns: 140px 1fr; gap: 4px 12px; margin: 0; font-size: 13px; }

@@ -391,11 +391,9 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       '</tbody></table>';
   }
 
+  /** 미리보기: CSV·TSV·XLSX 는 엑셀 같은 표로, 나머지는 텍스트로 (KC.sheetView) */
   function preview(target, o) {
-    const max = 150000;
-    target.classList.remove('hidden');
-    target.textContent = o.content.length > max ? o.content.slice(0, max) + '\n\n… (앞 ' + max.toLocaleString() + '자만 표시 · 전체 ' + U.fmtBytes(o.bytes) + ')' : o.content;
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    KC.sheetView.show(target, o);
   }
 
   /* ================= 메타데이터 변환 (주 기능) ================= */
@@ -615,9 +613,9 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     $('#moStats').innerHTML = stat('암종', cancerLabel()) + stat('컬럼', s.columns) + stat('파일', p.files.length, U.fmtBytes(p.files.reduce(function (t, f) { return t + f.bytes; }, 0))) +
       stat('KR CDI 대응', s.krcdi) + stat('mCODE 대응', s.mcode) + stat('OMOP 대응', s.omop) + stat('ARGO 대응', s.argo) + stat('DCAT 필수 누락', err, '', err ? 'err' : 'ok');
     $('#moOuts').innerHTML = p.files.map(function (f, i) {
-      const pv = typeof f.content === 'string';
+      const pv = typeof f.content === 'string' || KC.sheetView.isTable(f.path);
       return '<div class="out"><div class="std">' + esc(f.std) + '</div><div class="t">' + esc(f.title) + '</div><div class="m mono">' + esc(f.path) + ' · ' + U.fmtBytes(f.bytes) + '</div>' +
-        '<div class="act"><button class="btn sm primary" data-mdl="' + i + '">내려받기</button>' + (pv ? '<button class="btn sm" data-mpv="' + i + '">미리보기</button>' : '') + '</div></div>';
+        '<div class="act"><button class="btn sm primary" data-mdl="' + i + '">내려받기</button>' + (pv ? '<button class="btn sm" data-mpv="' + i + '">' + (KC.sheetView.isTable(f.path) ? '표로 보기' : '미리보기') + '</button>' : '') + '</div></div>';
     }).join('');
     $('#moIssuesCard').classList.remove('hidden');
     $('#moIssues').innerHTML = issuesTable(p.dcatIssues);
@@ -796,7 +794,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     $('#p-out').addEventListener('click', function (e) {
       const dl = e.target.closest('[data-dl]'), pv = e.target.closest('[data-pv]');
       if (dl) { const o = st.outputs[+dl.dataset.dl]; U.download(o.fileName, o.content, o.mime); }
-      if (pv) preview($('#outView'), st.outputs[+pv.dataset.pv]);
+      if (pv) { const o = st.outputs[+pv.dataset.pv]; preview($('#outView'), { name: o.fileName, content: o.content, bytes: o.bytes }); }
       if (e.target.id === 'dlAll') st.outputs.forEach(function (o, i) { setTimeout(function () { U.download(o.fileName, o.content, o.mime); }, i * 400); });
     });
     /* 메타데이터 변환 */
@@ -884,7 +882,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     $('#p-mout').addEventListener('click', function (e) {
       const dl = e.target.closest('[data-mdl]'), pv = e.target.closest('[data-mpv]');
       if (dl) { const f = st.mpkg.files[+dl.dataset.mdl]; U.download(metaFileName(f.path), new Blob([f.content], { type: f.mime }), f.mime); }
-      if (pv) { const f = st.mpkg.files[+pv.dataset.mpv]; preview($('#moView'), { content: f.content, bytes: f.bytes }); }
+      if (pv) { const f = st.mpkg.files[+pv.dataset.mpv]; preview($('#moView'), { name: f.path, content: f.content, bytes: f.bytes }); }
       if (e.target.id === 'moZip') {
         const p = st.mpkg || buildMeta();
         U.download('KCURE_' + cancerLabel() + '_메타데이터_' + stamp() + '.zip', new Blob([KC.meta.toZip([p])], { type: 'application/zip' }));
