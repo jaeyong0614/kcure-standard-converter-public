@@ -21,9 +21,7 @@ warnings.filterwarnings("ignore")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 ROOT = os.path.dirname(HERE)
-PROJ = os.path.dirname(ROOT)  # 중개포털 항목정의
-DEFAULT_FINAL = os.path.join(PROJ, "중개포털_SW겸용_항목정의서_KRmCODE_v2.4.xlsx")
-DEFAULT_AUX = os.path.join(PROJ, "중개포털_SW겸용_항목정의서_KR_mCODE_260831_V1.2.xlsx")
+from common import setup_console, source_path  # noqa: E402
 
 KRCORE_BASE = "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/"
 # KR Core V2 상세설명서 8장 예시에서 확인한 프로파일 ID. (확인=원문 확인, 추정=명명규칙 추정)
@@ -104,12 +102,18 @@ def as_int(v):
 
 
 def main():
+    setup_console()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--final", default=DEFAULT_FINAL)
-    ap.add_argument("--aux", default=DEFAULT_AUX)
+    ap.add_argument("--final", help="항목정의서 최종본 (기본: spec/sources)")
+    ap.add_argument("--aux", help="보조 워크북 V1.2 (기본: spec/sources)")
+    ap.add_argument("--argo", help="ICGC ARGO 데이터 사전 (기본: spec/sources)")
+    ap.add_argument("--mcode", help="mCODE STU4 데이터 사전 (기본: spec/sources)")
     ap.add_argument("--out", default=os.path.join(ROOT, "spec", "kcure_spec.json"))
-    ap.add_argument("--argo", default=os.path.join(PROJ, "데이터 항목정의", "argo_submission_templates_v1.34", "ICGC_ARGO_Data_Dictionary_v1.34.xlsx"))
     a = ap.parse_args()
+    a.final = a.final or source_path("final")
+    a.aux = a.aux or source_path("aux")
+    a.argo = a.argo or source_path("argo")
+    a.mcode = a.mcode or source_path("mcode")
 
     wf = load_workbook(a.final, read_only=True, data_only=True)
     wa = load_workbook(a.aux, read_only=True, data_only=True)
@@ -252,7 +256,7 @@ def main():
     argo_dict, n_argo = argo_map.apply(items, a.argo)
     # mCODE STU4 데이터 사전: 프로파일 URL·데이터요소 연결 (대응 자체는 항목정의서 v2.4)
     import mcode_dict
-    mcode_d, n_mp, n_me = mcode_dict.apply(items)
+    mcode_d, n_mp, n_me = mcode_dict.apply(items, a.mcode)
     # OMOP CDM v5.4 후보 매핑 (항목정의서에 없는 대응 → 규칙 기반 자동 후보)
     import omop_map
     omop_d = omop_map.apply(items)

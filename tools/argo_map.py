@@ -16,8 +16,7 @@ from openpyxl import load_workbook
 warnings.filterwarnings("ignore")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJ = os.path.dirname(ROOT)
-DEFAULT_DICT = os.path.join(PROJ, "데이터 항목정의", "argo_submission_templates_v1.34", "ICGC_ARGO_Data_Dictionary_v1.34.xlsx")
+from common import setup_console, source_path  # noqa: E402
 
 IV = "일자 → 진단일 기준 경과일(interval, days) 계산 필요"
 
@@ -172,7 +171,8 @@ RULES = [
 COMPILED = [(re.compile(p, re.I), t, c, n) for p, t, c, n in RULES]
 
 
-def load_dictionary(path=DEFAULT_DICT):
+def load_dictionary(path=None):
+    path = path or source_path("argo")
     """ARGO 사전 → {schemas:[...], fields:{'schema.field': {...}}}"""
     wb = load_workbook(path, read_only=True, data_only=True)
     pv = {}
@@ -231,7 +231,7 @@ def map_item(item, fields):
     return None
 
 
-def apply(items, dict_path=DEFAULT_DICT):
+def apply(items, dict_path=None):
     d = load_dictionary(dict_path)
     n = 0
     for it in items:
@@ -245,6 +245,7 @@ def apply(items, dict_path=DEFAULT_DICT):
 
 
 if __name__ == "__main__":
+    setup_console()
     import json
     from collections import Counter
     spec = json.load(open(os.path.join(ROOT, "spec", "kcure_spec.json"), encoding="utf-8"))

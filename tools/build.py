@@ -57,4 +57,6 @@ def main():
 
 
 if __name__ == "__main__":
+    from common import setup_console
+    setup_console()
     main()

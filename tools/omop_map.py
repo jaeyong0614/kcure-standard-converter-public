@@ -267,6 +267,8 @@ def apply(items):
 
 
 if __name__ == "__main__":
+    from common import setup_console
+    setup_console()
     import json
     from collections import Counter
     spec = json.load(open(os.path.join(ROOT, "spec", "kcure_spec.json"), encoding="utf-8"))

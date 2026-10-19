@@ -22,7 +22,7 @@ K-CURE 9개 암종의 **항목(컬럼)** 을 메타데이터로 변환하는 무
 | 통합 | `00_통합_메타데이터.xlsx` (12개 시트: 요약 · 컬럼별 통합(6개 표준) · KR CDI · KR Core · mCODE 매핑/프로파일/데이터요소 · OMOP ETL매핑/필드커버리지 · DCAT 변수 · ARGO 매핑/커버리지) |
 | KR CDI V3 | 컬럼 대응표, 80항목 커버리지(R 미대응 표시), FHIR ConceptMap |
 | KR Core V2 | **FHIR 논리모델**(StructureDefinition kind=logical, 컬럼=요소, `element.mapping`에 KR Core·KR CDI·mCODE·OMOP·ARGO), 프로파일·경로별 컬럼, ConceptMap |
-| mCODE STU4 | 컬럼 매핑(프로파일 URL·데이터요소), **프로파일 38종·데이터요소 417개 충족 현황**, ConceptMap |
+| mCODE STU4 | 컬럼 매핑(프로파일 URL·데이터요소), **프로파일 38종(임상 36 + Bundle·Group 2)·데이터요소 417개 충족 현황**, ConceptMap |
 | OMOP CDM v5.4 | **ETL 매핑 명세**(테이블·대상 필드·개념/일자/원천값 필드·권장 어휘·변환 주의), 사용 테이블의 필드 충족 현황, **source_to_concept_map 작성 템플릿**, ConceptMap |
 | DCAT 2.0 | 암종 데이터셋 카탈로그 RDF/XML·Turtle·JSON-LD. 컬럼 정의는 `ndi:profile`에 넣고, `dct:conformsTo`는 KR CDI·KR Core·ARGO. 필수속성 검증 결과 포함 |
 | ICGC ARGO v1.34 | 컬럼 매핑(후보), 245필드 커버리지(Core·Required 충족), ConceptMap, **제출 템플릿 TSV**와 채우기 안내 |
@@ -89,9 +89,9 @@ K-CURE 9개 암종의 **항목(컬럼)** 을 메타데이터로 변환하는 무
   - 항목 정의와 컬럼 통계는 `ndi:profile`(JSON)에 넣습니다. 배포 파일에는 SHA-256 체크섬(`spdx:checksum`)을 붙입니다.
   - 환자 단위 샘플(`ndi:sample`)은 넣지 않습니다.
 
-## 4. 항목정의서(v2.4)에서 발견된 매핑 검토 대상 — 168개 항목
+## 4. 항목정의서(v2.4)에서 발견된 매핑 검토 대상 — 168개 항목(171건)
 
-변환기를 만들면서, 그대로 변환하면 데이터가 왜곡되는 배정을 찾았습니다. 변환기는 이 항목들을 자동보정하거나 별도로 처리하고 로그에 남깁니다.
+변환기를 만들면서, 그대로 변환하면 데이터가 왜곡되는 배정을 찾았습니다. 한 항목에 문제가 두 가지 겹치는 경우가 3개 있어 건수(171)가 항목 수(168)보다 많습니다. 변환기는 이 항목들을 자동보정하거나 별도로 처리하고 로그에 남깁니다.
 다음 개정 때 검토해야 할 목록은 [docs/02_매핑검토대상.csv](docs/02_매핑검토대상.csv)에 있습니다(`python tools/audit_spec.py`로 재생성).
 
 | 코드 | 문제 | 건수 | 예 |
@@ -108,23 +108,48 @@ K-CURE 9개 암종의 **항목(컬럼)** 을 메타데이터로 변환하는 무
 
 ```
 KCURE_표준변환기_프로토타입/
-├─ dist/KCURE_표준변환기.html   ← 배포본(단일 파일, 약 1.4MB)
+├─ dist/KCURE_표준변환기.html   ← 배포본(단일 파일, 약 2.5MB — 내장 명세 2.2MB 포함)
 ├─ src/                        ← 소스 (index.html, css/, js/)
 │   └─ js/ util · sha256 · readers(CSV/XLSX) · spec · values · mapper · fhir · krcdi · pipeline · dcat · artifacts · app
 ├─ spec/kcure_spec.json(.js)   ← 내장 명세 (v2.4 + V1.2에서 추출)
 ├─ samples/                    ← 합성(가상) 샘플: 대장암 CSV, 유방암 XLSX·CP949 CSV
-├─ spec/sources/               ← OMOP CDM v5.4 공식 테이블·필드 명세(OHDSI)
+├─ spec/sources/               ← 명세 원본 고정 사본(항목정의서 v2.4·V1.2, ARGO·mCODE 사전, OMOP 명세) + manifest.json(SHA-256)
 ├─ tests/test.html, tests.js   ← 브라우저 자동 테스트 125개
-├─ tools/                      ← build_spec.py · argo_map.py(ARGO 규칙) · omop_map.py(OMOP 규칙) · mcode_dict.py(mCODE 사전) · make_samples.py · build.py · audit_spec.py
-└─ docs/                       ← 개발계획서, 매핑검토대상
+├─ tools/                      ← build_spec.py · argo_map.py(ARGO 규칙) · omop_map.py(OMOP 규칙) · mcode_dict.py(mCODE 사전) · make_samples.py · build.py · audit_spec.py · sync_sources.py(원본 고정) · common.py
+└─ docs/                       ← 개발계획서, 매핑검토대상, 03 수정개발계획서(v0.2), 04 맞춤형 프롬프트
 ```
 
 ## 6. 개발자용
+
+### 6.1 Windows 개발 환경 (권장)
+
+```bat
+py -3.11 -m venv venv
+venv\Scripts\python.exe -m pip install -r requirements.txt
+venv\Scripts\python.exe toolsuild.py --all
+```
+
+- PowerShell 실행 정책 때문에 `venv\Scripts\Activate.ps1`이 막히면, 위처럼 `venv\Scripts\python.exe`를 직접 호출하면 됩니다.
+- Microsoft Store판 `python`에서 `python -I`로 실행하면 사용자 site-packages(openpyxl)를 찾지 못합니다. venv를 쓰세요.
+- 도구 스크립트는 시작할 때 콘솔 출력을 UTF-8로 바꿉니다(`tools/common.py`). 그래서 cp949 콘솔에서도 한글·기호 출력 오류가 나지 않습니다.
+- 경로에 한글과 공백이 있습니다(`OneDrive\바탕 화면\…`). 명령에서는 항상 따옴표로 감싸세요.
+- 그 밖의 Windows 유의사항은 [docs/03_수정개발계획서.md §5](docs/03_수정개발계획서.md)를 보세요.
+
+### 6.2 빌드
 
 ```bash
 python tools/build.py --all
 ```
 (명세 추출 → 샘플 생성 → 단일 HTML 빌드. openpyxl 필요)
+
+명세 원본은 `spec/sources/`의 고정 사본을 씁니다. 원본(상위 폴더의 항목정의서 등)이 개정되면 다음 명령을 실행합니다.
+```bash
+python tools/sync_sources.py --update   # 최신본 복사 + manifest.json(SHA-256) 갱신
+python tools/sync_sources.py --check    # 해시만 점검
+```
+`build_spec.py --final/--aux/--argo/--mcode <파일>`로 원본을 직접 지정할 수도 있습니다.
+
+### 6.3 테스트
 
 ```bash
 python -m http.server 8765
@@ -140,6 +165,7 @@ python -m http.server 8765
 - FHIR 검증은 내장 구조검증(R4 필수요소·날짜형식·참조 무결성)까지만 합니다. KR Core 프로파일 적합성은 HL7 FHIR Validator와 KR Core 패키지로 별도 검증해야 합니다.
 - 코드표가 없는 항목(138건)과 단위가 정해지지 않은 항목(95건)은 원문 텍스트를 보존하는 방식(`CodeableConcept.text`, `valueString`)으로 처리합니다.
 - 입력은 1행 1환자(wide) 형식을 기준으로 합니다. 같은 환자의 여러 행은 행별로 리소스를 만들고, Patient만 하나로 합칩니다.
+- mCODE 데이터 사전(`spec/sources/mCODEDataDictionary-STU4.xlsx`)의 IG 버전 표기는 `4.0.0-ballot`입니다. 정식 STU4(4.0.0, 2025-02-16) 사전과 프로파일·데이터요소가 같은지 확인해야 합니다.
 - 대용량은 아직 검증하지 않았습니다(수천 행 수준을 상정). 수만 행 이상이면 NDJSON 분할 출력 등을 추가해야 합니다.
 
 ## 8. 확인 필요 사항

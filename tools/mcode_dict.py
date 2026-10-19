@@ -12,9 +12,7 @@ from openpyxl import load_workbook
 warnings.filterwarnings("ignore")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJ = os.path.dirname(ROOT)
-DEFAULT_DD = os.path.join(PROJ, "데이터 항목정의", "데이터 항목정의_claude", "outputs", "KR_CDI_K_CURE_업무프로세스_260825",
-                          "source_review", "mCODEDataDictionary-STU4.xlsx")
+from common import setup_console, source_path  # noqa: E402
 # 항목정의서 표기 → 데이터 사전 프로파일 제목
 ALIAS = {"tumormorphology": "Tumor Morphology Report"}
 
@@ -23,7 +21,8 @@ def key(title):
     return re.sub(r"[^a-z0-9]", "", re.sub(r"\s*profile\.?$", "", str(title).strip(), flags=re.I).lower())
 
 
-def load(path=DEFAULT_DD):
+def load(path=None):
+    path = path or source_path("mcode")
     wb = load_workbook(path, read_only=True, data_only=True)
     profiles = []
     for r in list(wb["Profiles"].iter_rows(values_only=True))[1:]:
@@ -44,7 +43,7 @@ def load(path=DEFAULT_DD):
             "profiles": profiles, "elements": elements}
 
 
-def apply(items, path=DEFAULT_DD):
+def apply(items, path=None):
     d = load(path)
     by_key = {p["key"]: p for p in d["profiles"]}
     for k, title in ALIAS.items():
@@ -74,6 +73,7 @@ def apply(items, path=DEFAULT_DD):
 
 
 if __name__ == "__main__":
+    setup_console()
     import json
     spec = json.load(open(os.path.join(ROOT, "spec", "kcure_spec.json"), encoding="utf-8"))
     d, a, b = apply(spec["items"])
