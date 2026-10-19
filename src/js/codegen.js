@@ -45,16 +45,42 @@ KC.codegen = (function () {
       'NUM_RX = re.compile(r"^-?\\d+(\\.\\d+)?$")',
       '',
       '',
-      'def read_table(path):',
-      '    """CSV(UTF-8 → CP949 순서로 시도) 또는 XLSX를 문자열로 읽는다."""',
+      'CHUNK_ROWS = 200000  # 큰 CSV(수 GB)는 이 행 수씩 나눠 처리해 메모리를 아낀다',
+      'RARE_COUNTS = {}  # 희소값 묶기용 전체 빈도(첫 번째 읽기에서 계산)',
+      '',
+      '',
+      'def detect_encoding(path):',
+      '    """앞 1MB로 UTF-8 여부를 본다(끝에서 잘린 글자는 무시). 아니면 CP949."""',
+      '    with open(path, "rb") as f:',
+      '        head = f.read(1 << 20)',
+      '    try:',
+      '        head.decode("utf-8")',
+      '    except UnicodeDecodeError as e:',
+      '        if e.start < len(head) - 4:',
+      '            return "cp949"',
+      '    return "utf-8-sig"',
+      '',
+      '',
+      'def read_chunks(path, usecols=None):',
+      '    """CSV는 CHUNK_ROWS 행씩, XLSX는 한 번에 문자열로 읽는다. 원본은 읽기만 한다."""',
       '    if path.suffix.lower() in (".xlsx", ".xlsm"):',
-      '        return pd.read_excel(path, dtype=str).fillna("")',
-      '    for enc in ("utf-8-sig", "cp949"):',
-      '        try:',
-      '            return pd.read_csv(path, dtype=str, encoding=enc, keep_default_na=False)',
-      '        except UnicodeDecodeError:',
-      '            continue',
-      '    raise SystemExit(f"인코딩을 알 수 없습니다: {path}")',
+      '        df = pd.read_excel(path, dtype=str).fillna("")',
+      '        yield df[[c for c in df.columns if usecols(c)]] if usecols else df',
+      '        return',
+      '    yield from pd.read_csv(path, dtype=str, encoding=detect_encoding(path), keep_default_na=False,',
+      '                           chunksize=CHUNK_ROWS, usecols=usecols)',
+      '',
+      '',
+      'def count_rare(cols):',
+      '    for chunk in read_chunks(INPUT, usecols=lambda c: c in cols):',
+      '        for c in chunk.columns:',
+      '            vc = chunk[c].map(norm).value_counts()',
+      '            RARE_COUNTS[c] = vc if c not in RARE_COUNTS else RARE_COUNTS[c].add(vc, fill_value=0)',
+      '',
+      '',
+      'def tally(counts, col, tech, rule, n):',
+      '    t = counts.setdefault(col, [tech, rule, 0])',
+      '    t[2] += n',
       '',
       '',
       'def norm(v):',
@@ -131,9 +157,11 @@ KC.codegen = (function () {
       '    return v[:keep] + "*" * max(len(v) - keep, 0)',
       '',
       '',
-      'def group_rare(series, k):',
+      'def group_rare(series, k, col):',
       '    s = series.map(norm)',
-      '    counts = s.value_counts()',
+      '    counts = RARE_COUNTS.get(col)',
+      '    if counts is None:',
+      '        counts = s.value_counts()',
       '    rare = set(counts[counts < k].index)',
       '    return s.map(lambda v: "기타" if v in rare else v)',
       '',
@@ -145,26 +173,16 @@ KC.codegen = (function () {
       '    return t',
       '',
       '',
-      'def main():',
-      '    if not SALT:',
-      '        raise SystemExit("환경변수 KCURE_SALT 를 설정하세요 (예: set KCURE_SALT=기관비밀값)")',
-      '    if not INPUT.exists():',
-      '        raise SystemExit(f"입력 파일이 없습니다: {INPUT}")',
-      '    if OUTPUT.resolve() == INPUT.resolve():',
-      '        raise SystemExit("OUTPUT 이 INPUT 과 같습니다 — 원본 덮어쓰기 금지")',
-      '    src = read_table(INPUT)',
-      '    missing = [c for c in EXPECTED if c not in src.columns]',
-      '    if missing:',
-      '        print("[경고] 입력에 없는 컬럼:", ", ".join(missing))',
+      'def transform(src, counts):',
+      '    """원천 조각(DataFrame) 1개 → 가명처리 결과 조각. counts 에 컬럼별 변경 행 수를 더한다."""',
       '    pids = src[PATIENT_COL] if PATIENT_COL in src.columns else pd.Series([""] * len(src), index=src.index)',
       '    out = pd.DataFrame(index=src.index)',
-      '    log = []',
       '');
     cols.forEach(function (c) {
       const p = c.params || {}, q = pyStr(c.col);
       const t = c.technique;
       L.push('    # [' + c.ruleId + '] ' + c.col + (c.item ? ' (' + c.item.id + ' ' + c.item.name + ')' : '') + ' — ' + t + ': ' + c.reason);
-      if (t === 'DELETE') { L.push('    log.append((' + q + ', "DELETE", ' + pyStr(c.ruleId) + ', 0))  # 결과에서 제외', ''); return; }
+      if (t === 'DELETE') { L.push('    tally(counts, ' + q + ', "DELETE", ' + pyStr(c.ruleId) + ', 0)  # 결과에서 제외', ''); return; }
       L.push('    if ' + q + ' in src.columns:');
       const v = 'src[' + q + ']';
       let e;
@@ -177,21 +195,47 @@ KC.codegen = (function () {
       } else if (t === 'BIN') e = v + '.map(lambda x: bin_value(x, ' + (+p.width || 5) + '))';
       else if (t === 'TOP_BOTTOM') e = v + '.map(lambda x: top_bottom(x, ' + (p.lower == null ? 'None' : +p.lower) + ', ' + (p.upper == null ? 'None' : +p.upper) + '))';
       else if (t === 'MASK') e = v + '.map(lambda x: mask(x, ' + (+p.keep || 1) + '))';
-      else if (t === 'GROUP_RARE') e = 'group_rare(' + v + ', ' + (+p.k || 5) + ')';
+      else if (t === 'GROUP_RARE') e = 'group_rare(' + v + ', ' + (+p.k || 5) + ', ' + q + ')';
       else if (t === 'REGEX_PII') e = v + '.map(regex_pii)';
       else e = v + '.map(norm)';
       L.push('        out[' + q + '] = ' + e);
-      L.push('        log.append((' + q + ', ' + pyStr(t) + ', ' + pyStr(c.ruleId) + ', int((out[' + q + '] != src[' + q + '].map(norm)).sum())))', '');
+      L.push('        tally(counts, ' + q + ', ' + pyStr(t) + ', ' + pyStr(c.ruleId) + ', int((out[' + q + '] != src[' + q + '].map(norm)).sum()))', '');
     });
     const skipped = plan.columns.filter(function (c) { return c.status !== '승인'; }).map(function (c) { return c.col; });
+    const rare = cols.filter(function (c) { return c.technique === 'GROUP_RARE'; }).map(function (c) { return pyStr(c.col); });
+    L.push('    return out', '', '');
+    L.push('def main():',
+      '    if not SALT:',
+      '        raise SystemExit("환경변수 KCURE_SALT 를 설정하세요 (예: set KCURE_SALT=기관비밀값)")',
+      '    if not INPUT.exists():',
+      '        raise SystemExit(f"입력 파일이 없습니다: {INPUT}")',
+      '    if OUTPUT.resolve() == INPUT.resolve():',
+      '        raise SystemExit("OUTPUT 이 INPUT 과 같습니다 — 원본 덮어쓰기 금지")');
     L.push('    skipped = [' + skipped.map(pyStr).join(', ') + ']  # 미승인 → 결과에서 제외');
+    L.push('    rare_cols = {' + rare.join(', ') + '}' + (rare.length ? '' : '  # 희소값 묶기 컬럼 없음'));
     L.push(
+      '    if rare_cols:',
+      '        count_rare(rare_cols)  # 희소값은 파일 전체 빈도로 판단(조각별로 판단하면 결과가 달라짐)',
       '    OUTPUT.parent.mkdir(parents=True, exist_ok=True)',
       '    tmp = OUTPUT.with_name(OUTPUT.name + ".tmp")  # OneDrive 등 동기화 폴더 잠금 대비: 임시 파일에 쓴 뒤 교체',
-      '    out.to_csv(tmp, index=False, encoding="utf-8-sig")',
+      '    counts, rows, ncols, first = {}, 0, 0, True',
+      '    for src in read_chunks(INPUT):',
+      '        if first:',
+      '            missing = [c for c in EXPECTED if c not in src.columns]',
+      '            if missing:',
+      '                print("[경고] 입력에 없는 컬럼:", ", ".join(missing))',
+      '        out = transform(src, counts)',
+      '        # 첫 조각만 BOM·헤더를 쓰고 나머지는 이어 붙인다',
+      '        out.to_csv(tmp, index=False, encoding="utf-8-sig" if first else "utf-8", mode="w" if first else "a", header=first)',
+      '        rows, ncols, first = rows + len(out), len(out.columns), False',
+      '        if rows >= CHUNK_ROWS:',
+      '            print(f"  … {rows:,}행 처리", flush=True)',
+      '    if first:',
+      '        raise SystemExit(f"읽을 행이 없습니다: {INPUT}")',
       '    os.replace(tmp, OUTPUT)',
+      '    log = [(c, t[0], t[1], t[2]) for c, t in counts.items()]',
       '    pd.DataFrame(log, columns=["컬럼", "기법", "규칙", "변경 행 수"]).to_csv(LOG, index=False, encoding="utf-8-sig")',
-      '    print(f"완료: {len(out)}행 · {len(out.columns)}컬럼 → {OUTPUT}")',
+      '    print(f"완료: {rows}행 · {ncols}컬럼 → {OUTPUT}")',
       '    print(f"로그: {LOG}")',
       '    if skipped:',
       '        print("미승인으로 제외한 컬럼:", ", ".join(skipped))',

@@ -169,7 +169,8 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     const mappedGuess = t.headers.filter(function (h) { return KC.mapper.matchOne(h, st.cancer).itemId; }).length;
     $('#fileStats').innerHTML = stat('데이터 행', t.rows.length.toLocaleString()) + stat('컬럼', t.headers.length) +
       stat('자동매핑 예상', mappedGuess + ' / ' + t.headers.length, '표준명·원천별칭 일치') +
-      stat('인코딩', st.file.encoding) + stat('파일 크기', U.fmtBytes(st.file.size || 0));
+      stat('인코딩', st.file.encoding) + stat('파일 크기', U.fmtBytes(st.file.size || 0), st.file.truncated ? '앞부분만 읽음' : '', st.file.truncated ? 'warn' : '');
+    $('#loadErr').innerHTML = st.file.truncated ? note(esc(KC.readers.truncNote(st.file)), 'warn') : '';
     const head = '<tr>' + t.headers.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr>';
     const body = t.rows.slice(0, 5).map(function (r) { return '<tr>' + r.map(function (v) { return '<td class="trunc">' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('');
     $('#preview').innerHTML = '<table><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
@@ -454,7 +455,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       entries.forEach(function (e) { e.include = true; });
       st.msel = { cancer: cancer, source: 'file', fileName: file.name, entries: entries };
       $$('#selCancers input').forEach(function (i) { i.checked = false; });
-      afterSelection('파일 「' + file.name + '」 · ' + how);
+      afterSelection('파일 「' + file.name + '」 · ' + how + (f.truncated ? ' · 대용량이라 앞부분만 읽음' : ''));
     } catch (err) {
       $('#selMsg').innerHTML = note('파일을 읽지 못했습니다: ' + esc(err.message), 'err');
     }

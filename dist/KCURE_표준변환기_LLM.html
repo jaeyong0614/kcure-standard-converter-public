@@ -1032,10 +1032,40 @@ KC.readers = (function () {
     }
   }
 
-  /** File 객체 → {name, sheets:[{name, rows}], encoding} */
+  // 브라우저는 약 2GB 넘는 파일을 한 번에 읽지 못한다(NotReadableError). 큰 텍스트 파일은 앞부분만 읽는다.
+  const LARGE_BYTES = 200 * 1024 * 1024, HEAD_BYTES = 16 * 1024 * 1024;
+
+  /** 큰 CSV·TSV 의 앞 HEAD_BYTES 만 읽는다. 마지막 줄바꿈에서 자르고, 잘렸을 수 있는 마지막 행은 버린다 */
+  async function readHead(file, delim) {
+    const blob = file.slice(0, HEAD_BYTES);
+    blob.name = file.name;
+    let u8 = new Uint8Array(await readBytes(blob));
+    const nl = u8.lastIndexOf(0x0A);
+    if (nl > 0) u8 = u8.subarray(0, nl + 1);
+    const dec = decodeText(u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength));
+    const rows = parseCsv(dec.text, delim);
+    if (rows.length > 2) rows.pop();
+    return { name: file.name, size: file.size, encoding: dec.encoding, sheets: [{ name: file.name, rows: rows }],
+      truncated: true, headBytes: u8.byteLength, headRows: Math.max(0, rows.length - 1) };
+  }
+
+  /** 앞부분만 읽었을 때 화면에 보여 줄 안내 */
+  function truncNote(f) {
+    if (!f || !f.truncated) return '';
+    return '대용량 파일(' + KC.util.fmtBytes(f.size) + ')이라 앞부분 ' + KC.util.fmtBytes(f.headBytes) + '(데이터 ' + f.headRows.toLocaleString() + '행)만 읽었습니다. ' +
+      '컬럼 구조·가명처리 추천·샘플 변환에는 충분합니다. 전체 데이터 처리는 ④에서 만든 코드를 병원 내부에서 실행하세요.';
+  }
+
+  /** File 객체 → {name, sheets:[{name, rows}], encoding, truncated?} */
   async function readFile(file) {
-    const buf = await readBytes(file);
     const lower = file.name.toLowerCase();
+    if (file.size > LARGE_BYTES) {
+      if (/\.(xlsx|xlsm|xls)$/.test(lower)) {
+        throw new Error('엑셀 파일이 너무 큽니다(' + KC.util.fmtBytes(file.size) + '). 엑셀 파일은 통째로 읽어야 하므로, CSV(UTF-8)로 저장하거나 앞부분 일부만 담은 파일로 시도해 주세요.');
+      }
+      return readHead(file, /\.tsv$/.test(lower) ? '	' : null);
+    }
+    const buf = await readBytes(file);
     if (/\.(xlsx|xlsm)$/.test(lower)) {
       return { name: file.name, size: file.size, encoding: 'XLSX', sheets: await readXlsx(buf) };
     }
@@ -1047,7 +1077,7 @@ KC.readers = (function () {
     return { name: file.name, size: file.size, encoding: dec.encoding, sheets: [{ name: file.name, rows: parseCsv(dec.text, delim) }] };
   }
 
-  return { readFile: readFile, readBytes: readBytes, readXlsx: readXlsx, parseCsv: parseCsv, decodeText: decodeText, unzip: unzip };
+  return { readFile: readFile, readBytes: readBytes, truncNote: truncNote, LARGE_BYTES: LARGE_BYTES, readXlsx: readXlsx, parseCsv: parseCsv, decodeText: decodeText, unzip: unzip };
 })();
 
 </script>
@@ -4128,16 +4158,42 @@ KC.codegen = (function () {
       'NUM_RX = re.compile(r"^-?\\d+(\\.\\d+)?$")',
       '',
       '',
-      'def read_table(path):',
-      '    """CSV(UTF-8 → CP949 순서로 시도) 또는 XLSX를 문자열로 읽는다."""',
+      'CHUNK_ROWS = 200000  # 큰 CSV(수 GB)는 이 행 수씩 나눠 처리해 메모리를 아낀다',
+      'RARE_COUNTS = {}  # 희소값 묶기용 전체 빈도(첫 번째 읽기에서 계산)',
+      '',
+      '',
+      'def detect_encoding(path):',
+      '    """앞 1MB로 UTF-8 여부를 본다(끝에서 잘린 글자는 무시). 아니면 CP949."""',
+      '    with open(path, "rb") as f:',
+      '        head = f.read(1 << 20)',
+      '    try:',
+      '        head.decode("utf-8")',
+      '    except UnicodeDecodeError as e:',
+      '        if e.start < len(head) - 4:',
+      '            return "cp949"',
+      '    return "utf-8-sig"',
+      '',
+      '',
+      'def read_chunks(path, usecols=None):',
+      '    """CSV는 CHUNK_ROWS 행씩, XLSX는 한 번에 문자열로 읽는다. 원본은 읽기만 한다."""',
       '    if path.suffix.lower() in (".xlsx", ".xlsm"):',
-      '        return pd.read_excel(path, dtype=str).fillna("")',
-      '    for enc in ("utf-8-sig", "cp949"):',
-      '        try:',
-      '            return pd.read_csv(path, dtype=str, encoding=enc, keep_default_na=False)',
-      '        except UnicodeDecodeError:',
-      '            continue',
-      '    raise SystemExit(f"인코딩을 알 수 없습니다: {path}")',
+      '        df = pd.read_excel(path, dtype=str).fillna("")',
+      '        yield df[[c for c in df.columns if usecols(c)]] if usecols else df',
+      '        return',
+      '    yield from pd.read_csv(path, dtype=str, encoding=detect_encoding(path), keep_default_na=False,',
+      '                           chunksize=CHUNK_ROWS, usecols=usecols)',
+      '',
+      '',
+      'def count_rare(cols):',
+      '    for chunk in read_chunks(INPUT, usecols=lambda c: c in cols):',
+      '        for c in chunk.columns:',
+      '            vc = chunk[c].map(norm).value_counts()',
+      '            RARE_COUNTS[c] = vc if c not in RARE_COUNTS else RARE_COUNTS[c].add(vc, fill_value=0)',
+      '',
+      '',
+      'def tally(counts, col, tech, rule, n):',
+      '    t = counts.setdefault(col, [tech, rule, 0])',
+      '    t[2] += n',
       '',
       '',
       'def norm(v):',
@@ -4214,9 +4270,11 @@ KC.codegen = (function () {
       '    return v[:keep] + "*" * max(len(v) - keep, 0)',
       '',
       '',
-      'def group_rare(series, k):',
+      'def group_rare(series, k, col):',
       '    s = series.map(norm)',
-      '    counts = s.value_counts()',
+      '    counts = RARE_COUNTS.get(col)',
+      '    if counts is None:',
+      '        counts = s.value_counts()',
       '    rare = set(counts[counts < k].index)',
       '    return s.map(lambda v: "기타" if v in rare else v)',
       '',
@@ -4228,26 +4286,16 @@ KC.codegen = (function () {
       '    return t',
       '',
       '',
-      'def main():',
-      '    if not SALT:',
-      '        raise SystemExit("환경변수 KCURE_SALT 를 설정하세요 (예: set KCURE_SALT=기관비밀값)")',
-      '    if not INPUT.exists():',
-      '        raise SystemExit(f"입력 파일이 없습니다: {INPUT}")',
-      '    if OUTPUT.resolve() == INPUT.resolve():',
-      '        raise SystemExit("OUTPUT 이 INPUT 과 같습니다 — 원본 덮어쓰기 금지")',
-      '    src = read_table(INPUT)',
-      '    missing = [c for c in EXPECTED if c not in src.columns]',
-      '    if missing:',
-      '        print("[경고] 입력에 없는 컬럼:", ", ".join(missing))',
+      'def transform(src, counts):',
+      '    """원천 조각(DataFrame) 1개 → 가명처리 결과 조각. counts 에 컬럼별 변경 행 수를 더한다."""',
       '    pids = src[PATIENT_COL] if PATIENT_COL in src.columns else pd.Series([""] * len(src), index=src.index)',
       '    out = pd.DataFrame(index=src.index)',
-      '    log = []',
       '');
     cols.forEach(function (c) {
       const p = c.params || {}, q = pyStr(c.col);
       const t = c.technique;
       L.push('    # [' + c.ruleId + '] ' + c.col + (c.item ? ' (' + c.item.id + ' ' + c.item.name + ')' : '') + ' — ' + t + ': ' + c.reason);
-      if (t === 'DELETE') { L.push('    log.append((' + q + ', "DELETE", ' + pyStr(c.ruleId) + ', 0))  # 결과에서 제외', ''); return; }
+      if (t === 'DELETE') { L.push('    tally(counts, ' + q + ', "DELETE", ' + pyStr(c.ruleId) + ', 0)  # 결과에서 제외', ''); return; }
       L.push('    if ' + q + ' in src.columns:');
       const v = 'src[' + q + ']';
       let e;
@@ -4260,21 +4308,47 @@ KC.codegen = (function () {
       } else if (t === 'BIN') e = v + '.map(lambda x: bin_value(x, ' + (+p.width || 5) + '))';
       else if (t === 'TOP_BOTTOM') e = v + '.map(lambda x: top_bottom(x, ' + (p.lower == null ? 'None' : +p.lower) + ', ' + (p.upper == null ? 'None' : +p.upper) + '))';
       else if (t === 'MASK') e = v + '.map(lambda x: mask(x, ' + (+p.keep || 1) + '))';
-      else if (t === 'GROUP_RARE') e = 'group_rare(' + v + ', ' + (+p.k || 5) + ')';
+      else if (t === 'GROUP_RARE') e = 'group_rare(' + v + ', ' + (+p.k || 5) + ', ' + q + ')';
       else if (t === 'REGEX_PII') e = v + '.map(regex_pii)';
       else e = v + '.map(norm)';
       L.push('        out[' + q + '] = ' + e);
-      L.push('        log.append((' + q + ', ' + pyStr(t) + ', ' + pyStr(c.ruleId) + ', int((out[' + q + '] != src[' + q + '].map(norm)).sum())))', '');
+      L.push('        tally(counts, ' + q + ', ' + pyStr(t) + ', ' + pyStr(c.ruleId) + ', int((out[' + q + '] != src[' + q + '].map(norm)).sum()))', '');
     });
     const skipped = plan.columns.filter(function (c) { return c.status !== '승인'; }).map(function (c) { return c.col; });
+    const rare = cols.filter(function (c) { return c.technique === 'GROUP_RARE'; }).map(function (c) { return pyStr(c.col); });
+    L.push('    return out', '', '');
+    L.push('def main():',
+      '    if not SALT:',
+      '        raise SystemExit("환경변수 KCURE_SALT 를 설정하세요 (예: set KCURE_SALT=기관비밀값)")',
+      '    if not INPUT.exists():',
+      '        raise SystemExit(f"입력 파일이 없습니다: {INPUT}")',
+      '    if OUTPUT.resolve() == INPUT.resolve():',
+      '        raise SystemExit("OUTPUT 이 INPUT 과 같습니다 — 원본 덮어쓰기 금지")');
     L.push('    skipped = [' + skipped.map(pyStr).join(', ') + ']  # 미승인 → 결과에서 제외');
+    L.push('    rare_cols = {' + rare.join(', ') + '}' + (rare.length ? '' : '  # 희소값 묶기 컬럼 없음'));
     L.push(
+      '    if rare_cols:',
+      '        count_rare(rare_cols)  # 희소값은 파일 전체 빈도로 판단(조각별로 판단하면 결과가 달라짐)',
       '    OUTPUT.parent.mkdir(parents=True, exist_ok=True)',
       '    tmp = OUTPUT.with_name(OUTPUT.name + ".tmp")  # OneDrive 등 동기화 폴더 잠금 대비: 임시 파일에 쓴 뒤 교체',
-      '    out.to_csv(tmp, index=False, encoding="utf-8-sig")',
+      '    counts, rows, ncols, first = {}, 0, 0, True',
+      '    for src in read_chunks(INPUT):',
+      '        if first:',
+      '            missing = [c for c in EXPECTED if c not in src.columns]',
+      '            if missing:',
+      '                print("[경고] 입력에 없는 컬럼:", ", ".join(missing))',
+      '        out = transform(src, counts)',
+      '        # 첫 조각만 BOM·헤더를 쓰고 나머지는 이어 붙인다',
+      '        out.to_csv(tmp, index=False, encoding="utf-8-sig" if first else "utf-8", mode="w" if first else "a", header=first)',
+      '        rows, ncols, first = rows + len(out), len(out.columns), False',
+      '        if rows >= CHUNK_ROWS:',
+      '            print(f"  … {rows:,}행 처리", flush=True)',
+      '    if first:',
+      '        raise SystemExit(f"읽을 행이 없습니다: {INPUT}")',
       '    os.replace(tmp, OUTPUT)',
+      '    log = [(c, t[0], t[1], t[2]) for c, t in counts.items()]',
       '    pd.DataFrame(log, columns=["컬럼", "기법", "규칙", "변경 행 수"]).to_csv(LOG, index=False, encoding="utf-8-sig")',
-      '    print(f"완료: {len(out)}행 · {len(out.columns)}컬럼 → {OUTPUT}")',
+      '    print(f"완료: {rows}행 · {ncols}컬럼 → {OUTPUT}")',
       '    print(f"로그: {LOG}")',
       '    if skipped:',
       '        print("미승인으로 제외한 컬럼:", ", ".join(skipped))',
@@ -5092,7 +5166,8 @@ KC.deidUi = (function () {
       const cancer = st.host.cancer() || '';
       st.plan = KC.deid.plan(headers, rows.slice(1), cancer);
       planLogged('file');
-      st.source = '샘플 파일 「' + file.name + '」 · 컬럼 ' + headers.length + ' · 분석 ' + st.plan.sampleRows + '행 (최대 ' + KC.deid.MAX_SAMPLE_ROWS + '행, 샘플값은 화면에서만 사용)';
+      st.source = '샘플 파일 「' + file.name + '」 · 컬럼 ' + headers.length + ' · 분석 ' + st.plan.sampleRows + '행 (최대 ' + KC.deid.MAX_SAMPLE_ROWS + '행, 샘플값은 화면에서만 사용)' +
+        (f.truncated ? ' · 대용량(' + KC.util.fmtBytes(f.size) + ')이라 앞부분만 읽음 — 생성 코드는 전체 파일에 적용됩니다' : '');
       $('#dzIn').value = $('#dzIn').value || 'C:\\kcure\\in\\' + file.name;
       $('#dzOut').value = $('#dzOut').value || 'C:\\kcure\\out\\' + file.name.replace(/\.[^.]+$/, '') + '_deid.csv';
       render();
@@ -5514,7 +5589,8 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     const mappedGuess = t.headers.filter(function (h) { return KC.mapper.matchOne(h, st.cancer).itemId; }).length;
     $('#fileStats').innerHTML = stat('데이터 행', t.rows.length.toLocaleString()) + stat('컬럼', t.headers.length) +
       stat('자동매핑 예상', mappedGuess + ' / ' + t.headers.length, '표준명·원천별칭 일치') +
-      stat('인코딩', st.file.encoding) + stat('파일 크기', U.fmtBytes(st.file.size || 0));
+      stat('인코딩', st.file.encoding) + stat('파일 크기', U.fmtBytes(st.file.size || 0), st.file.truncated ? '앞부분만 읽음' : '', st.file.truncated ? 'warn' : '');
+    $('#loadErr').innerHTML = st.file.truncated ? note(esc(KC.readers.truncNote(st.file)), 'warn') : '';
     const head = '<tr>' + t.headers.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr>';
     const body = t.rows.slice(0, 5).map(function (r) { return '<tr>' + r.map(function (v) { return '<td class="trunc">' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('');
     $('#preview').innerHTML = '<table><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
@@ -5799,7 +5875,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       entries.forEach(function (e) { e.include = true; });
       st.msel = { cancer: cancer, source: 'file', fileName: file.name, entries: entries };
       $$('#selCancers input').forEach(function (i) { i.checked = false; });
-      afterSelection('파일 「' + file.name + '」 · ' + how);
+      afterSelection('파일 「' + file.name + '」 · ' + how + (f.truncated ? ' · 대용량이라 앞부분만 읽음' : ''));
     } catch (err) {
       $('#selMsg').innerHTML = note('파일을 읽지 못했습니다: ' + esc(err.message), 'err');
     }

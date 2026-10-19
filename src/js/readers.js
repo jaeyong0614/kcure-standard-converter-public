@@ -231,10 +231,40 @@ KC.readers = (function () {
     }
   }
 
-  /** File 객체 → {name, sheets:[{name, rows}], encoding} */
+  // 브라우저는 약 2GB 넘는 파일을 한 번에 읽지 못한다(NotReadableError). 큰 텍스트 파일은 앞부분만 읽는다.
+  const LARGE_BYTES = 200 * 1024 * 1024, HEAD_BYTES = 16 * 1024 * 1024;
+
+  /** 큰 CSV·TSV 의 앞 HEAD_BYTES 만 읽는다. 마지막 줄바꿈에서 자르고, 잘렸을 수 있는 마지막 행은 버린다 */
+  async function readHead(file, delim) {
+    const blob = file.slice(0, HEAD_BYTES);
+    blob.name = file.name;
+    let u8 = new Uint8Array(await readBytes(blob));
+    const nl = u8.lastIndexOf(0x0A);
+    if (nl > 0) u8 = u8.subarray(0, nl + 1);
+    const dec = decodeText(u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength));
+    const rows = parseCsv(dec.text, delim);
+    if (rows.length > 2) rows.pop();
+    return { name: file.name, size: file.size, encoding: dec.encoding, sheets: [{ name: file.name, rows: rows }],
+      truncated: true, headBytes: u8.byteLength, headRows: Math.max(0, rows.length - 1) };
+  }
+
+  /** 앞부분만 읽었을 때 화면에 보여 줄 안내 */
+  function truncNote(f) {
+    if (!f || !f.truncated) return '';
+    return '대용량 파일(' + KC.util.fmtBytes(f.size) + ')이라 앞부분 ' + KC.util.fmtBytes(f.headBytes) + '(데이터 ' + f.headRows.toLocaleString() + '행)만 읽었습니다. ' +
+      '컬럼 구조·가명처리 추천·샘플 변환에는 충분합니다. 전체 데이터 처리는 ④에서 만든 코드를 병원 내부에서 실행하세요.';
+  }
+
+  /** File 객체 → {name, sheets:[{name, rows}], encoding, truncated?} */
   async function readFile(file) {
-    const buf = await readBytes(file);
     const lower = file.name.toLowerCase();
+    if (file.size > LARGE_BYTES) {
+      if (/\.(xlsx|xlsm|xls)$/.test(lower)) {
+        throw new Error('엑셀 파일이 너무 큽니다(' + KC.util.fmtBytes(file.size) + '). 엑셀 파일은 통째로 읽어야 하므로, CSV(UTF-8)로 저장하거나 앞부분 일부만 담은 파일로 시도해 주세요.');
+      }
+      return readHead(file, /\.tsv$/.test(lower) ? '	' : null);
+    }
+    const buf = await readBytes(file);
     if (/\.(xlsx|xlsm)$/.test(lower)) {
       return { name: file.name, size: file.size, encoding: 'XLSX', sheets: await readXlsx(buf) };
     }
@@ -246,5 +276,5 @@ KC.readers = (function () {
     return { name: file.name, size: file.size, encoding: dec.encoding, sheets: [{ name: file.name, rows: parseCsv(dec.text, delim) }] };
   }
 
-  return { readFile: readFile, readBytes: readBytes, readXlsx: readXlsx, parseCsv: parseCsv, decodeText: decodeText, unzip: unzip };
+  return { readFile: readFile, readBytes: readBytes, truncNote: truncNote, LARGE_BYTES: LARGE_BYTES, readXlsx: readXlsx, parseCsv: parseCsv, decodeText: decodeText, unzip: unzip };
 })();

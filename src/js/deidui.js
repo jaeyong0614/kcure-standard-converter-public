@@ -38,7 +38,8 @@ KC.deidUi = (function () {
       const cancer = st.host.cancer() || '';
       st.plan = KC.deid.plan(headers, rows.slice(1), cancer);
       planLogged('file');
-      st.source = '샘플 파일 「' + file.name + '」 · 컬럼 ' + headers.length + ' · 분석 ' + st.plan.sampleRows + '행 (최대 ' + KC.deid.MAX_SAMPLE_ROWS + '행, 샘플값은 화면에서만 사용)';
+      st.source = '샘플 파일 「' + file.name + '」 · 컬럼 ' + headers.length + ' · 분석 ' + st.plan.sampleRows + '행 (최대 ' + KC.deid.MAX_SAMPLE_ROWS + '행, 샘플값은 화면에서만 사용)' +
+        (f.truncated ? ' · 대용량(' + KC.util.fmtBytes(f.size) + ')이라 앞부분만 읽음 — 생성 코드는 전체 파일에 적용됩니다' : '');
       $('#dzIn').value = $('#dzIn').value || 'C:\\kcure\\in\\' + file.name;
       $('#dzOut').value = $('#dzOut').value || 'C:\\kcure\\out\\' + file.name.replace(/\.[^.]+$/, '') + '_deid.csv';
       render();

@@ -102,7 +102,21 @@ DICOM 스크립트는 pydicom이 있는 환경에서 `python tools/verify_dicom.
 
 > **개인정보:** 모든 처리는 이 PC의 브라우저 안에서만 수행합니다. CSP(`connect-src 'none'`)로 네트워크 전송을 원천 차단했습니다. 환자 식별자는 기본적으로 솔트+SHA-256으로 가명처리하고, 생년월일은 연도만 남깁니다.
 
-지원 환경: Windows 10/11 기본 Edge(또는 Chrome) 103 이상. XLSX 읽기에는 브라우저 내장 압축해제 기능을 씁니다.
+지원 환경: Windows 10/11 기본 Edge(또는 Chrome) 103 이상. macOS·Linux의 Chrome·Edge에서도 같은 파일로 동작합니다. XLSX 읽기에는 브라우저 내장 압축해제 기능을 씁니다.
+
+### 다른 PC·기관에서 쓰기
+
+- **받기:** GitHub 저장소 화면에서 `Code → Download ZIP`을 누르거나 `git clone`으로 받습니다. 압축을 풀고 `dist/KCURE_표준변환기.html`을 엽니다. Python·설치·인터넷이 필요 없습니다.
+- **LLM 연동본(선택):**
+  - 준비: [Ollama](https://ollama.com)를 설치하고 `ollama pull qwen2.5:7b-instruct`로 모델을 받습니다.
+  - 실행: `dist/LLM연동_실행.bat`을 더블클릭합니다.
+  - Python이 없는 PC에서는 실행기가 Windows 기본 PowerShell(`dist/serve_llm.ps1`)로 이 PC 전용 주소(`http://localhost:8770`)를 띄웁니다.
+  - macOS·Linux에서는 `python3 tools/serve_llm.py`를 실행합니다.
+- **큰 파일:** 브라우저는 약 2GB가 넘는 파일을 한 번에 읽지 못합니다. 그래서 200MB가 넘는 CSV·TSV는 **앞부분 16MB만** 읽어 컬럼 구조 파악, 가명처리 추천, 샘플 변환에 씁니다(예: MIMIC-III `NOTEEVENTS.csv` 3.9GB).
+  - 전체 데이터는 ④에서 만든 Python 코드로 처리합니다. 이 코드는 CSV를 20만 행씩 나눠 처리하므로 수 GB 파일도 메모리 부족 없이 돌아갑니다.
+  - 200MB가 넘는 엑셀(xlsx)은 CSV로 저장한 뒤 넣습니다.
+- **파일을 읽지 못할 때:** 파일이 엑셀에서 열려 있거나, OneDrive '온라인 전용' 파일이면 읽기에 실패할 수 있습니다. 화면에 나오는 안내를 따르세요.
+- **데이터 반입 주의:** 저장소에는 합성(가상) 샘플만 들어 있습니다. MIMIC 등 이용 약정이 있는 데이터나 병원 실데이터는 저장소에 올리지 마세요.
 
 ### 어떤 파일을 어디에 넣나
 
