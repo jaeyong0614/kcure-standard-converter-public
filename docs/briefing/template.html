@@ -1,0 +1,364 @@
+<title>K-CURE 표준변환기 v0.2 브리핑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@600;700&display=swap">
+<style>
+/* 레이아웃: 단일 본문 칼럼(최대 1040px) + 넓은 화면에서 섹션 제목을 왼쪽 여백에 두는 보고서형 구성 */
+:root {
+  --bg: #f4f6f4;
+  --surface: #ffffff;
+  --ink: #17221e;
+  --muted: #5b6a64;
+  --line: #d9e0dc;
+  --accent: #0e6b58;
+  --accent-soft: #e2efea;
+  --ok: #1f7a3f;
+  --ok-soft: #e3f2e7;
+  --warn: #9a5b00;
+  --warn-soft: #fbefd9;
+  --bad: #b3261e;
+  --bad-soft: #fbe3e1;
+  --seg1: #0e6b58;
+  --seg2: #5aa58f;
+  --seg3: #b8d8cc;
+  --seg4: #c9b27a;
+  --seg5: #e3e7e4;
+  --font-display: "Noto Serif KR", "Batang", serif;
+  --font-body: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "D2Coding", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111916; --surface: #18221e; --ink: #e5ece8; --muted: #9aaaa3; --line: #2b3a34;
+    --accent: #5fc3a6; --accent-soft: #1d3a31; --ok: #6fd28f; --ok-soft: #1b3524; --warn: #f0b45a; --warn-soft: #3a2c14;
+    --bad: #ff8a80; --bad-soft: #3d1d1b; --seg1: #5fc3a6; --seg2: #3c8f78; --seg3: #285f50; --seg4: #a88d4f; --seg5: #2b3a34;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111916; --surface: #18221e; --ink: #e5ece8; --muted: #9aaaa3; --line: #2b3a34;
+  --accent: #5fc3a6; --accent-soft: #1d3a31; --ok: #6fd28f; --ok-soft: #1b3524; --warn: #f0b45a; --warn-soft: #3a2c14;
+  --bad: #ff8a80; --bad-soft: #3d1d1b; --seg1: #5fc3a6; --seg2: #3c8f78; --seg3: #285f50; --seg4: #a88d4f; --seg5: #2b3a34;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.65; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h1 { font-family: var(--font-display); font-size: clamp(26px, 4vw, 36px); line-height: 1.25; letter-spacing: -0.01em; }
+h2 { font-size: 20px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+header { display: grid; gap: 10px; padding-bottom: 24px; border-bottom: 2px solid var(--ink); }
+
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 24px; }
+.strip > div { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
+.strip .k { font-size: 12px; color: var(--muted); }
+.strip .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.strip .s { font-size: 12px; color: var(--muted); }
+.strip .v.ok { color: var(--ok); }
+
+section { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; padding-block: 36px; border-bottom: 1px solid var(--line); }
+section > .head { display: grid; gap: 4px; align-content: start; }
+section > .head .no { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+section > .body { display: grid; gap: 18px; min-width: 0; }
+ul.facts { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 72ch; }
+
+.tbl { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--bg); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 3px; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.neutral { background: var(--accent-soft); color: var(--accent); }
+
+.timeline { display: grid; gap: 0; border-left: 2px solid var(--line); margin-left: 6px; }
+.tl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 0 0 18px 20px; position: relative; }
+.tl::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+.tl.done::before { background: var(--accent); }
+.tl.todo::before { border-style: dashed; border-color: var(--muted); }
+.tl .t { font-weight: 600; }
+.tl .d { color: var(--muted); font-size: 13.5px; grid-column: 1 / -1; max-width: 76ch; }
+.tl .r { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; white-space: nowrap; }
+
+.bars { display: grid; gap: 16px; }
+.bar { display: grid; gap: 6px; }
+.bar .label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 13.5px; }
+.bar .label b { font-weight: 600; }
+.track { display: flex; height: 18px; border-radius: 2px; overflow: hidden; background: var(--seg5); }
+.track span { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; border-radius: 2px; }
+.s1 { background: var(--seg1); } .s2 { background: var(--seg2); } .s3 { background: var(--seg3); } .s4 { background: var(--seg4); } .s5 { background: var(--seg5); border: 1px solid var(--line); }
+
+.growth { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding: 10px 12px 0; border: 1px solid var(--line); background: var(--surface); overflow-x: auto; }
+.growth .col { display: grid; justify-items: center; gap: 4px; min-width: 52px; flex: 1; }
+.growth .colbar { width: 28px; background: var(--seg2); border-radius: 2px 2px 0 0; }
+.growth .col.new .colbar { background: var(--accent); }
+.growth .n { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.growth .c { font-size: 11.5px; color: var(--muted); padding-bottom: 6px; white-space: nowrap; }
+
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tools input[type=search], .tools select { font: inherit; font-size: 14px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); min-width: 0; }
+.tools input[type=search] { flex: 1 1 220px; }
+.tools label { font-size: 13.5px; display: flex; gap: 6px; align-items: center; }
+.count { font-size: 13px; color: var(--muted); }
+#testList td.name { min-width: 220px; }
+#testList td.grp { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+.listbox { max-height: 520px; overflow: auto; }
+
+.verify { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.card { border: 1px solid var(--line); background: var(--surface); padding: 14px 16px; display: grid; gap: 8px; min-width: 0; align-content: start; }
+.card .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.card ul { margin: 0; padding-left: 18px; font-size: 13.5px; display: grid; gap: 3px; }
+pre.log { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.55; background: var(--bg); border: 1px solid var(--line); padding: 10px 12px; overflow-x: auto; white-space: pre; }
+details summary { cursor: pointer; font-size: 13.5px; color: var(--accent); }
+.note { font-size: 13px; color: var(--muted); max-width: 76ch; }
+input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 760px) {
+  section { grid-template-columns: minmax(0, 1fr); gap: 14px; padding-block: 28px; }
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .verify { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">중개포털 항목정의 · 의료기관 배포 SW</div>
+  <h1>K-CURE 표준변환기 v0.2 진행 브리핑</h1>
+  <div class="meta">
+    <span>기준일 2026-10-19</span>
+    <span>저장소 <span class="mono">jaeyong0614/kcure-standard-converter</span> (비공개)</span>
+    <span>최신 커밋 <span class="mono">efd36bb</span></span>
+    <span>테스트 실행 __WHEN__</span>
+  </div>
+  <div class="strip">
+    <div><span class="k">브라우저 자동 테스트</span><span class="v ok">__PASS__ / __TOTAL__</span><span class="s">실패 __FAIL__건 · v0.1 대비 +70</span></div>
+    <div><span class="k">생성 코드 실제 실행 검증</span><span class="v ok">4 / 4</span><span class="s">Python 정형 2 · DICOM 1 · 원본 해시 1</span></div>
+    <div><span class="k">앱 내장 자체 점검</span><span class="v ok">통과</span><span class="s">9개 암종 패키지 + 합성 환자 2종</span></div>
+    <div><span class="k">개발 단계</span><span class="v">S0–S4 완료</span><span class="s">S5 더미 PoC · S6 병원 인터뷰 남음</span></div>
+  </div>
+</header>
+
+<section id="summary">
+  <div class="head"><span class="no">01</span><h2>한눈에 보기</h2></div>
+  <div class="body">
+    <ul class="facts">
+      <li>v0.1 프로토타입은 9개 암종 1,255개 항목을 KR CDI·KR Core·mCODE·OMOP·DCAT·ARGO 메타데이터로 바꾸는 <b>Level 1 엔진</b>이었습니다.</li>
+      <li>v0.2에서는 Hospital SW flow의 <b>Level 2</b>를 붙였습니다. 원본은 건드리지 않고 가명처리 실행 코드(Python·SQL·정규식·DICOM)를 추천하며, 담당자가 승인한 컬럼만 코드에 들어갑니다.</li>
+      <li>매핑 품질을 보강했습니다.
+        <ul class="facts">
+          <li>KR CDI 미대응을 '수집범위외'와 '실제 누락'으로 나눴습니다.</li>
+          <li>검토 대상 171건은 승인 전 수정안으로 관리합니다.</li>
+          <li>mCODE·KR Core 리소스가 다른 167항목에 기본 표현을 정했습니다.</li>
+          <li>ARGO Core 충족은 45에서 48로 늘었고, 파생·지정값은 따로 집계합니다.</li>
+        </ul>
+      </li>
+      <li>로컬 소형 LLM 연동은 별도 빌드로 분리했습니다. 이 PC(127.0.0.1)에만 연결하고, 제안은 사람이 적용해야 반영됩니다. 실제 LLM 서버로는 아직 시험하지 않았습니다.</li>
+      <li>모든 단계는 git에 단계별 커밋으로 남겼고 GitHub 비공개 저장소에 올렸습니다.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="context">
+  <div class="head"><span class="no">02</span><h2>요구사항 대응</h2><p class="note">Hospital sw flow 요구사항별 구현 상태</p></div>
+  <div class="body">
+    <p>항목정의 업무(WBS 12단계, G0~G7 게이트)의 9단계 '메타데이터 변환 설계'와 10단계 '품질관리·위험도 평가'를 SW로 옮기는 작업입니다. 기준은 Google Drive의 <b>Hospital sw flow</b>입니다.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>요구</th><th>구현 내용</th><th>상태</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">FR-01</td><td>로우 항목 → 표준 항목 매핑</td><td>별칭·정규화 매칭(1,501개 별칭), 복합 컬럼 전개 제안, LLM 보조 후보(선택)</td><td><span class="pill ok">구현</span></td></tr>
+        <tr><td class="mono">FR-02</td><td>가명처리 기법 추천·해설</td><td>추천 규칙 21개, 기법 11종, 컬럼별 근거·신뢰도 표시</td><td><span class="pill ok">구현</span></td></tr>
+        <tr><td class="mono">FR-03</td><td>정형·비정형 샘플 분석 → 코드</td><td>정형 앞 10행 패턴 탐지, 비정형 PII 정규식 9종, Python·SQL 3방언·Regex 생성</td><td><span class="pill ok">구현</span></td></tr>
+        <tr><td class="mono">FR-04</td><td>DICOM 헤더 비식별화</td><td>PS3.15 주요 태그 58개 기반 pydicom 스크립트, 합성 DICOM 실행 검증</td><td><span class="pill ok">구현</span></td></tr>
+        <tr><td class="mono">NFR-01</td><td>폐쇄망 완결</td><td>기본 배포본 CSP <code>connect-src 'none'</code>, LLM 연동본은 loopback만 허용</td><td><span class="pill ok">구현</span></td></tr>
+        <tr><td class="mono">NFR-02</td><td>CPU/GPU 소형 LLM</td><td>Ollama·LM Studio 어댑터, 20개 단위 비동기 요청. 실제 모델로는 미시험</td><td><span class="pill warn">부분</span></td></tr>
+        <tr><td class="mono">NFR-03</td><td>경량 패키지</td><td>무설치 단일 HTML 약 2.6MB(LLM 엔진은 별도 설치)</td><td><span class="pill ok">구현</span></td></tr>
+        <tr><td class="mono">NFR-04</td><td>환경 무의존 실행 코드</td><td>Python 실행 검증 완료. SQL 3방언은 문법 자체검사만, 실제 DB 미실행</td><td><span class="pill warn">부분</span></td></tr>
+        <tr><td class="mono">6.1</td><td>Human-in-the-loop</td><td>후보·승인·반려(가명처리), 후보·승인·수정·반려(매핑). 신뢰도 '높음'만 일괄 승인</td><td><span class="pill ok">구현</span></td></tr>
+        <tr><td class="mono">6.2</td><td>로컬 감사 이력·중앙 규칙팩</td><td>해시 체인 감사 이력(.jsonl), SHA-256 규칙팩 검증·비교·교체</td><td><span class="pill ok">구현</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="timeline">
+  <div class="head"><span class="no">03</span><h2>개발 경과</h2><p class="note">git 커밋 순서</p></div>
+  <div class="body">
+    <div class="timeline">
+      <div class="tl done"><span class="t">v0.1.0 프로토타입 기준선</span><span class="r">66b94fd · 테스트 125</span><span class="d">6개 표준 메타데이터 변환, 부가 환자 데이터 변환(FHIR·KR CDI·DCAT).</span></div>
+      <div class="tl done"><span class="t">수정개발계획서·맞춤형 프롬프트</span><span class="r">c7fffbd</span><span class="d">Hospital SW flow와의 차이 분석, Windows 유의사항 W1~W12, 소형 LLM용 프롬프트 P1~P5, 개발 지시 P6.</span></div>
+      <div class="tl done"><span class="t">S0 기준선 정비</span><span class="r">48dc25b · 테스트 125</span><span class="d">명세 원본 4종을 spec/sources에 SHA-256으로 고정, cp949 콘솔 출력 오류 해결, venv 안내, README 수치 정정. 재생성 명세가 기존과 같음을 확인했습니다.</span></div>
+      <div class="tl done"><span class="t">S1 매핑 품질 보강</span><span class="r">50a694f · 테스트 139</span><span class="d">KR CDI 수집범위 17항목, 매핑 수정안 171건(후보), mCODE·KR Core 리소스 상이 167항목 표시, ARGO 규칙 4개·파생/지정값 17개.</span></div>
+      <div class="tl done"><span class="t">S2 가명처리 코드 추천</span><span class="r">bda7b19 · 테스트 169</span><span class="d">④ 탭 신설. 샘플 10행 분석 → 기법 추천 → 승인 컬럼만 Python·SQL·Regex 생성. 원본 수정 구문 자체검사, 실행 검증 도구 추가.</span></div>
+      <div class="tl done"><span class="t">S3 DICOM · 로컬 LLM 어댑터</span><span class="r">5e5076f · 테스트 184</span><span class="d">DICOM 스크립트 생성(58태그), LLM 연동본 별도 빌드(loopback 전용), 응답 JSON 검증·재시도·규칙 유지.</span></div>
+      <div class="tl done"><span class="t">S4 승인 · 감사 이력 · 규칙팩</span><span class="r">efd36bb · 테스트 195</span><span class="d">3·4단계 검토 상태, 해시 체인 감사 이력, 규칙팩 검증·비교·교체, 통합 엑셀 '검토 상태' 열.</span></div>
+      <div class="tl todo"><span class="t">S5 더미 데이터 PoC</span><span class="r">예정</span><span class="d">P4 프롬프트로 더미 생성 → 로컬 소형 LLM 입력 → 매핑 정확도·PII 재현율·코드 실행률 측정.</span></div>
+      <div class="tl todo"><span class="t">S6 병원 인터뷰·보완</span><span class="r">예정</span><span class="d">현장 피드백 반영 목록과 v0.3 범위 확정.</span></div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px">단계별 자동 테스트 수</h3>
+      <div class="growth" id="growth" aria-label="단계별 자동 테스트 수 막대"></div>
+    </div>
+  </div>
+</section>
+
+<section id="mapping">
+  <div class="head"><span class="no">04</span><h2>표준 매핑 현황</h2><p class="note">내장 명세 1,255항목 전체 기준</p></div>
+  <div class="body">
+    <div class="bars" id="bars"></div>
+    <ul class="facts note">
+      <li>KR CDI 수집범위외 17항목은 직접식별자 6, 기관 메타데이터 5, 전송 시 생성 6입니다. 성명처럼 범위외인 R 항목은 경고가 아니라 정보로 보고합니다.</li>
+      <li>mCODE와 KR Core의 기반 리소스가 다른 항목은 167개입니다. 기본 표현은 KR Core 120, mCODE 47로 정했습니다.</li>
+      <li>매핑 수정안 171건(168항목)은 모두 '후보'입니다. 승인한 건만 다음 빌드에서 명세에 반영되며, 현재 반영된 건은 0건입니다.</li>
+      <li>ARGO Core 미충족 15개는 대부분 면역·호르몬 치료 용량과 종양세포 비율입니다. 약물 필드는 국내 약품코드 → RxNorm 매핑표가 있어야 채울 수 있습니다.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="tests">
+  <div class="head"><span class="no">05</span><h2>SW 테스트 결과</h2><p class="note">tests/test.html 자동 테스트 __TOTAL__건</p></div>
+  <div class="body">
+    <div class="tbl"><table id="groupTable">
+      <thead><tr><th>영역</th><th>도입</th><th class="num">통과</th><th class="num">전체</th><th>결과</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="테스트 이름 검색 (예: DICOM, CP949, 가명키)" aria-label="테스트 이름 검색">
+      <select id="grp" aria-label="영역 선택"><option value="">모든 영역</option></select>
+      <label><input type="checkbox" id="failOnly"> 실패만</label>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="tbl listbox"><table id="testList">
+      <thead><tr><th>#</th><th>테스트</th><th>영역</th><th>결과</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <h3>생성 코드 실제 실행 검증</h3>
+    <p class="note">브라우저가 만든 코드 패키지를 합성 샘플에 실제로 실행해 확인했습니다. 솔트는 검증용 값이고, 원본 파일은 실행 전후 SHA-256을 비교했습니다.</p>
+    <div class="verify">
+      <div class="card"><div class="top"><h3>대장암 정형 (UTF-8 CSV)</h3><span class="pill ok">통과</span></div>
+        <ul><li>15행 · 결과 39컬럼(미승인 1개 제외)</li><li>원본 해시 불변, 같은 솔트 2회 실행 결과 동일</li><li>가명키 = 변환기 FHIR·KR CDI 방식과 일치</li></ul></div>
+      <div class="card"><div class="top"><h3>유방암 정형 (CP949 CSV · XLSX)</h3><span class="pill ok">통과</span></div>
+        <ul><li>CP949 자동 판별, XLSX 입력 모두 15행 · 40컬럼</li><li>연도만·날짜 이동·가명키 형식 점검 통과</li><li>SQL Server용 SQL 패키지 생성</li></ul></div>
+      <div class="card"><div class="top"><h3>DICOM 헤더 비식별화</h3><span class="pill ok">통과</span></div>
+        <ul><li>합성 CT 2장 + DICOM 아닌 파일 1개</li><li>UID 재생성(같은 검사는 같은 새 UID), StudyDate −6일 이동</li><li>private 태그·기관명 삭제, 입력 폴더 안 출력 시 중단</li></ul></div>
+      <div class="card"><div class="top"><h3>비정형 PII · 원본 고정</h3><span class="pill ok">통과</span></div>
+        <ul><li>이름·환자번호·날짜·전화·주민번호 치환, 예외어 Hodgkin 보존</li><li>명세 원본 4종 SHA-256 manifest 일치</li></ul></div>
+    </div>
+    <details><summary>검증 로그 원문 보기</summary><pre class="log" id="vlog"></pre></details>
+
+    <h3>앱 내장 자체 점검 (배포본 #selftest)</h3>
+    <div class="tbl"><table id="selftest">
+      <thead><tr><th>대상</th><th class="num">컬럼·환자</th><th class="num">파일·FHIR</th><th class="num">mCODE · KR CDI 값</th><th class="num">OMOP</th><th class="num">ARGO</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="head"><span class="no">06</span><h2>남은 과제</h2><p class="note">결정·확인이 필요한 사항</p></div>
+  <div class="body">
+    <div class="tbl"><table>
+      <thead><tr><th>구분</th><th>내용</th><th>현재 상태</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill warn">검증</span></td><td>실제 소형 LLM(7B~14B)으로 S5 더미 PoC</td><td>모의 응답으로만 시험</td></tr>
+        <tr><td><span class="pill warn">검증</span></td><td>생성 SQL을 실제 DB에서 실행(이 PC에 SQL Server Express 있음)</td><td>문법 자체검사만</td></tr>
+        <tr><td><span class="pill warn">검증</span></td><td>KR Core 추정 프로파일 ID 2종(영상·병리 DiagnosticReport) 공식 패키지 대조</td><td>52항목이 추정 URL 사용</td></tr>
+        <tr><td><span class="pill neutral">결정</span></td><td>매핑 수정안 171건의 승인 주체·절차</td><td>전건 '후보'</td></tr>
+        <tr><td><span class="pill neutral">결정</span></td><td>KR CDI 수집범위외 17항목 목록 확정</td><td>초안 적용</td></tr>
+        <tr><td><span class="pill neutral">결정</span></td><td>가명처리 기준선(날짜 이동 허용, 솔트·매핑표 보관 주체)</td><td>±30일 이동, 생년 연도만</td></tr>
+        <tr><td><span class="pill neutral">결정</span></td><td>대상 병원 DB 방언, PC 사양, 규칙팩 배포 경로</td><td>병원 인터뷰(S6)에서 확인</td></tr>
+        <tr><td><span class="pill neutral">자료</span></td><td>국내 약품코드 → RxNorm 매핑표(ARGO 약물 필드)</td><td>파생 규칙만 정의</td></tr>
+        <tr><td><span class="pill neutral">자료</span></td><td>mCODE 데이터 사전이 4.0.0-ballot 표기 — 정식 STU4 사전과 대조</td><td>미확인</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="files">
+  <div class="head"><span class="no">07</span><h2>산출물 위치</h2></div>
+  <div class="body">
+    <div class="tbl"><table>
+      <thead><tr><th>산출물</th><th>경로 (KCURE_표준변환기_프로토타입/)</th></tr></thead>
+      <tbody>
+        <tr><td>무설치 배포본</td><td class="mono">dist/KCURE_표준변환기.html</td></tr>
+        <tr><td>LLM 연동 배포본</td><td class="mono">dist/KCURE_표준변환기_LLM.html</td></tr>
+        <tr><td>수정개발계획서 · 맞춤형 프롬프트</td><td class="mono">docs/03_수정개발계획서.md · docs/04_맞춤형_프롬프트.md</td></tr>
+        <tr><td>변경 이력</td><td class="mono">CHANGELOG.md</td></tr>
+        <tr><td>가명처리 규칙 · 매핑 수정안</td><td class="mono">spec/deid_rules.json · spec/corrections.json</td></tr>
+        <tr><td>자동 테스트 · 실행 검증 도구</td><td class="mono">tests/test.html · tools/verify_generated.py · tools/verify_dicom.py</td></tr>
+        <tr><td>GitHub (비공개)</td><td><a href="https://github.com/jaeyong0614/kcure-standard-converter" target="_blank" rel="noopener">github.com/jaeyong0614/kcure-standard-converter</a></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(function () {
+  const esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  const $ = function (s) { return document.querySelector(s); };
+
+  /* 단계별 테스트 수 */
+  const steps = [['v0.1', 125], ['S0', 125], ['S1', 139], ['S2', 169], ['S3', 184], ['S4', 195]];
+  const max = 195;
+  $('#growth').innerHTML = steps.map(function (s, i) {
+    return '<div class="col' + (i === steps.length - 1 ? ' new' : '') + '"><span class="n">' + s[1] + '</span><span class="colbar" style="height:' + Math.round(s[1] / max * 90) + 'px"></span><span class="c">' + s[0] + '</span></div>';
+  }).join('');
+
+  /* 매핑 막대 */
+  const bars = [
+    { t: 'KR CDI V3', u: '공식 80개 항목 기준', segs: [['대응', 36], ['수집범위외', 17], ['실제 미대응', 27]], cls: ['s1', 's3', 's5'] },
+    { t: 'KR Core V2', u: '1,255항목 판정', segs: [['직접재사용', 396], ['제약재사용', 763], ['확장필요', 96]], cls: ['s1', 's2', 's4'] },
+    { t: 'mCODE STU4', u: '1,255항목 참조수준', segs: [['직접재사용', 552], ['부분참조', 129], ['개념·구조참조', 356], ['미대응', 218]], cls: ['s1', 's2', 's3', 's5'] },
+    { t: 'ICGC ARGO v1.34', u: 'Core 79필드 기준', segs: [['직접 대응', 48], ['파생 가능', 12], ['제출 시 지정값', 4], ['미충족', 15]], cls: ['s1', 's3', 's4', 's5'] },
+    { t: 'OMOP CDM v5.4', u: '1,255항목 후보 신뢰도', segs: [['높음', 165], ['중간', 873], ['낮음', 217]], cls: ['s1', 's2', 's4'] }
+  ];
+  $('#bars').innerHTML = bars.map(function (b) {
+    const tot = b.segs.reduce(function (a, s) { return a + s[1]; }, 0);
+    return '<div class="bar"><div class="label"><b>' + esc(b.t) + '</b><span class="note">' + esc(b.u) + ' · 합계 ' + tot.toLocaleString() + '</span></div>' +
+      '<div class="track" role="img" aria-label="' + esc(b.t + ' ' + b.segs.map(function (s) { return s[0] + ' ' + s[1]; }).join(', ')) + '">' +
+      b.segs.map(function (s, i) { return '<span class="' + b.cls[i] + '" style="width:' + (s[1] / tot * 100) + '%" title="' + esc(s[0] + ' ' + s[1]) + '"></span>'; }).join('') + '</div>' +
+      '<div class="legend">' + b.segs.map(function (s, i) { return '<span><i class="' + b.cls[i] + '"></i>' + esc(s[0]) + ' ' + s[1].toLocaleString() + ' (' + (s[1] / tot * 100).toFixed(1) + '%)</span>'; }).join('') + '</div></div>';
+  }).join('');
+
+  /* 테스트 결과 */
+  const R = DATA.results;
+  const groups = DATA.groups;
+  $('#groupTable tbody').innerHTML = groups.map(function (g) {
+    const rs = R.filter(function (r) { return r.g === g.id; });
+    const p = rs.filter(function (r) { return r.pass; }).length;
+    return '<tr><td>' + esc(g.name) + '</td><td>' + esc(g.since) + '</td><td class="num">' + p + '</td><td class="num">' + rs.length + '</td><td><span class="pill ' + (p === rs.length ? 'ok' : 'bad') + '">' + (p === rs.length ? '모두 통과' : (rs.length - p) + '건 실패') + '</span></td></tr>';
+  }).join('');
+  $('#grp').innerHTML += groups.map(function (g) { return '<option value="' + g.id + '">' + esc(g.name) + '</option>'; }).join('');
+  const gname = {};
+  groups.forEach(function (g) { gname[g.id] = g.name; });
+  function renderList() {
+    const q = $('#q').value.trim().toLowerCase(), g = $('#grp').value, f = $('#failOnly').checked;
+    const rows = R.filter(function (r) { return (!g || r.g === g) && (!f || !r.pass) && (!q || r.name.toLowerCase().indexOf(q) >= 0); });
+    $('#count').textContent = rows.length + '건 표시 / 전체 ' + R.length + '건';
+    $('#testList tbody').innerHTML = rows.length ? rows.map(function (r) {
+      return '<tr><td class="num">' + (r.i + 1) + '</td><td class="name">' + esc(r.name) + (!r.pass && r.detail ? '<div class="note mono">' + esc(r.detail) + '</div>' : '') + '</td><td class="grp">' + esc(gname[r.g]) + '</td><td><span class="pill ' + (r.pass ? 'ok' : 'bad') + '">' + (r.pass ? '통과' : '실패') + '</span></td></tr>';
+    }).join('') : '<tr><td colspan="4" class="note">조건에 맞는 테스트가 없습니다. ' + (f ? '실패한 테스트는 0건입니다.' : '') + '</td></tr>';
+  }
+  ['#q', '#grp', '#failOnly'].forEach(function (s) { $(s).addEventListener('input', renderList); $(s).addEventListener('change', renderList); });
+  renderList();
+
+  $('#vlog').textContent = DATA.verifyLog;
+  $('#selftest tbody').innerHTML = DATA.selftest.map(function (s) {
+    return '<tr><td>' + esc(s[0]) + '</td><td class="num">' + esc(s[1]) + '</td><td class="num">' + esc(s[2]) + '</td><td class="num">' + esc(s[3]) + '</td><td class="num">' + esc(s[4]) + '</td><td class="num">' + esc(s[5]) + '</td></tr>';
+  }).join('');
+})();
+</script>
