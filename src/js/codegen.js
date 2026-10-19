@@ -392,7 +392,7 @@ KC.codegen = (function () {
   function readme(plan, opts, check) {
     const T = KC.deid.techniques();
     const rows = plan.columns.map(function (c) {
-      return '| ' + [c.col, c.item ? c.item.id + ' ' + c.item.name : '(미매핑)', (T[c.technique] || {}).label + ' `' + c.technique + '`', c.ruleId, c.reason, c.confidence, c.status].join(' | ') + ' |';
+      return '| ' + [c.col, c.item ? c.item.id + ' ' + c.item.name : '(항목 미인식)', (T[c.technique] || {}).label + ' `' + c.technique + '`', c.ruleId, c.reason, c.confidence, c.status].join(' | ') + ' |';
     });
     return ['# K-CURE 가명처리 코드 패키지', '',
       '- 생성: ' + plan.created + ' · K-CURE 표준변환기 ' + KC.APP_VERSION + ' · 규칙팩 deid_rules v' + plan.version,

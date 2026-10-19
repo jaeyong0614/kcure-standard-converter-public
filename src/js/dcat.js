@@ -301,7 +301,7 @@ KC.dcat = (function () {
       o[c.col] = {
         itemId: c.itemId, name: c.name, definition: it.def, type: c.type, length: it.len, unit: c.unit, allowed: it.allowed || undefined,
         n: c.n, missing: c.missing, missingRate: c.missingRate, distinct: c.distinct, min: c.min, max: c.max, issues: c.issues,
-        krcdi: c.cdi || undefined, krcorePath: c.corePath, krcoreJudge: c.judge, mcode: it.mcode.profile
+        krcdi: c.cdi || undefined, krcorePath: c.corePath, krcoreJudge: KC.match.label(c.judge), krcoreJudgeOriginal: c.judge, mcode: it.mcode.profile
       };
       return o;
     }, {}) } }));
@@ -344,7 +344,7 @@ KC.dcat = (function () {
   /** 컬럼 1개의 변수 정의 (ndi:profile) — K-CURE 정의 + KR CDI·KR Core·mCODE·ARGO 대응 */
   function variable(e) {
     const it = e.item;
-    if (!it) return { name: e.col, standardMapping: '미매핑(K-CURE 표준항목 없음)' };
+    if (!it) return { name: e.col, standardMapping: '항목 미인식(K-CURE 표준항목 없음)' };
     const a = KC.meta ? KC.meta.argoOf(e) : null;
     const o = KC.meta ? KC.meta.omopOf(e) : null;
     const mc = KC.meta ? KC.meta.mcodeOf(e) : null;
@@ -352,10 +352,10 @@ KC.dcat = (function () {
       itemId: it.id, name: it.name, definition: it.def, domain: it.domain, category: it.cat1 + '/' + it.cat2,
       datatype: xsdType(it.type), sourceType: it.type, length: it.len || undefined, unit: it.unit || undefined,
       allowed: it.allowed || undefined, required: it.req,
-      krcdi: it.cdi && it.cdi.el ? { class: it.cdi.cls, element: it.cdi.el, requirement: it.cdi.req, match: it.cdi.match || undefined } : undefined,
-      krcore: { profile: it.core.profile, profileUrl: it.core.url || undefined, path: it.core.path, judgement: it.core.judge },
-      mcode: mc ? { profile: mc.title || mc.profile, profileUrl: mc.url || undefined, path: mc.path, element: mc.element || undefined, level: mc.level }
-        : { level: it.mcode.level, note: 'mCODE STU4 대응 없음' },
+      krcdi: it.cdi && it.cdi.el ? { class: it.cdi.cls, element: it.cdi.el, requirement: it.cdi.req, match: KC.match.label(it.cdi.match || '대응'), matchOriginal: it.cdi.match || undefined } : undefined,
+      krcore: { profile: it.core.profile, profileUrl: it.core.url || undefined, path: it.core.path, judgement: KC.match.label(it.core.judge), judgementOriginal: it.core.judge },
+      mcode: mc ? { profile: mc.title || mc.profile, profileUrl: mc.url || undefined, path: mc.path, element: mc.element || undefined, level: KC.match.label(mc.level), levelOriginal: mc.level }
+        : { level: KC.match.label(it.mcode.level), levelOriginal: it.mcode.level, note: 'mCODE STU4 미매칭' },
       omop: o ? { table: o.table, field: o.field, conceptField: o.concept, dateField: o.date || undefined, vocabulary: o.vocab || undefined, confidence: o.conf } : undefined,
       argo: a ? { schema: a.schema, field: a.field, tier: a.tier, requirement: a.req, confidence: a.conf, transform: a.note || undefined } : undefined,
       definitionGap: it.gap
@@ -404,7 +404,7 @@ KC.dcat = (function () {
       }, {}) } }));
       ds.lit('ndi:summary', JSON.stringify({ data: {
         columns: entries.length, items: items.length, krcdiMapped: nCdi, mcodeMapped: nMc, omopMapped: nOm, argoMapped: nArgo,
-        krcoreJudge: U.groupCount(items, function (i) { return i.core.judge; }),
+        krcoreJudge: U.groupCount(items, function (i) { return KC.match.label(i.core.judge); }),
         domains: U.groupCount(items, function (i) { return i.domain; }),
         definitionComplete: items.filter(function (i) { return i.gap === 'G0'; }).length
       } }));

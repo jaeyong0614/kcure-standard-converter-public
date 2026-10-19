@@ -84,7 +84,7 @@ KC.deidUi = (function () {
         return '<tr class="' + (c.status === '반려' ? 'muted' : '') + '"><td><select data-dzs="' + i + '">' + ['후보', '승인', '반려'].map(function (s) {
             return '<option' + (s === c.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>' +
           '<td><b>' + esc(c.col) + '</b>' + exp + '</td>' +
-          '<td class="small">' + (c.item ? '<span class="mono">' + c.item.id + '</span><div class="l2">' + esc(c.item.name) + ' · ' + esc(c.item.role) + '</div>' : '<span class="pill warn">미매핑</span>') + '</td>' +
+          '<td class="small">' + (c.item ? '<span class="mono">' + c.item.id + '</span><div class="l2">' + esc(c.item.name) + ' · ' + esc(c.item.role) + '</div>' : '<span class="pill warn">항목 미인식</span>') + '</td>' +
           '<td class="small">' + smp + '</td><td>' + sel + '</td><td>' + (params || '<span class="muted small">—</span>') + '</td>' +
           '<td class="small">' + esc(c.reason) + ' <span class="muted mono">' + c.ruleId + '</span></td><td><span class="pill ' + pc + '">' + esc(c.confidence) + '</span></td>' +
           '<td class="small">' + (c.llm ? esc((KC.deid.techniques()[c.llm.technique] || {}).label || c.llm.technique) + (c.llm.itemId ? ' · ' + esc(c.llm.itemId) : '') +

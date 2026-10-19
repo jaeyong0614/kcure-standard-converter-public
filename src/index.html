@@ -75,15 +75,16 @@
   <section class="panel" id="p-mmap">
     <div class="card">
       <h2>② 컬럼별 메타데이터 매핑 (KR CDI · KR Core · mCODE · OMOP · DCAT · ARGO)</h2>
-      <p class="desc">KR CDI·KR Core·mCODE 대응은 항목정의서(규칙승인)를 따릅니다. OMOP·ARGO 대응은 규칙 기반 자동 후보이며 해당 칸에서 직접 고칠 수 있습니다(비우면 "대응 없음"). 표가 넓으면 가로로 스크롤하세요.</p>
+      <p class="desc">KR CDI·KR Core·mCODE 매칭은 항목정의서(규칙승인)를 따릅니다. OMOP·ARGO 매칭은 규칙 기반 자동 후보이며 해당 칸에서 직접 고칠 수 있습니다(비우면 "미매칭"). 표가 넓으면 가로로 스크롤하세요.</p>
+      <p class="desc small"><b>매칭 용어</b> 직접매칭=그대로 사용 · 조건부매칭=제약 추가 필요 · 상위매칭=상위 항목으로만 담김 · 참조매칭=개념·구조만 참조 · 확장필요=확장 설계 대상 · 미매칭=대응 항목 없음 · 범위외=표준 수집범위 밖 · 항목 미인식=표준항목에 연결 안 된 컬럼. 배지에 마우스를 올리면 항목정의서의 원래 판정이 보입니다.</p>
       <div id="mmEmpty" class="note">먼저 ① 에서 암종이나 컬럼을 선택하세요.</div>
       <div class="stats" id="mmStats"></div>
       <div class="row" style="margin:10px 0">
         <input type="search" id="mmQ" placeholder="컬럼·항목·FHIR 경로·mCODE·OMOP·ARGO 검색" style="max-width:320px">
         <button class="btn sm" id="mmApproveHigh" title="OMOP 신뢰도 높음이고 ARGO가 없거나 높음이며 매핑 수정안이 없는 행만">신뢰도 '높음' 행 일괄 승인</button>
         <select id="mmView" style="width:220px">
-          <option value="all">전체</option><option value="cdi">KR CDI 대응만</option><option value="ext">KR Core 확장필요만</option>
-          <option value="argo">ARGO 대응만</option><option value="noargo">ARGO 미대응만</option><option value="low">ARGO 신뢰도 낮음·중간</option><option value="unmapped">표준항목 미매핑 컬럼</option>
+          <option value="all">전체</option><option value="cdi">KR CDI 매칭만</option><option value="ext">KR Core 확장필요만</option>
+          <option value="argo">ARGO 매칭만</option><option value="noargo">ARGO 미매칭만</option><option value="low">ARGO 신뢰도 낮음·중간</option><option value="unmapped">항목 미인식 컬럼</option>
         </select>
       </div>
       <datalist id="argoList"></datalist>
@@ -262,7 +263,7 @@
       <div class="row" style="margin:10px 0">
         <label class="f grow" style="max-width:420px"><span>환자 식별 컬럼 (환자 단위 묶음·가명키)</span><select id="patientCol"></select></label>
         <label class="f" style="width:200px"><span>표시</span>
-          <select id="mapFilter"><option value="all">전체</option><option value="mapped">매핑됨</option><option value="unmapped">미매핑</option></select></label>
+          <select id="mapFilter"><option value="all">전체</option><option value="mapped">매핑됨</option><option value="unmapped">항목 미인식</option></select></label>
         <div class="grow"></div>
         <button class="btn sm" id="loadMapCfg">매핑 설정 불러오기</button>
         <button class="btn sm" id="saveMapCfg">매핑 설정 저장</button>
@@ -351,8 +352,8 @@
         <input type="search" id="specQ" placeholder="항목ID·항목명·원천별칭·FHIR 경로 검색" style="max-width:360px">
         <select id="specCancer" style="width:140px"></select>
         <select id="specDomain" style="width:150px"></select>
-        <select id="specCdi" style="width:160px"><option value="">KR CDI 전체</option><option value="Y">KR CDI 대응만</option><option value="N">KR CDI 미대응</option></select>
-        <select id="specJudge" style="width:150px"><option value="">KR Core 판정 전체</option><option>직접재사용</option><option>제약재사용</option><option>확장필요</option></select>
+        <select id="specCdi" style="width:160px"><option value="">KR CDI 전체</option><option value="Y">KR CDI 매칭만</option><option value="N">KR CDI 미매칭</option></select>
+        <select id="specJudge" style="width:150px"><option value="">KR Core 판정 전체</option><option value="직접재사용">직접매칭</option><option value="제약재사용">조건부매칭</option><option value="확장필요">확장필요</option></select>
         <div class="grow"></div>
         <button class="btn sm" id="specReload">개정 항목정의서(xlsx) 불러오기</button>
         <input type="file" id="specInput" accept=".xlsx" hidden>

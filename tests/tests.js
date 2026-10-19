@@ -227,6 +227,14 @@
     eq('9개 암종 DCAT 오류 0', all9.reduce(function (s, p) { return s + p.dcatIssues.filter(function (x) { return x.level === '오류'; }).length; }, 0), 0);
     window.TEST_XLSX_SAMPLE = KC.meta.build(CONF, '대장암', fe).files[0].content;
 
+    /* 매칭 표시 용어 (원래 판정은 명세에 그대로, 산출물에 '원래 판정' 열) */
+    eq('표시 용어: 직접재사용·직접대응 → 직접매칭', [KC.match.label('직접재사용'), KC.match.label('직접대응')].join('/'), '직접매칭/직접매칭');
+    eq('표시 용어: 제약재사용·부분참조·개념참조', [KC.match.label('제약재사용'), KC.match.label('부분참조'), KC.match.label('구조참조(KR-mCODE 자체정의)')].join('/'), '조건부매칭/상위매칭/참조매칭');
+    eq('표시 용어: 문구 안 낱말 교체', [KC.match.label('미대응 — 필수'), KC.match.label('수집범위외 — 직접식별자'), KC.match.label('미매핑')].join('/'), '미매칭 — 필수/범위외 — 직접식별자/항목 미인식');
+    const pkL = KC.meta.build(CONF, '대장암', fe), cdiCsv = pkL.files.find(function (f) { return f.path === 'KR_CDI/KRCDI_컬럼대응.csv'; }).content;
+    ok('KR CDI 대응표: 매칭유형·원래 판정 열', /매칭유형,원래 판정/.test(cdiCsv) && /(직접매칭,직접대응|상위매칭,부분대응)/.test(cdiCsv));
+    ok('명세 원래 판정 값은 그대로', KC.spec.items.some(function (i) { return i.core.judge === '제약재사용'; }));
+
     /* 7. 매핑 품질 보강 (v0.2 S1) */
     eq('KR CDI 수집범위외 17항목', KC.spec.krcdi.filter(function (k) { return k.scope; }).length, 17);
     const nameScope = crc.run.krcdi.conformance.find(function (c) { return c.el === '성명' && c.cls === '환자 정보'; });

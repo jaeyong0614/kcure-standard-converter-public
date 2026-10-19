@@ -92,6 +92,65 @@ KC.util = (function () {
   };
 })();
 
+/**
+ * 매핑 판정 표시 용어. 명세(spec)에 저장된 원래 판정(직접재사용·제약재사용 등)은 그대로 두고,
+ * 화면과 산출물에는 모든 표준에 같은 척도로 보여 준다. 산출물에는 '원래 판정' 열을 함께 남긴다.
+ */
+KC.match = (function () {
+  'use strict';
+  const MAP = {
+    '직접대응': '직접매칭', '직접재사용': '직접매칭',
+    '제약재사용': '조건부매칭',
+    '부분대응': '상위매칭', '부분참조': '상위매칭',
+    '개념참조': '참조매칭', '구조참조(KR-mCODE 자체정의)': '참조매칭', '구조참조': '참조매칭',
+    '확장필요': '확장필요',
+    '미대응': '미매칭', '대응없음': '미매칭', '대응 없음': '미매칭',
+    '수집범위외': '범위외', '미매핑': '항목 미인식', '대응': '매칭'
+  };
+  const RE = /구조참조\(KR-mCODE 자체정의\)|직접대응|직접재사용|제약재사용|부분대응|부분참조|개념참조|구조참조|대응 없음|대응없음|미대응|수집범위외|미매핑/g;
+  const LEGEND = [
+    ['직접매칭', '그대로 사용', '직접대응 · 직접재사용'],
+    ['조건부매칭', '같은 항목이지만 값·코드 제약을 더해야 함', '제약재사용'],
+    ['상위매칭', '더 넓은 상위 항목으로만 담김', '부분대응 · 부분참조'],
+    ['참조매칭', '개념·구조만 빌려 씀', '개념참조 · 구조참조(KR-mCODE 자체정의)'],
+    ['확장필요', '담을 곳이 없어 확장 설계가 필요함', '확장필요'],
+    ['미매칭', '해당 표준에 대응 항목 없음', '미대응 · 대응없음'],
+    ['범위외', '그 표준이 원래 수집하지 않는 영역', '수집범위외'],
+    ['항목 미인식', '원천 컬럼이 K-CURE 표준항목에 연결되지 않음(매핑 지정 필요)', '미매핑']
+  ];
+
+  /** 원래 판정 → 표시 용어. 목록에 없는 값은 그대로, '미대응 — 필수' 같은 문구는 낱말만 바꾼다 */
+  function label(v) {
+    if (v == null) return '';
+    const s = String(v);
+    if (MAP[s]) return MAP[s];
+    return s.replace(RE, function (t) { return MAP[t]; });
+  }
+  /** 화면 배지 색 */
+  function cls(v) {
+    const l = label(v);
+    return l === '직접매칭' || l === '매칭' ? 'ok' : l === '확장필요' || l === '미매칭' || l === '항목 미인식' ? 'warn' : l === '상위매칭' ? 'info' : '';
+  }
+  /** 표시 용어(원래 판정) — 원래 값과 같으면 하나만 */
+  function both(v) {
+    const l = label(v);
+    return !v || l === String(v) ? l : l + '(' + v + ')';
+  }
+  /** 항목의 원래 판정 요약: 'KR CDI 부분대응 · KR Core 제약재사용 · mCODE 개념참조' */
+  function orig(it) {
+    if (!it) return '미매핑';
+    const p = [];
+    if (it.cdi && it.cdi.el) p.push('KR CDI ' + (it.cdi.match || '대응(유형 미상)'));
+    if (it.core && it.core.judge) p.push('KR Core ' + it.core.judge);
+    if (it.mcode && it.mcode.level) p.push('mCODE ' + it.mcode.level);
+    return p.join(' · ');
+  }
+  function legendText() {
+    return LEGEND.map(function (x) { return x[0] + '=' + x[1]; }).join(' · ');
+  }
+  return { label: label, cls: cls, both: both, orig: orig, LEGEND: LEGEND, legendText: legendText };
+})();
+
 /** 변환·검증 로그 수집기 */
 KC.Log = function () {
   this.entries = [];

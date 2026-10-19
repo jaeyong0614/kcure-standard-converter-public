@@ -231,15 +231,16 @@ pre.view { background: var(--code-bg); border: 1px solid var(--line); border-rad
   <section class="panel" id="p-mmap">
     <div class="card">
       <h2>② 컬럼별 메타데이터 매핑 (KR CDI · KR Core · mCODE · OMOP · DCAT · ARGO)</h2>
-      <p class="desc">KR CDI·KR Core·mCODE 대응은 항목정의서(규칙승인)를 따릅니다. OMOP·ARGO 대응은 규칙 기반 자동 후보이며 해당 칸에서 직접 고칠 수 있습니다(비우면 "대응 없음"). 표가 넓으면 가로로 스크롤하세요.</p>
+      <p class="desc">KR CDI·KR Core·mCODE 매칭은 항목정의서(규칙승인)를 따릅니다. OMOP·ARGO 매칭은 규칙 기반 자동 후보이며 해당 칸에서 직접 고칠 수 있습니다(비우면 "미매칭"). 표가 넓으면 가로로 스크롤하세요.</p>
+      <p class="desc small"><b>매칭 용어</b> 직접매칭=그대로 사용 · 조건부매칭=제약 추가 필요 · 상위매칭=상위 항목으로만 담김 · 참조매칭=개념·구조만 참조 · 확장필요=확장 설계 대상 · 미매칭=대응 항목 없음 · 범위외=표준 수집범위 밖 · 항목 미인식=표준항목에 연결 안 된 컬럼. 배지에 마우스를 올리면 항목정의서의 원래 판정이 보입니다.</p>
       <div id="mmEmpty" class="note">먼저 ① 에서 암종이나 컬럼을 선택하세요.</div>
       <div class="stats" id="mmStats"></div>
       <div class="row" style="margin:10px 0">
         <input type="search" id="mmQ" placeholder="컬럼·항목·FHIR 경로·mCODE·OMOP·ARGO 검색" style="max-width:320px">
         <button class="btn sm" id="mmApproveHigh" title="OMOP 신뢰도 높음이고 ARGO가 없거나 높음이며 매핑 수정안이 없는 행만">신뢰도 '높음' 행 일괄 승인</button>
         <select id="mmView" style="width:220px">
-          <option value="all">전체</option><option value="cdi">KR CDI 대응만</option><option value="ext">KR Core 확장필요만</option>
-          <option value="argo">ARGO 대응만</option><option value="noargo">ARGO 미대응만</option><option value="low">ARGO 신뢰도 낮음·중간</option><option value="unmapped">표준항목 미매핑 컬럼</option>
+          <option value="all">전체</option><option value="cdi">KR CDI 매칭만</option><option value="ext">KR Core 확장필요만</option>
+          <option value="argo">ARGO 매칭만</option><option value="noargo">ARGO 미매칭만</option><option value="low">ARGO 신뢰도 낮음·중간</option><option value="unmapped">항목 미인식 컬럼</option>
         </select>
       </div>
       <datalist id="argoList"></datalist>
@@ -418,7 +419,7 @@ pre.view { background: var(--code-bg); border: 1px solid var(--line); border-rad
       <div class="row" style="margin:10px 0">
         <label class="f grow" style="max-width:420px"><span>환자 식별 컬럼 (환자 단위 묶음·가명키)</span><select id="patientCol"></select></label>
         <label class="f" style="width:200px"><span>표시</span>
-          <select id="mapFilter"><option value="all">전체</option><option value="mapped">매핑됨</option><option value="unmapped">미매핑</option></select></label>
+          <select id="mapFilter"><option value="all">전체</option><option value="mapped">매핑됨</option><option value="unmapped">항목 미인식</option></select></label>
         <div class="grow"></div>
         <button class="btn sm" id="loadMapCfg">매핑 설정 불러오기</button>
         <button class="btn sm" id="saveMapCfg">매핑 설정 저장</button>
@@ -507,8 +508,8 @@ pre.view { background: var(--code-bg); border: 1px solid var(--line); border-rad
         <input type="search" id="specQ" placeholder="항목ID·항목명·원천별칭·FHIR 경로 검색" style="max-width:360px">
         <select id="specCancer" style="width:140px"></select>
         <select id="specDomain" style="width:150px"></select>
-        <select id="specCdi" style="width:160px"><option value="">KR CDI 전체</option><option value="Y">KR CDI 대응만</option><option value="N">KR CDI 미대응</option></select>
-        <select id="specJudge" style="width:150px"><option value="">KR Core 판정 전체</option><option>직접재사용</option><option>제약재사용</option><option>확장필요</option></select>
+        <select id="specCdi" style="width:160px"><option value="">KR CDI 전체</option><option value="Y">KR CDI 매칭만</option><option value="N">KR CDI 미매칭</option></select>
+        <select id="specJudge" style="width:150px"><option value="">KR Core 판정 전체</option><option value="직접재사용">직접매칭</option><option value="제약재사용">조건부매칭</option><option value="확장필요">확장필요</option></select>
         <div class="grow"></div>
         <button class="btn sm" id="specReload">개정 항목정의서(xlsx) 불러오기</button>
         <input type="file" id="specInput" accept=".xlsx" hidden>
@@ -644,6 +645,65 @@ KC.util = (function () {
     download: download, toCsv: toCsv, byteLength: byteLength, fmtBytes: fmtBytes,
     hexToUuid: hexToUuid, groupCount: groupCount, yieldUI: yieldUI
   };
+})();
+
+/**
+ * 매핑 판정 표시 용어. 명세(spec)에 저장된 원래 판정(직접재사용·제약재사용 등)은 그대로 두고,
+ * 화면과 산출물에는 모든 표준에 같은 척도로 보여 준다. 산출물에는 '원래 판정' 열을 함께 남긴다.
+ */
+KC.match = (function () {
+  'use strict';
+  const MAP = {
+    '직접대응': '직접매칭', '직접재사용': '직접매칭',
+    '제약재사용': '조건부매칭',
+    '부분대응': '상위매칭', '부분참조': '상위매칭',
+    '개념참조': '참조매칭', '구조참조(KR-mCODE 자체정의)': '참조매칭', '구조참조': '참조매칭',
+    '확장필요': '확장필요',
+    '미대응': '미매칭', '대응없음': '미매칭', '대응 없음': '미매칭',
+    '수집범위외': '범위외', '미매핑': '항목 미인식', '대응': '매칭'
+  };
+  const RE = /구조참조\(KR-mCODE 자체정의\)|직접대응|직접재사용|제약재사용|부분대응|부분참조|개념참조|구조참조|대응 없음|대응없음|미대응|수집범위외|미매핑/g;
+  const LEGEND = [
+    ['직접매칭', '그대로 사용', '직접대응 · 직접재사용'],
+    ['조건부매칭', '같은 항목이지만 값·코드 제약을 더해야 함', '제약재사용'],
+    ['상위매칭', '더 넓은 상위 항목으로만 담김', '부분대응 · 부분참조'],
+    ['참조매칭', '개념·구조만 빌려 씀', '개념참조 · 구조참조(KR-mCODE 자체정의)'],
+    ['확장필요', '담을 곳이 없어 확장 설계가 필요함', '확장필요'],
+    ['미매칭', '해당 표준에 대응 항목 없음', '미대응 · 대응없음'],
+    ['범위외', '그 표준이 원래 수집하지 않는 영역', '수집범위외'],
+    ['항목 미인식', '원천 컬럼이 K-CURE 표준항목에 연결되지 않음(매핑 지정 필요)', '미매핑']
+  ];
+
+  /** 원래 판정 → 표시 용어. 목록에 없는 값은 그대로, '미대응 — 필수' 같은 문구는 낱말만 바꾼다 */
+  function label(v) {
+    if (v == null) return '';
+    const s = String(v);
+    if (MAP[s]) return MAP[s];
+    return s.replace(RE, function (t) { return MAP[t]; });
+  }
+  /** 화면 배지 색 */
+  function cls(v) {
+    const l = label(v);
+    return l === '직접매칭' || l === '매칭' ? 'ok' : l === '확장필요' || l === '미매칭' || l === '항목 미인식' ? 'warn' : l === '상위매칭' ? 'info' : '';
+  }
+  /** 표시 용어(원래 판정) — 원래 값과 같으면 하나만 */
+  function both(v) {
+    const l = label(v);
+    return !v || l === String(v) ? l : l + '(' + v + ')';
+  }
+  /** 항목의 원래 판정 요약: 'KR CDI 부분대응 · KR Core 제약재사용 · mCODE 개념참조' */
+  function orig(it) {
+    if (!it) return '미매핑';
+    const p = [];
+    if (it.cdi && it.cdi.el) p.push('KR CDI ' + (it.cdi.match || '대응(유형 미상)'));
+    if (it.core && it.core.judge) p.push('KR Core ' + it.core.judge);
+    if (it.mcode && it.mcode.level) p.push('mCODE ' + it.mcode.level);
+    return p.join(' · ');
+  }
+  function legendText() {
+    return LEGEND.map(function (x) { return x[0] + '=' + x[1]; }).join(' · ');
+  }
+  return { label: label, cls: cls, both: both, orig: orig, LEGEND: LEGEND, legendText: legendText };
 })();
 
 /** 변환·검증 로그 수집기 */
@@ -2219,10 +2279,10 @@ KC.krcdi = (function () {
         const value = c.cdiValue;
         rec.classes[it.cdi.cls] = rec.classes[it.cdi.cls] || {};
         const arr = rec.classes[it.cdi.cls][it.cdi.el] = rec.classes[it.cdi.cls][it.cdi.el] || [];
-        arr.push({ value: value, source: it.id, sourceName: it.name, match: it.cdi.match || '대응(유형 미상)' });
+        arr.push({ value: value, source: it.id, sourceName: it.name, match: KC.match.label(it.cdi.match || '대응'), matchOriginal: it.cdi.match || '' });
         filled[key] = (filled[key] || 0) + 1;
         touchedCls[it.cdi.cls] = (touchedCls[it.cdi.cls] || 0) + 1;
-        long.push([patientKey, rowIdx, def ? def.no : '', it.cdi.cls, it.cdi.el, def ? def.elEn : '', it.cdi.req, it.cdi.match || '', value, it.id, it.name]);
+        long.push([patientKey, rowIdx, def ? def.no : '', it.cdi.cls, it.cdi.el, def ? def.elEn : '', it.cdi.req, KC.match.label(it.cdi.match || '대응'), value, it.id, it.name, it.cdi.match || '']);
         if (!def) log.warn('KRCDI_UNKNOWN', 'KR CDI 80항목 사전에 없는 배정(' + key + ')', c.ctx);
       });
     }
@@ -2254,7 +2314,7 @@ KC.krcdi = (function () {
         if (c.level === '정보') log.info('KRCDI_R_SCOPE', 'KR CDI [' + c.cls + '] ' + c.el + ' — ' + c.msg, { target: 'KR CDI' });
         else log.warn('KRCDI_R_MISSING', 'KR CDI [' + c.cls + '] ' + c.el + ' — ' + c.msg, { target: 'KR CDI' });
       });
-      const header = ['환자키', '원천행', 'KRCDI_항목No', 'KRCDI_분류', 'KRCDI_항목', 'KRCDI_항목(영문)', '필수여부', '대응유형', '값', 'K-CURE_항목ID', 'K-CURE_항목명'];
+      const header = ['환자키', '원천행', 'KRCDI_항목No', 'KRCDI_분류', 'KRCDI_항목', 'KRCDI_항목(영문)', '필수여부', '매칭유형', '값', 'K-CURE_항목ID', 'K-CURE_항목명', '원래_판정'];
       return {
         standard: 'KR CDI V3 (한국 핵심교류데이터)',
         note: KC.spec.data.meta.stageNote,
@@ -2711,7 +2771,7 @@ KC.dcat = (function () {
       o[c.col] = {
         itemId: c.itemId, name: c.name, definition: it.def, type: c.type, length: it.len, unit: c.unit, allowed: it.allowed || undefined,
         n: c.n, missing: c.missing, missingRate: c.missingRate, distinct: c.distinct, min: c.min, max: c.max, issues: c.issues,
-        krcdi: c.cdi || undefined, krcorePath: c.corePath, krcoreJudge: c.judge, mcode: it.mcode.profile
+        krcdi: c.cdi || undefined, krcorePath: c.corePath, krcoreJudge: KC.match.label(c.judge), krcoreJudgeOriginal: c.judge, mcode: it.mcode.profile
       };
       return o;
     }, {}) } }));
@@ -2754,7 +2814,7 @@ KC.dcat = (function () {
   /** 컬럼 1개의 변수 정의 (ndi:profile) — K-CURE 정의 + KR CDI·KR Core·mCODE·ARGO 대응 */
   function variable(e) {
     const it = e.item;
-    if (!it) return { name: e.col, standardMapping: '미매핑(K-CURE 표준항목 없음)' };
+    if (!it) return { name: e.col, standardMapping: '항목 미인식(K-CURE 표준항목 없음)' };
     const a = KC.meta ? KC.meta.argoOf(e) : null;
     const o = KC.meta ? KC.meta.omopOf(e) : null;
     const mc = KC.meta ? KC.meta.mcodeOf(e) : null;
@@ -2762,10 +2822,10 @@ KC.dcat = (function () {
       itemId: it.id, name: it.name, definition: it.def, domain: it.domain, category: it.cat1 + '/' + it.cat2,
       datatype: xsdType(it.type), sourceType: it.type, length: it.len || undefined, unit: it.unit || undefined,
       allowed: it.allowed || undefined, required: it.req,
-      krcdi: it.cdi && it.cdi.el ? { class: it.cdi.cls, element: it.cdi.el, requirement: it.cdi.req, match: it.cdi.match || undefined } : undefined,
-      krcore: { profile: it.core.profile, profileUrl: it.core.url || undefined, path: it.core.path, judgement: it.core.judge },
-      mcode: mc ? { profile: mc.title || mc.profile, profileUrl: mc.url || undefined, path: mc.path, element: mc.element || undefined, level: mc.level }
-        : { level: it.mcode.level, note: 'mCODE STU4 대응 없음' },
+      krcdi: it.cdi && it.cdi.el ? { class: it.cdi.cls, element: it.cdi.el, requirement: it.cdi.req, match: KC.match.label(it.cdi.match || '대응'), matchOriginal: it.cdi.match || undefined } : undefined,
+      krcore: { profile: it.core.profile, profileUrl: it.core.url || undefined, path: it.core.path, judgement: KC.match.label(it.core.judge), judgementOriginal: it.core.judge },
+      mcode: mc ? { profile: mc.title || mc.profile, profileUrl: mc.url || undefined, path: mc.path, element: mc.element || undefined, level: KC.match.label(mc.level), levelOriginal: mc.level }
+        : { level: KC.match.label(it.mcode.level), levelOriginal: it.mcode.level, note: 'mCODE STU4 미매칭' },
       omop: o ? { table: o.table, field: o.field, conceptField: o.concept, dateField: o.date || undefined, vocabulary: o.vocab || undefined, confidence: o.conf } : undefined,
       argo: a ? { schema: a.schema, field: a.field, tier: a.tier, requirement: a.req, confidence: a.conf, transform: a.note || undefined } : undefined,
       definitionGap: it.gap
@@ -2814,7 +2874,7 @@ KC.dcat = (function () {
       }, {}) } }));
       ds.lit('ndi:summary', JSON.stringify({ data: {
         columns: entries.length, items: items.length, krcdiMapped: nCdi, mcodeMapped: nMc, omopMapped: nOm, argoMapped: nArgo,
-        krcoreJudge: U.groupCount(items, function (i) { return i.core.judge; }),
+        krcoreJudge: U.groupCount(items, function (i) { return KC.match.label(i.core.judge); }),
         domains: U.groupCount(items, function (i) { return i.domain; }),
         definitionComplete: items.filter(function (i) { return i.gap === 'G0'; }).length
       } }));
@@ -2858,7 +2918,7 @@ KC.artifacts = (function () {
   function toKrcdi(conf, items) {
     const base = conf.kcureBase || KC.spec.data.meta.kcureBase;
     const cm = header(base, 'kcure-to-krcdi', 'K-CURE 표준항목 → KR CDI V3 항목 대응',
-      'K-CURE 9개 암종 표준항목과 KR CDI V3(14분류·80항목) 간 대응. 직접대응=equivalent, 부분대응(상위 항목으로만 교류)=wider.', conf);
+      'K-CURE 9개 암종 표준항목과 KR CDI V3(14분류·80항목) 간 매칭. 직접매칭(직접대응)=equivalent, 상위매칭(부분대응: 상위 항목으로만 교류)=wider.', conf);
     cm.sourceUri = base + 'CodeSystem/kcure-item';
     cm.targetUri = KRCDI_URI;
     const els = items.filter(function (it) { return it.cdi && it.cdi.el; }).map(function (it) {
@@ -2868,7 +2928,7 @@ KC.artifacts = (function () {
         target: [{
           code: def ? 'KRCDI-' + String(def.no).padStart(2, '0') : it.cdi.el, display: it.cdi.cls + ' / ' + it.cdi.el,
           equivalence: it.cdi.match === '직접대응' ? 'equivalent' : it.cdi.match === '부분대응' ? 'wider' : 'relatedto',
-          comment: '필수여부 ' + (it.cdi.req || '-') + ' · 대응유형 ' + (it.cdi.match || '미상') + ' · 심사등급 ' + (it.grade || '-')
+          comment: '필수여부 ' + (it.cdi.req || '-') + ' · 매칭유형 ' + (it.cdi.match ? KC.match.both(it.cdi.match) : '미상') + ' · 심사등급 ' + (it.grade || '-')
         }]
       };
     });
@@ -2879,7 +2939,7 @@ KC.artifacts = (function () {
   function toKrcore(conf, items) {
     const base = conf.kcureBase || KC.spec.data.meta.kcureBase;
     const cm = header(base, 'kcure-to-krcore', 'K-CURE 표준항목 → KR Core V2 / FHIR R4 경로 대응',
-      '항목별 KR Core 프로파일과 FHIR 경로. 직접재사용=equivalent, 제약재사용=relatedto(추가 제약 필요), 확장필요=unmatched(확장 설계 대상).', conf);
+      '항목별 KR Core 프로파일과 FHIR 경로. 직접매칭(직접재사용)=equivalent, 조건부매칭(제약재사용: 추가 제약 필요)=relatedto, 확장필요=unmatched(확장 설계 대상).', conf);
     cm.sourceUri = base + 'CodeSystem/kcure-item';
     cm.targetUri = KC.spec.data.meta.krcoreBase;
     const groups = {};
@@ -2887,7 +2947,7 @@ KC.artifacts = (function () {
       const tgt = it.core.url || 'http://hl7.org/fhir/StructureDefinition/' + it.core.path.split('.')[0];
       const g = groups[tgt] = groups[tgt] || { source: base + 'CodeSystem/kcure-item', target: tgt, element: [] };
       const eq = it.core.judge === '직접재사용' ? 'equivalent' : it.core.judge === '확장필요' ? 'unmatched' : 'relatedto';
-      const t = { equivalence: eq, comment: it.core.profile + ' · 판정 ' + it.core.judge + ' · mCODE ' + it.mcode.profile + ' ' + it.mcode.path + ' (' + it.mcode.level + ')' };
+      const t = { equivalence: eq, comment: it.core.profile + ' · 판정 ' + KC.match.both(it.core.judge) + ' · mCODE ' + it.mcode.profile + ' ' + it.mcode.path + ' (' + KC.match.both(it.mcode.level) + ')' };
       if (eq !== 'unmatched') { t.code = it.core.path; t.display = it.core.path; }
       else t.comment = '대상 경로 후보 ' + it.core.path + ' · ' + t.comment;
       g.element.push({ code: it.id, display: it.name, target: [t] });
@@ -2923,7 +2983,7 @@ KC.artifacts = (function () {
   function toMcode(conf, items) {
     const base = conf.kcureBase || KC.spec.data.meta.kcureBase;
     const cm = header(base, 'kcure-to-mcode', 'K-CURE 표준항목 → HL7 mCODE STU4',
-      '항목별 mCODE 프로파일·FHIR 경로. 직접재사용=equivalent, 부분참조=wider, 개념·구조참조=relatedto, 미대응=unmatched.', conf);
+      '항목별 mCODE 프로파일·FHIR 경로. 직접매칭(직접재사용)=equivalent, 상위매칭(부분참조)=wider, 참조매칭(개념·구조참조)=relatedto, 미매칭(미대응)=unmatched.', conf);
     cm.sourceUri = base + 'CodeSystem/kcure-item';
     cm.targetUri = 'http://hl7.org/fhir/us/mcode';
     const groups = {};
@@ -2933,7 +2993,7 @@ KC.artifacts = (function () {
       const tgt = none ? 'http://hl7.org/fhir/us/mcode' : m.url;
       const g = groups[tgt] = groups[tgt] || { source: base + 'CodeSystem/kcure-item', target: tgt, element: [] };
       const eq = none ? 'unmatched' : m.level === '직접재사용' ? 'equivalent' : m.level === '부분참조' ? 'wider' : 'relatedto';
-      const t = { equivalence: eq, comment: (m.title || m.profile) + ' · ' + m.level + (m.element ? ' · 데이터요소 ' + m.element : '') + (none ? ' · KR-mCODE 후보 ' + it.prf : '') +
+      const t = { equivalence: eq, comment: (m.title || m.profile) + ' · ' + KC.match.both(m.level) + (m.element ? ' · 데이터요소 ' + m.element : '') + (none ? ' · KR-mCODE 후보 ' + it.prf : '') +
         (m.resConflict ? ' · KR Core ' + it.core.path.split('.')[0] + '와 리소스 상이(mCODE ' + m.resConflict + '), 기본 표현 ' + m.primary : '') };
       if (!none) { t.code = m.path; t.display = (m.title || m.profile) + ' ' + m.path; }
       g.element.push({ code: it.id, display: it.name, target: [t] });
@@ -2983,7 +3043,7 @@ KC.artifacts = (function () {
       usedNames[en] = 1;
       const el = { id: root + '.' + en, path: root + '.' + en, label: e.col, min: 0, max: '1' };
       if (!it) {
-        Object.assign(el, { short: e.col, definition: '원천 컬럼(K-CURE 표준항목 미매핑)', type: [{ code: 'string' }] });
+        Object.assign(el, { short: e.col, definition: '원천 컬럼(K-CURE 표준항목 미인식)', type: [{ code: 'string' }] });
         els.push(el);
         return;
       }
@@ -2994,9 +3054,9 @@ KC.artifacts = (function () {
       if (it.req === '필수') el.min = 1;
       el.type = [{ code: FT[it.type] || 'string' }];
       if (it.type === 'VARCHAR' && it.len) el.maxLength = it.len;
-      el.mapping = [{ identity: 'krcore', map: it.core.path, comment: it.core.profile + ' [' + it.core.judge + ']' }];
-      if (it.cdi && it.cdi.el) el.mapping.push({ identity: 'krcdi', map: it.cdi.cls + '.' + it.cdi.el, comment: '필수여부 ' + it.cdi.req + (it.cdi.match ? ' · ' + it.cdi.match : '') });
-      if (it.mcode.path && it.mcode.path !== '해당 없음') el.mapping.push({ identity: 'mcode', map: it.mcode.path, comment: (it.mcode.title || it.mcode.profile) + ' [' + it.mcode.level + ']' + (it.mcode.element ? ' · ' + it.mcode.element : '') });
+      el.mapping = [{ identity: 'krcore', map: it.core.path, comment: it.core.profile + ' [' + KC.match.both(it.core.judge) + ']' }];
+      if (it.cdi && it.cdi.el) el.mapping.push({ identity: 'krcdi', map: it.cdi.cls + '.' + it.cdi.el, comment: '필수여부 ' + it.cdi.req + (it.cdi.match ? ' · ' + KC.match.both(it.cdi.match) : '') });
+      if (it.mcode.path && it.mcode.path !== '해당 없음') el.mapping.push({ identity: 'mcode', map: it.mcode.path, comment: (it.mcode.title || it.mcode.profile) + ' [' + KC.match.both(it.mcode.level) + ']' + (it.mcode.element ? ' · ' + it.mcode.element : '') });
       const o = KC.meta.omopOf(e);
       if (o) el.mapping.push({ identity: 'omop', map: o.table + '.' + o.field, comment: '개념 ' + o.concept + (o.vocab && o.vocab !== '-' ? ' · ' + o.vocab : '') + ' · 신뢰도 ' + o.conf });
       const a = KC.meta.argoOf(e);
@@ -3024,15 +3084,15 @@ KC.artifacts = (function () {
 
   function specCsv(items) {
     const rows = [['항목ID', '표준항목명', '표준정의', '대분류', '중분류', '우선검토구분', 'mCODE도메인', '의미역할', '출현암종',
-      '데이터타입', '길이', '단위', '코드여부', '표준코드명', '허용값', '필수여부', 'KR_CDI_분류', 'KR_CDI_항목', 'KR_CDI_필수', 'KR_CDI_대응유형',
-      'KR_Core_Profile', 'KR_Core_Profile_URL', 'KR_Core_FHIR_Path', 'KR_Core_판정', 'mCODE_Profile', 'mCODE_FHIR_Path', 'mCODE_참조수준',
-      'KR-mCODE_프로파일ID', '심사등급', '매핑확정단계', '정의결손코드', '원천별칭']];
+      '데이터타입', '길이', '단위', '코드여부', '표준코드명', '허용값', '필수여부', 'KR_CDI_분류', 'KR_CDI_항목', 'KR_CDI_필수', 'KR_CDI_매칭유형',
+      'KR_Core_Profile', 'KR_Core_Profile_URL', 'KR_Core_FHIR_Path', 'KR_Core_판정', 'mCODE_Profile', 'mCODE_FHIR_Path', 'mCODE_매칭유형',
+      'KR-mCODE_프로파일ID', '심사등급', '매핑확정단계', '정의결손코드', '원천별칭', '원래_판정']];
     items.forEach(function (it) {
       const c = it.cdi || {};
       rows.push([it.id, it.name, it.def, it.cat1, it.cat2, it.tier, it.domain, it.role, it.cancers.join(' '), it.type, it.len || '', it.unit,
-        it.codeYN, it.codeName, it.allowed, it.req, c.cls || '', c.el || '', c.req || '', c.match || '', it.core.profile, it.core.url,
-        it.core.path, it.core.judge, it.mcode.profile, it.mcode.path, it.mcode.level, it.prf, it.grade, it.stage, it.gap,
-        (it.aliases || []).map(function (a) { return a[0]; }).join(' | ')]);
+        it.codeYN, it.codeName, it.allowed, it.req, c.cls || '', c.el || '', c.req || '', c.el ? KC.match.label(c.match || '대응') : '', it.core.profile, it.core.url,
+        it.core.path, KC.match.label(it.core.judge), it.mcode.profile, it.mcode.path, KC.match.label(it.mcode.level), it.prf, it.grade, it.stage, it.gap,
+        (it.aliases || []).map(function (a) { return a[0]; }).join(' | '), KC.match.orig(it)]);
     });
     return U.toCsv(rows);
   }
@@ -3342,40 +3402,40 @@ KC.meta = (function () {
   /* ---------- 표 생성 ---------- */
   function integratedRows(entries) {
     const head = ['No', '원천 컬럼', '항목ID', '표준항목명', '표준정의', '대분류', '중분류', 'mCODE 도메인', '데이터타입', '길이', '단위', '허용값', '필수여부',
-      'KR CDI 분류', 'KR CDI 항목', 'KR CDI 필수', 'KR CDI 대응유형',
+      'KR CDI 분류', 'KR CDI 항목', 'KR CDI 필수', 'KR CDI 매칭유형',
       'KR Core 프로파일', 'KR Core 프로파일 URL', 'KR Core FHIR 경로', 'KR Core 판정',
       'DCAT 변수 자료형',
-      'mCODE 프로파일', 'mCODE 프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', 'mCODE 참조수준',
+      'mCODE 프로파일', 'mCODE 프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', 'mCODE 매칭유형',
       'OMOP 테이블', 'OMOP 필드', 'OMOP 개념 필드', 'OMOP 일자 필드', 'OMOP 원천값 필드', 'OMOP 어휘', 'OMOP 변환·주의', 'OMOP 신뢰도',
       'ARGO 스키마', 'ARGO 필드', 'ARGO 표시명', 'ARGO Tier', 'ARGO 필수조건', 'ARGO 유형', 'ARGO 허용값', 'ARGO 변환·주의', 'ARGO 신뢰도',
-      '매핑 단계', '정의결손', 'mCODE·KR Core 리소스', '기본 표현', '매핑 수정안', '검토 상태'];
+      '매핑 단계', '정의결손', 'mCODE·KR Core 리소스', '기본 표현', '매핑 수정안', '검토 상태', '원래 판정'];
     const rows = [head];
     entries.forEach(function (e, i) {
       const it = e.item;
-      if (!it) { rows.push([i + 1, e.col, '', '(미매핑)']); return; }
+      if (!it) { rows.push([i + 1, e.col, '', '(항목 미인식)']); return; }
       const c = it.cdi || {}, a = argoOf(e), o = omopOf(e), m = it.mcode;
       rows.push([i + 1, e.col, it.id, it.name, it.def, it.cat1, it.cat2, it.domain, it.type, it.len || '', it.unit, it.allowed, it.req,
-        c.cls || '', c.el || '', c.req || '', c.match || '',
-        it.core.profile, it.core.url, it.core.path, it.core.judge,
+        c.cls || '', c.el || '', c.req || '', c.el ? KC.match.label(c.match || '대응') : '',
+        it.core.profile, it.core.url, it.core.path, KC.match.label(it.core.judge),
         KC.dcat.xsdType(it.type),
-        m.title || m.profile, m.url || '', m.path, m.element || '', m.level,
+        m.title || m.profile, m.url || '', m.path, m.element || '', KC.match.label(m.level),
         o ? o.table : '', o ? o.field : '', o ? o.concept : '', o ? o.date : '', o ? o.source : '', o ? o.vocab : '', o ? o.note : '', o ? o.conf : '',
         a ? a.schema : '', a ? a.field : '', a ? a.label : '', a ? a.tier : '', a ? a.req : '', a ? a.type : '', a ? argoValues(a) : '', a ? a.note : '', a ? a.conf : '',
         it.stage, it.gap, m.resConflict ? '상이(KR Core ' + it.core.path.split('.')[0] + ' / mCODE ' + m.resConflict + ')' : '일치',
-        m.resConflict ? m.primary : '', reviewText(it), e.rv || '후보']);
+        m.resConflict ? m.primary : '', reviewText(it), e.rv || '후보', KC.match.orig(it)]);
     });
     return rows;
   }
 
   /* ---------- mCODE 표 ---------- */
   function mcodeMapRows(entries) {
-    const rows = [['원천 컬럼', '항목ID', '표준항목명', 'mCODE 프로파일', '프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', '데이터요소 필수', '참조수준', 'KR Core 경로', '리소스 일치', '기본 표현', '비고']];
+    const rows = [['원천 컬럼', '항목ID', '표준항목명', 'mCODE 프로파일', '프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', '데이터요소 필수', '매칭유형', 'KR Core 경로', '리소스 일치', '기본 표현', '비고', '원래 판정']];
     entries.forEach(function (e) {
       if (!e.item) return;
       const m = e.item.mcode;
-      rows.push([e.col, e.item.id, e.item.name, m.title || m.profile, m.url || '', m.path, m.element || '', m.elRequired || '', m.level, e.item.core.path,
+      rows.push([e.col, e.item.id, e.item.name, m.title || m.profile, m.url || '', m.path, m.element || '', m.elRequired || '', KC.match.label(m.level), e.item.core.path,
         m.resConflict ? '상이' : (m.path && m.path !== '해당 없음' ? '일치' : ''), m.resConflict ? m.primary : '',
-        /미정의/.test(m.profile) ? 'mCODE STU4에 대응 프로파일 없음 — KR-mCODE 신규 후보(' + e.item.prf + ')' : (m.level === '구조참조(KR-mCODE 자체정의)' ? 'mCODE Draft 구조 참조, KR-mCODE에서 자체 정의' : '')]);
+        /미정의/.test(m.profile) ? 'mCODE STU4에 매칭 프로파일 없음 — KR-mCODE 신규 후보(' + e.item.prf + ')' : (m.level === '구조참조(KR-mCODE 자체정의)' ? 'mCODE Draft 구조 참조, KR-mCODE에서 자체 정의' : ''), m.level]);
     });
     return rows;
   }
@@ -3389,7 +3449,7 @@ KC.meta = (function () {
       (byProf[m.title] = byProf[m.title] || []).push(e);
       if (m.element) (byEl[m.title + '|' + m.element] = byEl[m.title + '|' + m.element] || []).push(e);
     });
-    const prof = [['mCODE 프로파일', 'URL', '그룹', '데이터요소 수', '필수 데이터요소 수', '대응 컬럼 수', '대응 데이터요소 수', '대응 컬럼', '상태']];
+    const prof = [['mCODE 프로파일', 'URL', '그룹', '데이터요소 수', '필수 데이터요소 수', '매칭 컬럼 수', '매칭 데이터요소 수', '매칭 컬럼', '상태']];
     let covered = 0;
     d.profiles.forEach(function (p) {
       const els = d.elements.filter(function (x) { return x.profile === p.title; });
@@ -3397,9 +3457,9 @@ KC.meta = (function () {
       const es = byProf[p.title] || [];
       const elHit = els.filter(function (x) { return byEl[p.title + '|' + x.name]; }).length;
       if (es.length) covered++;
-      prof.push([p.title, p.url, p.group, els.length, req.length, es.length, elHit, es.slice(0, 30).map(function (e) { return e.col; }).join(' | ') + (es.length > 30 ? ' …' : ''), es.length ? '대응' : '미대응']);
+      prof.push([p.title, p.url, p.group, els.length, req.length, es.length, elHit, es.slice(0, 30).map(function (e) { return e.col; }).join(' | ') + (es.length > 30 ? ' …' : ''), es.length ? '매칭' : '미매칭']);
     });
-    const el = [['mCODE 프로파일', '데이터요소', '필수', '반복', '자료형', 'FHIR 요소', '대응 K-CURE 컬럼']];
+    const el = [['mCODE 프로파일', '데이터요소', '필수', '반복', '자료형', 'FHIR 요소', '매칭 K-CURE 컬럼']];
     d.elements.forEach(function (x) {
       const es = byEl[x.profile + '|' + x.name] || [];
       el.push([x.profile, x.name, x.required, x.card, x.type, x.path, es.map(function (e) { return e.col; }).join(' | ')]);
@@ -3422,19 +3482,19 @@ KC.meta = (function () {
     const d = KC.spec.data.omop || { tables: [], fields: {} };
     const by = {}, used = {};
     entries.forEach(function (e) { const o = omopOf(e); if (o) { (by[o.key] = by[o.key] || []).push(e.col); used[o.table] = (used[o.table] || 0) + 1; } });
-    const rows = [['OMOP 테이블', '필드', '필수', '자료형', '참조 테이블', '대응 K-CURE 컬럼', '상태']];
+    const rows = [['OMOP 테이블', '필드', '필수', '자료형', '참조 테이블', '매칭 K-CURE 컬럼', '상태']];
     let req = 0, reqOk = 0;
     d.tables.forEach(function (t) {
       if (!used[t.name]) return;
       t.fields.forEach(function (fn) {
         const f = d.fields[t.name + '.' + fn], hit = by[t.name + '.' + fn] || [];
         let state;
-        if (hit.length) state = '대응';
+        if (hit.length) state = '매칭';
         else if (/_type_concept_id$/.test(fn)) state = 'ETL 상수(유형: 32817 EHR 등)';
         else if (/_id$/.test(fn) && !/_concept_id$/.test(fn)) state = 'ETL 생성(키·참조)';
         else if (/_concept_id$/.test(fn) && (by[t.name + '.' + fn.replace(/_concept_id$/, '_source_value')] || OMOP_T[t.name] && OMOP_T[t.name].concept === fn && used[t.name])) state = '어휘 매핑으로 채움';
-        else state = f.required ? '미대응 — 필수' : '미대응';
-        if (f.required) { req++; if (state !== '미대응 — 필수') reqOk++; }
+        else state = f.required ? '미매칭 — 필수' : '미매칭';
+        if (f.required) { req++; if (state !== '미매칭 — 필수') reqOk++; }
         rows.push([t.name, fn, f.required ? 'Y' : '', f.type, f.fk, hit.join(' | '), state]);
       });
     });
@@ -3461,12 +3521,12 @@ KC.meta = (function () {
     });
     const touched = {};
     Object.keys(byKey).forEach(function (k) { touched[k.split('|')[0]] = 1; });
-    const rows = [['No', 'KR CDI 분류', 'KR CDI 항목', '영문명', '필수여부', '데이터타입', '참조 용어체계', 'KR Core 1순위 경로', '대응 K-CURE 컬럼', '대응 수', '상태', '수집범위 사유']];
+    const rows = [['No', 'KR CDI 분류', 'KR CDI 항목', '영문명', '필수여부', '데이터타입', '참조 용어체계', 'KR Core 1순위 경로', '매칭 K-CURE 컬럼', '매칭 수', '상태', '수집범위 사유']];
     KC.spec.krcdi.forEach(function (k) {
       const hit = byKey[k.cls + '|' + k.el] || [];
-      const state = hit.length ? '대응' : k.scope ? '수집범위외 — ' + k.scope : (touched[k.cls] && k.req === 'R' ? 'R(필수) 미대응 — 사용 분류' : '미대응');
+      const state = hit.length ? '매칭' : k.scope ? '범위외 — ' + k.scope : (touched[k.cls] && k.req === 'R' ? 'R(필수) 미매칭 — 사용 분류' : '미매칭');
       rows.push([k.no, k.cls, k.el, k.elEn, k.req, k.type, k.term, k.corePath,
-        hit.map(function (e) { return e.col + ' (' + e.item.id + (e.item.cdi.match ? ', ' + e.item.cdi.match : '') + ')'; }).join(' | '), hit.length, state, k.scopeNote || '']);
+        hit.map(function (e) { return e.col + ' (' + e.item.id + (e.item.cdi.match ? ', ' + KC.match.both(e.item.cdi.match) : '') + ')'; }).join(' | '), hit.length, state, k.scopeNote || '']);
     });
     return rows;
   }
@@ -3478,12 +3538,12 @@ KC.meta = (function () {
       const k = e.item.core.profile + '\u0001' + e.item.core.path;
       (groups[k] = groups[k] || []).push(e);
     });
-    const rows = [['KR Core 프로파일', '프로파일 URL', 'FHIR 리소스', 'FHIR 경로', '판정', '대응 K-CURE 컬럼 수', '대응 K-CURE 컬럼']];
+    const rows = [['KR Core 프로파일', '프로파일 URL', 'FHIR 리소스', 'FHIR 경로', '판정', '매칭 K-CURE 컬럼 수', '매칭 K-CURE 컬럼', '원래 판정']];
     Object.keys(groups).sort().forEach(function (k) {
       const es = groups[k], it = es[0].item;
       const judges = Object.keys(U.groupCount(es, function (e) { return e.item.core.judge; })).join('/');
-      rows.push([it.core.profile, it.core.url, it.core.path.split('.')[0], it.core.path, judges, es.length,
-        es.map(function (e) { return e.col; }).join(' | ')]);
+      rows.push([it.core.profile, it.core.url, it.core.path.split('.')[0], it.core.path, judges.split('/').map(KC.match.label).filter(function (x, i, a) { return a.indexOf(x) === i; }).join('/'), es.length,
+        es.map(function (e) { return e.col; }).join(' | '), judges]);
     });
     return rows;
   }
@@ -3501,14 +3561,14 @@ KC.meta = (function () {
   function argoCoverage(entries) {
     const by = {};
     entries.forEach(function (e) { const a = argoOf(e); if (a) (by[a.key] = by[a.key] || []).push(e.col); });
-    const rows = [['ARGO 스키마', '필드', '표시명', 'Tier', '필수조건', '유형', '대응 K-CURE 컬럼', '상태', '파생·지정 규칙']];
+    const rows = [['ARGO 스키마', '필드', '표시명', 'Tier', '필수조건', '유형', '매칭 K-CURE 컬럼', '상태', '파생·지정 규칙']];
     const stat = { core: 0, coreHit: 0, coreDerived: 0, coreFixed: 0, req: 0, reqHit: 0, all: 0, hit: 0 };
     const derived = (KC.spec.data.argo && KC.spec.data.argo.derived) || {};
     (KC.spec.data.argo ? KC.spec.data.argo.schemas : []).forEach(function (s) {
       s.fields.forEach(function (fn) {
         const k = s.name + '.' + fn, f = KC.spec.data.argo.fields[k], hit = by[k] || [];
         const isId = f.tier === 'ID';
-        let state = hit.length ? '대응' : isId ? '식별자(제출 시 생성)' : (f.req === 'Required' ? '미대응 — Required' : f.tier === 'Core' ? '미대응 — Core' : '미대응');
+        let state = hit.length ? '매칭' : isId ? '식별자(제출 시 생성)' : (f.req === 'Required' ? '미매칭 — Required' : f.tier === 'Core' ? '미매칭 — Core' : '미매칭');
         // 직접 대응이 없을 때만 파생·지정값으로 본다 (직접 대응 수와 섞지 않음)
         const dv = derived[k];
         let how = '';
@@ -3612,42 +3672,42 @@ KC.meta = (function () {
     const add = function (path, std, title, content, mime) { files.push({ path: path, std: std, title: title, content: content, mime: mime }); };
 
     const summaryRows = [['구분', '값', '비고'],
-      ['암종', label, ''], ['원천 컬럼', sum.columns, '표준항목 매핑 ' + sum.mapped + ' · 미매핑 ' + sum.unmapped],
-      ['KR CDI 대응 컬럼', sum.krcdi, 'KR CDI 80항목 중 ' + sum.krcdiElements + '개 항목에 대응 · 수집범위외 ' + sum.krcdiOutOfScope + ' · 실제 미대응 ' + sum.krcdiGap],
-      ['KR Core 직접재사용', sum.krcoreDirect, ''], ['KR Core 제약재사용', sum.krcoreConstrained, '추가 제약 필요'], ['KR Core 확장필요', sum.krcoreExtension, '확장 설계 대상'],
+      ['암종', label, ''], ['원천 컬럼', sum.columns, '표준항목 연결 ' + sum.mapped + ' · 항목 미인식 ' + sum.unmapped],
+      ['KR CDI 매칭 컬럼', sum.krcdi, 'KR CDI 80항목 중 ' + sum.krcdiElements + '개 항목에 매칭 · 범위외 ' + sum.krcdiOutOfScope + ' · 실제 미매칭 ' + sum.krcdiGap],
+      ['KR Core 직접매칭', sum.krcoreDirect, '원래 판정: 직접재사용'], ['KR Core 조건부매칭', sum.krcoreConstrained, '추가 제약 필요 · 원래 판정: 제약재사용'], ['KR Core 확장필요', sum.krcoreExtension, '확장 설계 대상'],
       ['KR Core 프로파일 수', sum.krcoreProfiles, 'KR Core 및 KR-mCODE 후보 포함'],
-      ['mCODE 대응 컬럼', sum.mcode, '직접 ' + sum.mcodeDirect + ' · 부분 ' + sum.mcodePartial + ' · 개념/구조참조 ' + sum.mcodeRef + ' · 미대응 ' + sum.mcodeNone],
-      ['mCODE·KR Core 리소스 상이', sum.mcodeConflict, '기본 표현 규칙: KR Core 우선, KR Core 확장필요·mCODE 직접재사용이면 mCODE'],
+      ['mCODE 매칭 컬럼', sum.mcode, '직접매칭 ' + sum.mcodeDirect + ' · 상위매칭 ' + sum.mcodePartial + ' · 참조매칭 ' + sum.mcodeRef + ' · 미매칭 ' + sum.mcodeNone],
+      ['mCODE·KR Core 리소스 상이', sum.mcodeConflict, '기본 표현 규칙: KR Core 우선, KR Core 확장필요·mCODE 직접매칭이면 mCODE'],
       ['매핑 수정안 대상 컬럼', sum.review, 'spec/corrections.json (승인된 건만 명세 반영)'],
       ['mCODE 프로파일 충족', sum.mcodeProfiles + ' / ' + sum.mcodeProfilesTotal, 'mCODE STU4 데이터 사전 프로파일 기준'],
-      ['OMOP CDM 대응 컬럼', sum.omop, confText(sum.omopConf)],
+      ['OMOP CDM 매칭 컬럼', sum.omop, confText(sum.omopConf)],
       ['OMOP 사용 테이블', Object.keys(sum.omopTables).length, Object.keys(sum.omopTables).map(function (k) { return k + ' ' + sum.omopTables[k]; }).join(', ')],
       ['OMOP 필수 필드 충족', ocov.reqOk + ' / ' + ocov.req, '사용 테이블의 필수 필드(키·유형은 ETL 생성 포함)'],
-      ['ICGC ARGO 대응 컬럼', sum.argo, '높음 ' + (sum.argoConf['높음'] || 0) + ' · 중간 ' + (sum.argoConf['중간'] || 0) + ' · 낮음 ' + (sum.argoConf['낮음'] || 0) + (sum.argoConf['수동'] ? ' · 수동 ' + sum.argoConf['수동'] : '')],
-      ['ARGO Core 필드 충족', sum.argoCoreHit + ' / ' + sum.argoCore, 'ID 계층 제외 · 직접 대응만. 별도로 파생 가능 ' + sum.argoCoreDerived + ' · 제출 시 지정값 ' + sum.argoCoreFixed], ['ARGO Required 필드 충족', sum.argoReqHit + ' / ' + sum.argoReq, 'ID 계층 제외'],
+      ['ICGC ARGO 매칭 컬럼', sum.argo, '높음 ' + (sum.argoConf['높음'] || 0) + ' · 중간 ' + (sum.argoConf['중간'] || 0) + ' · 낮음 ' + (sum.argoConf['낮음'] || 0) + (sum.argoConf['수동'] ? ' · 수동 ' + sum.argoConf['수동'] : '')],
+      ['ARGO Core 필드 충족', sum.argoCoreHit + ' / ' + sum.argoCore, 'ID 계층 제외 · 직접 매칭만. 별도로 파생 가능 ' + sum.argoCoreDerived + ' · 제출 시 지정값 ' + sum.argoCoreFixed], ['ARGO Required 필드 충족', sum.argoReqHit + ' / ' + sum.argoReq, 'ID 계층 제외'],
       ['DCAT 필수속성 누락', dc.issues.filter(function (x) { return x.level === '오류'; }).length, 'NIA 가이드 [표 5]'],
       ['기준 명세', KC.spec.data.meta.source, KC.spec.data.meta.stageNote], ['mCODE', 'mCODE STU4', KC.spec.data.meta.mcodeNote || ''],
       ['OMOP 매핑', 'OMOP CDM v5.4', KC.spec.data.meta.omopNote || ''], ['ARGO 매핑', 'ICGC ARGO v1.34', KC.spec.data.meta.argoNote || ''],
-      ['생성', U.nowIso(), 'K-CURE 표준변환기 ' + KC.APP_VERSION]];
+      ['생성', U.nowIso(), 'K-CURE 표준변환기 ' + KC.APP_VERSION], ['', '', ''], ['매칭 용어', '뜻', '원래 판정']].concat(KC.match.LEGEND.map(function (x) { return x.slice(); }));
 
     const W = function (n) { return new Array(n).fill(18); };
     add('00_통합_메타데이터.xlsx', '통합', '통합 메타데이터 정의서 (엑셀 12개 시트)', KC.writers.xlsx([
       { name: '00_요약', title: 'K-CURE ' + label + ' 컬럼 메타데이터 변환 요약', rows: summaryRows, widths: [24, 36, 70] },
-      { name: '01_항목메타데이터_통합', title: '컬럼별 KR CDI · KR Core · mCODE · OMOP · DCAT · ARGO 메타데이터', rows: integratedRows(entries), widths: [6, 22, 18, 22, 36].concat(W(44)) },
-      { name: '02_KR_CDI', title: 'KR CDI V3 80항목 대응 (이 암종 컬럼 기준)', rows: krcdiRows(entries), widths: [6, 18, 18, 22, 8, 12, 20, 34, 50, 8, 26] },
-      { name: '03_KR_Core', title: 'KR Core V2 프로파일·경로별 컬럼', rows: krcoreRows(entries), widths: [40, 50, 16, 40, 18, 10, 60] },
-      { name: '04_mCODE_매핑', title: 'mCODE STU4 대응 (항목정의서 v2.4 기준)', rows: mcodeMapRows(entries), widths: [22, 18, 22, 32, 50, 34, 26, 14, 18, 34, 40] },
+      { name: '01_항목메타데이터_통합', title: '컬럼별 KR CDI · KR Core · mCODE · OMOP · DCAT · ARGO 메타데이터', rows: integratedRows(entries), widths: [6, 22, 18, 22, 36].concat(W(44), [50]) },
+      { name: '02_KR_CDI', title: 'KR CDI V3 80항목 매칭 (이 암종 컬럼 기준)', rows: krcdiRows(entries), widths: [6, 18, 18, 22, 8, 12, 20, 34, 50, 8, 26] },
+      { name: '03_KR_Core', title: 'KR Core V2 프로파일·경로별 컬럼', rows: krcoreRows(entries), widths: [40, 50, 16, 40, 18, 10, 60, 24] },
+      { name: '04_mCODE_매핑', title: 'mCODE STU4 매칭 (항목정의서 v2.4 기준)', rows: mcodeMapRows(entries), widths: [22, 18, 22, 32, 50, 34, 26, 14, 14, 34, 10, 20, 40, 24] },
       { name: '05_mCODE_프로파일', title: 'mCODE STU4 프로파일 충족 현황', rows: mcov.profiles, widths: [36, 60, 10, 10, 10, 10, 10, 60, 10] },
       { name: '06_mCODE_데이터요소', title: 'mCODE STU4 데이터요소 충족 현황', rows: mcov.elements, widths: [34, 30, 20, 10, 20, 36, 50] },
-      { name: '07_OMOP_ETL매핑', title: 'OMOP CDM v5.4 대응 (규칙 기반 후보 · ETL 명세)', rows: omopMapRows(entries), widths: [22, 18, 22, 10, 20, 24, 10, 24, 22, 26, 26, 50, 8, 40] },
+      { name: '07_OMOP_ETL매핑', title: 'OMOP CDM v5.4 매칭 (규칙 기반 후보 · ETL 명세)', rows: omopMapRows(entries), widths: [22, 18, 22, 10, 20, 24, 10, 24, 22, 26, 26, 50, 8, 40] },
       { name: '08_OMOP_필드커버리지', title: 'OMOP CDM 사용 테이블의 필드 충족 현황', rows: ocov.rows, widths: [22, 28, 6, 10, 18, 50, 24] },
       { name: '09_DCAT_변수', title: 'DCAT 데이터셋 변수 정의 (ndi:profile)', rows: dcatRows(entries), widths: [22, 18, 22, 12, 10, 30, 24, 34, 24, 30, 36, 40] },
-      { name: '10_ARGO_매핑', title: 'ICGC ARGO v1.34 대응 (규칙 기반 후보)', rows: argoMapRows(entries), widths: [22, 18, 22, 10, 18, 30, 26, 10, 12, 10, 8, 40, 40, 8, 40] },
+      { name: '10_ARGO_매핑', title: 'ICGC ARGO v1.34 매칭 (규칙 기반 후보)', rows: argoMapRows(entries), widths: [22, 18, 22, 10, 18, 30, 26, 10, 12, 10, 8, 40, 40, 8, 40] },
       { name: '11_ARGO_커버리지', title: 'ICGC ARGO 필드별 충족 현황', rows: cov.rows, widths: [20, 34, 30, 10, 12, 10, 40, 24] }
     ]), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-    add('KR_CDI/KRCDI_컬럼대응.csv', 'KR CDI V3', 'KR CDI 컬럼 대응표', csv([['원천 컬럼', '항목ID', '표준항목명', 'KR CDI 분류', 'KR CDI 항목', '필수여부', '대응유형']].concat(
-      entries.filter(function (e) { return e.item && e.item.cdi && e.item.cdi.el; }).map(function (e) { const c = e.item.cdi; return [e.col, e.item.id, e.item.name, c.cls, c.el, c.req, c.match || '']; }))), 'text/csv');
+    add('KR_CDI/KRCDI_컬럼대응.csv', 'KR CDI V3', 'KR CDI 컬럼 매칭표', csv([['원천 컬럼', '항목ID', '표준항목명', 'KR CDI 분류', 'KR CDI 항목', '필수여부', '매칭유형', '원래 판정']].concat(
+      entries.filter(function (e) { return e.item && e.item.cdi && e.item.cdi.el; }).map(function (e) { const c = e.item.cdi; return [e.col, e.item.id, e.item.name, c.cls, c.el, c.req, KC.match.label(c.match || '대응'), c.match || '']; }))), 'text/csv');
     add('KR_CDI/KRCDI_80항목_커버리지.csv', 'KR CDI V3', 'KR CDI 80항목 커버리지', csv(krcdiRows(entries)), 'text/csv');
     add('KR_CDI/ConceptMap_KCURE-KRCDI.json', 'KR CDI V3', 'FHIR ConceptMap (K-CURE→KR CDI)', JSON.stringify(KC.artifacts.toKrcdi(conf, items), null, 2), 'application/fhir+json');
 
@@ -3689,6 +3749,9 @@ KC.meta = (function () {
       'OMOP/      OMOP CDM v5.4 ETL 매핑 명세(테이블·필드·개념/일자/원천값 필드·권장 어휘), 필드 충족 현황, source_to_concept_map 템플릿, ConceptMap',
       'DCAT/      국가 데이터 카탈로그(DCAT-AP 2.1 + NIA ndi 확장) — 컬럼 정의는 ndi:profile(JSON)',
       'ARGO/      ICGC ARGO v1.34 컬럼 매핑(후보), 245필드 커버리지, ConceptMap, 제출 템플릿(TSV)과 채우기 안내',
+      '',
+      '매칭 용어: ' + KC.match.legendText(),
+      '  표의 매칭유형은 모든 표준에 같은 척도로 표시했고, 항목정의서의 원래 판정(직접재사용·제약재사용 등)은 \'원래 판정\' 열에 남겼습니다.',
       '',
       '주의: 모든 매핑은 후보 단계입니다. KR CDI·KR Core·mCODE는 규칙승인(L3 미검증), OMOP·ARGO는 규칙 기반 자동 후보로 전문가 검토가 필요합니다.',
       'OMOP: 테이블·필드 수준 매핑입니다. 개념 ID(concept_id)는 Athena 어휘와 source_to_concept_map 템플릿으로 별도 매핑합니다.',
@@ -4393,7 +4456,7 @@ KC.codegen = (function () {
   function readme(plan, opts, check) {
     const T = KC.deid.techniques();
     const rows = plan.columns.map(function (c) {
-      return '| ' + [c.col, c.item ? c.item.id + ' ' + c.item.name : '(미매핑)', (T[c.technique] || {}).label + ' `' + c.technique + '`', c.ruleId, c.reason, c.confidence, c.status].join(' | ') + ' |';
+      return '| ' + [c.col, c.item ? c.item.id + ' ' + c.item.name : '(항목 미인식)', (T[c.technique] || {}).label + ' `' + c.technique + '`', c.ruleId, c.reason, c.confidence, c.status].join(' | ') + ' |';
     });
     return ['# K-CURE 가명처리 코드 패키지', '',
       '- 생성: ' + plan.created + ' · K-CURE 표준변환기 ' + KC.APP_VERSION + ' · 규칙팩 deid_rules v' + plan.version,
@@ -5056,7 +5119,7 @@ KC.deidUi = (function () {
         return '<tr class="' + (c.status === '반려' ? 'muted' : '') + '"><td><select data-dzs="' + i + '">' + ['후보', '승인', '반려'].map(function (s) {
             return '<option' + (s === c.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>' +
           '<td><b>' + esc(c.col) + '</b>' + exp + '</td>' +
-          '<td class="small">' + (c.item ? '<span class="mono">' + c.item.id + '</span><div class="l2">' + esc(c.item.name) + ' · ' + esc(c.item.role) + '</div>' : '<span class="pill warn">미매핑</span>') + '</td>' +
+          '<td class="small">' + (c.item ? '<span class="mono">' + c.item.id + '</span><div class="l2">' + esc(c.item.name) + ' · ' + esc(c.item.role) + '</div>' : '<span class="pill warn">항목 미인식</span>') + '</td>' +
           '<td class="small">' + smp + '</td><td>' + sel + '</td><td>' + (params || '<span class="muted small">—</span>') + '</td>' +
           '<td class="small">' + esc(c.reason) + ' <span class="muted mono">' + c.ruleId + '</span></td><td><span class="pill ' + pc + '">' + esc(c.confidence) + '</span></td>' +
           '<td class="small">' + (c.llm ? esc((KC.deid.techniques()[c.llm.technique] || {}).label || c.llm.technique) + (c.llm.itemId ? ' · ' + esc(c.llm.itemId) : '') +
@@ -5471,13 +5534,13 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     }
     const methodCls = !m.itemId ? 'warn' : m.method === '수동' ? 'info' : 'ok';
     const cdi = it && it.cdi && it.cdi.el ? esc(it.cdi.cls + ' / ' + it.cdi.el) + ' <span class="pill">' + esc(it.cdi.req) + '</span>' : '<span class="muted">—</span>';
-    const core = it ? '<span class="mono">' + esc(it.core.path) + '</span> <span class="pill ' + (it.core.judge === '확장필요' ? 'warn' : it.core.judge === '직접재사용' ? 'ok' : '') + '">' + esc(it.core.judge) + '</span>' : '';
+    const core = it ? '<span class="mono">' + esc(it.core.path) + '</span> <span class="pill ' + KC.match.cls(it.core.judge) + '" title="원래 판정: ' + esc(it.core.judge) + '">' + esc(KC.match.label(it.core.judge)) + '</span>' : '';
     const alt = m.alternatives && m.alternatives.length ? '<div class="small muted">다른 후보 ' + m.alternatives.length + '개</div>' : '';
     return '<tr data-idx="' + m.idx + '"><td class="num">' + (m.idx + 1) + '</td><td><b>' + esc(m.col) + '</b>' + (m.idx === st.patientCol ? ' <span class="pill info">환자키</span>' : '') +
       '</td><td class="trunc small">' + esc(samples.join(' · ')) + '</td>' +
-      '<td><input type="text" list="itemList" value="' + esc(itemLabel(it)) + '" data-idx="' + m.idx + '" placeholder="미매핑 — 항목ID 또는 이름 입력">' + alt +
+      '<td><input type="text" list="itemList" value="' + esc(itemLabel(it)) + '" data-idx="' + m.idx + '" placeholder="항목 미인식 — 항목ID 또는 이름 입력">' + alt +
       (it ? '<div class="small muted">' + esc(it.type + (it.unit ? ' · ' + it.unit : '') + (it.allowed ? ' · ' + it.allowed : '')) + '</div>' : '') + '</td>' +
-      '<td><span class="pill ' + methodCls + '">' + esc(m.method) + '</span></td><td class="small">' + cdi + '</td><td class="small">' + core + '</td></tr>';
+      '<td><span class="pill ' + methodCls + '">' + esc(KC.match.label(m.method)) + '</span></td><td class="small">' + cdi + '</td><td class="small">' + core + '</td></tr>';
   }
 
   function renderMapping() {
@@ -5495,8 +5558,8 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     const mapped = st.mapping.filter(function (m) { return m.itemId; });
     const by = U.groupCount(mapped, function (m) { return m.method; });
     const cdi = mapped.filter(function (m) { const it = KC.spec.byId[m.itemId]; return it.cdi && it.cdi.el; }).length;
-    $('#mapStats').innerHTML = stat('매핑됨', mapped.length + ' / ' + n, '', mapped.length ? 'ok' : '') + stat('미매핑', n - mapped.length, '변환 제외', n - mapped.length ? 'warn' : '') +
-      stat('표준명 일치', by['표준명'] || 0) + stat('원천별칭 일치', by['원천별칭'] || 0) + stat('수동·설정', (by['수동'] || 0) + (by['설정파일'] || 0)) + stat('KR CDI 대응 컬럼', cdi);
+    $('#mapStats').innerHTML = stat('매핑됨', mapped.length + ' / ' + n, '', mapped.length ? 'ok' : '') + stat('항목 미인식', n - mapped.length, '변환 제외', n - mapped.length ? 'warn' : '') +
+      stat('표준명 일치', by['표준명'] || 0) + stat('원천별칭 일치', by['원천별칭'] || 0) + stat('수동·설정', (by['수동'] || 0) + (by['설정파일'] || 0)) + stat('KR CDI 매칭 컬럼', cdi);
   }
 
   /* ---------- 3. 변환 ---------- */
@@ -5594,7 +5657,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     const miss = {};
     r.krcdi.conformance.forEach(function (c) { miss[c.cls + '|' + c.el] = 1; });
     $('#cdiTable').innerHTML = '<table><thead><tr><th>분류</th><th>항목</th><th>필수</th><th class="num">값</th></tr></thead><tbody>' +
-      (cov.length ? cov.map(function (c) { return '<tr><td>' + esc(c.cls) + '</td><td>' + esc(c.el) + '</td><td>' + esc(c.req) + '</td><td class="num">' + c.values + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="muted">KR CDI 대응 컬럼 없음</td></tr>') +
+      (cov.length ? cov.map(function (c) { return '<tr><td>' + esc(c.cls) + '</td><td>' + esc(c.el) + '</td><td>' + esc(c.req) + '</td><td class="num">' + c.values + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="muted">KR CDI 매칭 컬럼 없음</td></tr>') +
       r.krcdi.conformance.map(function (c) { return '<tr><td>' + esc(c.cls) + '</td><td>' + esc(c.el) + '</td><td>R</td><td class="num"><span class="pill warn">누락</span></td></tr>'; }).join('') + '</tbody></table>';
     const codes = Object.keys(U.groupCount(r.log.entries, function (e) { return e.code; })).sort();
     $('#logCode').innerHTML = '<option value="">전체 코드</option>' + codes.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
@@ -5728,7 +5791,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     st.mmPage = 0;
     $('#selSource').textContent = '현재 선택: ' + sourceText;
     $('#selCancerLabel').value = st.msel.cancer || '';
-    const doms = Object.keys(U.groupCount(st.msel.entries, function (e) { return e.item ? e.item.domain : '(미매핑)'; })).sort();
+    const doms = Object.keys(U.groupCount(st.msel.entries, function (e) { return e.item ? e.item.domain : '(항목 미인식)'; })).sort();
     $('#selDomain').innerHTML = '<option value="">도메인 전체</option>' + doms.map(function (d) { return '<option>' + esc(d) + '</option>'; }).join('');
     $('#selCard').classList.remove('hidden');
     renderSel();
@@ -5742,7 +5805,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
   function selFiltered() {
     const q = $('#selQ').value.trim().toLowerCase(), d = $('#selDomain').value;
     return st.msel.entries.filter(function (e) {
-      if (d && (e.item ? e.item.domain : '(미매핑)') !== d) return false;
+      if (d && (e.item ? e.item.domain : '(항목 미인식)') !== d) return false;
       if (q && (e.col + ' ' + (e.item ? e.item.id + ' ' + e.item.name : '')).toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
@@ -5754,20 +5817,20 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     const s = KC.meta.summarize(used);
     $('#selTitle').textContent = '선택 항목 — ' + (st.msel.cancer || '암종 미지정');
     $('#selStats').innerHTML = stat('선택 컬럼', used.length + ' / ' + all.length) +
-      stat('표준항목 매핑', s.mapped, s.unmapped ? '미매핑 ' + s.unmapped : '', s.unmapped ? 'warn' : 'ok') +
-      stat('KR CDI 대응', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 · 범위외 ' + s.krcdiOutOfScope) +
-      stat('KR Core', s.krcoreDirect + ' / ' + s.krcoreConstrained + ' / ' + s.krcoreExtension, '직접 / 제약 / 확장') +
-      stat('mCODE 대응', s.mcode, '프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal) +
-      stat('OMOP 대응(후보)', s.omop, '테이블 ' + Object.keys(s.omopTables).length + '개') +
-      stat('ARGO 대응(후보)', s.argo, 'Core 필드 ' + s.argoCoreHit + '/' + s.argoCore + ' (+파생 ' + s.argoCoreDerived + ')');
+      stat('표준항목 연결', s.mapped, s.unmapped ? '항목 미인식 ' + s.unmapped : '', s.unmapped ? 'warn' : 'ok') +
+      stat('KR CDI 매칭', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 · 범위외 ' + s.krcdiOutOfScope) +
+      stat('KR Core', s.krcoreDirect + ' / ' + s.krcoreConstrained + ' / ' + s.krcoreExtension, '직접매칭 / 조건부매칭 / 확장필요') +
+      stat('mCODE 매칭', s.mcode, '프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal) +
+      stat('OMOP 매칭(후보)', s.omop, '테이블 ' + Object.keys(s.omopTables).length + '개') +
+      stat('ARGO 매칭(후보)', s.argo, 'Core 필드 ' + s.argoCoreHit + '/' + s.argoCore + ' (+파생 ' + s.argoCoreDerived + ')');
     const rows = selFiltered();
     $('#selTable').innerHTML = '<table><thead><tr><th>포함</th><th>원천 컬럼</th><th>항목ID</th><th>표준항목명</th><th>도메인</th><th>분류</th><th>자료형</th><th>선택 방식</th></tr></thead><tbody>' +
       rows.map(function (e) {
         const i = st.msel.entries.indexOf(e), it = e.item;
         return '<tr><td><input type="checkbox" data-sel="' + i + '"' + (e.include ? ' checked' : '') + '></td><td><b>' + esc(e.col) + '</b></td>' +
-          '<td class="mono small">' + (it ? it.id : '') + '</td><td>' + (it ? esc(it.name) : '<span class="pill warn">미매핑</span>') + '</td><td>' + (it ? esc(it.domain) : '') +
+          '<td class="mono small">' + (it ? it.id : '') + '</td><td>' + (it ? esc(it.name) : '<span class="pill warn">항목 미인식</span>') + '</td><td>' + (it ? esc(it.domain) : '') +
           '</td><td class="small">' + (it ? esc(it.cat1 + ' / ' + it.cat2) : '') + '</td><td class="small">' + (it ? esc(it.type + (it.unit ? ' · ' + it.unit : '')) : '') +
-          '</td><td><span class="pill ' + (it ? 'ok' : 'warn') + '">' + esc(e.method) + '</span></td></tr>';
+          '</td><td><span class="pill ' + (it ? 'ok' : 'warn') + '">' + esc(KC.match.label(e.method)) + '</span></td></tr>';
       }).join('') + '</tbody></table>';
   }
 
@@ -5797,23 +5860,23 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
 
   function mmRowHtml(e) {
     const i = st.msel.entries.indexOf(e), it = e.item;
-    if (!it) return '<tr><td><b>' + esc(e.col) + '</b><div class="small muted">표준항목 미매핑 — DCAT 변수로만 기술</div></td><td colspan="6" class="muted small">K-CURE 표준항목이 없어 KR CDI·KR Core·mCODE·OMOP·ARGO 대응을 정할 수 없습니다.</td></tr>';
+    if (!it) return '<tr><td><b>' + esc(e.col) + '</b><div class="small muted">항목 미인식 — DCAT 변수로만 기술</div></td><td colspan="6" class="muted small">K-CURE 표준항목이 없어 KR CDI·KR Core·mCODE·OMOP·ARGO 매칭을 정할 수 없습니다.</td></tr>';
     const c = it.cdi || {}, a = KC.meta.argoOf(e), o = KC.meta.omopOf(e), mc = KC.meta.mcodeOf(e);
-    const jc = it.core.judge === '직접재사용' ? 'ok' : it.core.judge === '확장필요' ? 'warn' : '';
+    const jc = KC.match.cls(it.core.judge);
     const ac = !a ? '' : a.conf === '높음' || a.conf === '수동' ? 'ok' : a.conf === '낮음' ? 'warn' : 'info';
     const oc = !o ? '' : o.conf === '높음' || o.conf === '수동' ? 'ok' : o.conf === '낮음' ? 'warn' : 'info';
-    const mlc = !mc ? 'warn' : mc.level === '직접재사용' ? 'ok' : mc.level === '부분참조' ? 'info' : '';
+    const mlc = !mc ? 'warn' : KC.match.cls(mc.level);
     return '<tr data-mi="' + i + '">' +
       '<td class="std"><div class="l1">' + esc(e.col) + '</div><div class="l2">' + it.id + (e.col !== it.name ? ' · ' + esc(it.name) : '') + '</div><div class="l2">' + esc(it.type + (it.unit ? ' · ' + it.unit : '')) + '</div></td>' +
-      '<td class="std">' + (c.el ? '<div class="l1">' + esc(c.el) + ' <span class="pill">' + esc(c.req) + '</span></div><div class="l2">' + esc(c.cls) + (c.match ? ' · ' + esc(c.match) : '') + '</div>' : '<span class="muted small">대응 없음</span>') + '</td>' +
-      '<td class="std"><div class="l1 mono small">' + esc(it.core.path) + '</div><div class="l2">' + esc(it.core.profile) + '</div><span class="pill ' + jc + '">' + esc(it.core.judge) + '</span></td>' +
+      '<td class="std">' + (c.el ? '<div class="l1">' + esc(c.el) + ' <span class="pill">' + esc(c.req) + '</span></div><div class="l2">' + esc(c.cls) + ' · ' + esc(KC.match.label(c.match || '대응')) + '</div>' : '<span class="muted small">미매칭</span>') + '</td>' +
+      '<td class="std"><div class="l1 mono small">' + esc(it.core.path) + '</div><div class="l2">' + esc(it.core.profile) + '</div><span class="pill ' + jc + '" title="원래 판정: ' + esc(it.core.judge) + '">' + esc(KC.match.label(it.core.judge)) + '</span></td>' +
       '<td class="std">' + (mc ? '<div class="l1 mono small">' + esc(mc.path) + '</div><div class="l2">' + esc(mc.title || mc.profile) + (mc.element ? ' · ' + esc(mc.element) : '') + '</div>' :
-        '<div class="l2">STU4 대응 없음 → KR-mCODE 후보 ' + esc(it.prf) + '</div>') + '<span class="pill ' + mlc + '">' + esc(it.mcode.level) + '</span></td>' +
-      '<td class="std"><input type="text" class="argo" list="omopList" data-omop="' + i + '" value="' + esc(o ? o.key : '') + '" placeholder="대응 없음 — table.field 입력">' +
+        '<div class="l2">STU4 매칭 없음 → KR-mCODE 후보 ' + esc(it.prf) + '</div>') + '<span class="pill ' + mlc + '" title="원래 판정: ' + esc(it.mcode.level) + '">' + esc(KC.match.label(it.mcode.level)) + '</span></td>' +
+      '<td class="std"><input type="text" class="argo" list="omopList" data-omop="' + i + '" value="' + esc(o ? o.key : '') + '" placeholder="미매칭 — table.field 입력">' +
       (o ? '<div class="l2">' + (o.concept ? '개념 ' + esc(o.concept) : 'person 필드') + (o.vocab && o.vocab !== '-' ? ' · ' + esc(o.vocab) : '') + ' <span class="pill ' + oc + '">' + esc(o.conf) + '</span></div>' +
         (o.note ? '<div class="l2">ETL: ' + esc(o.note) + '</div>' : '') : '') + '</td>' +
       '<td class="std"><div class="l1 mono small">' + KC.dcat.xsdType(it.type) + '</div><div class="l2">ndi:profile 변수</div></td>' +
-      '<td class="std"><input type="text" class="argo" list="argoList" data-argo="' + i + '" value="' + esc(a ? a.key : '') + '" placeholder="대응 없음 — schema.field 입력">' +
+      '<td class="std"><input type="text" class="argo" list="argoList" data-argo="' + i + '" value="' + esc(a ? a.key : '') + '" placeholder="미매칭 — schema.field 입력">' +
       (a ? '<div class="l2">' + esc(a.label) + ' · ' + esc(a.tier + (a.req ? '·' + a.req : '')) + ' · ' + esc(a.type) + ' <span class="pill ' + ac + '">' + esc(a.conf) + '</span></div>' +
         (a.note ? '<div class="l2">변환: ' + esc(a.note) + '</div>' : '') : '') + '</td>' +
       '<td><select data-rv="' + i + '">' + ['후보', '승인', '수정', '반려'].map(function (s) { return '<option' + (s === (e.rv || '후보') ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
@@ -5832,22 +5895,22 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     $('#mmEmpty').classList.toggle('hidden', has);
     if (!has) { $('#mmStats').innerHTML = ''; $('#mmTable').innerHTML = ''; $('#mmPager').innerHTML = ''; return; }
     const s = KC.meta.summarize(usedEntries());
-    $('#mmStats').innerHTML = stat('컬럼', s.columns, (st.msel.cancer || '') + (s.unmapped ? ' · 미매핑 ' + s.unmapped : '')) +
-      stat('KR CDI', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 대응 · 수집범위외 ' + s.krcdiOutOfScope + ' · 실제 미대응 ' + s.krcdiGap) +
-      stat('KR Core', s.krcoreDirect + ' / ' + s.krcoreConstrained + ' / ' + s.krcoreExtension, '직접 / 제약 / 확장 · 프로파일 ' + s.krcoreProfiles) +
-      stat('mCODE', s.mcode, '직접 ' + s.mcodeDirect + ' · 부분 ' + s.mcodePartial + ' · 참조 ' + s.mcodeRef + ' · 프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal + ' · KR Core와 리소스 상이 ' + s.mcodeConflict) +
+    $('#mmStats').innerHTML = stat('컬럼', s.columns, (st.msel.cancer || '') + (s.unmapped ? ' · 항목 미인식 ' + s.unmapped : '')) +
+      stat('KR CDI', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 매칭 · 범위외 ' + s.krcdiOutOfScope + ' · 실제 미매칭 ' + s.krcdiGap) +
+      stat('KR Core', s.krcoreDirect + ' / ' + s.krcoreConstrained + ' / ' + s.krcoreExtension, '직접매칭 / 조건부매칭 / 확장필요 · 프로파일 ' + s.krcoreProfiles) +
+      stat('mCODE', s.mcode, '직접매칭 ' + s.mcodeDirect + ' · 상위매칭 ' + s.mcodePartial + ' · 참조매칭 ' + s.mcodeRef + ' · 프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal + ' · KR Core와 리소스 상이 ' + s.mcodeConflict) +
       stat('OMOP CDM', s.omop, '높음 ' + (s.omopConf['높음'] || 0) + ' · 중간 ' + (s.omopConf['중간'] || 0) + ' · 낮음 ' + (s.omopConf['낮음'] || 0) + ' · 테이블 ' + Object.keys(s.omopTables).length) +
       stat('DCAT 변수', s.columns, '데이터셋 1개 · ndi:profile') +
-      stat('ARGO 대응', s.argo, '높음 ' + (s.argoConf['높음'] || 0) + ' · 중간 ' + (s.argoConf['중간'] || 0) + ' · 낮음 ' + (s.argoConf['낮음'] || 0) + (s.argoConf['수동'] ? ' · 수동 ' + s.argoConf['수동'] : '')) +
-      stat('ARGO Core 충족', s.argoCoreHit + ' / ' + s.argoCore, '직접 대응 · 파생 가능 ' + s.argoCoreDerived + ' · 지정값 ' + s.argoCoreFixed + ' · Required ' + s.argoReqHit + ' / ' + s.argoReq) +
+      stat('ARGO 매칭', s.argo, '높음 ' + (s.argoConf['높음'] || 0) + ' · 중간 ' + (s.argoConf['중간'] || 0) + ' · 낮음 ' + (s.argoConf['낮음'] || 0) + (s.argoConf['수동'] ? ' · 수동 ' + s.argoConf['수동'] : '')) +
+      stat('ARGO Core 충족', s.argoCoreHit + ' / ' + s.argoCore, '직접 매칭 · 파생 가능 ' + s.argoCoreDerived + ' · 지정값 ' + s.argoCoreFixed + ' · Required ' + s.argoReqHit + ' / ' + s.argoReq) +
       stat('매핑 수정안', s.review, '검토 대상 컬럼(spec/corrections.json)', s.review ? 'warn' : '');
     const rows = mmFiltered();
     const per = 100, pages = Math.max(1, Math.ceil(rows.length / per));
     st.mmPage = Math.min(st.mmPage || 0, pages - 1);
     const tables = Object.keys(s.omopTables).sort();
     const cur = $('#mmView').value;
-    $('#mmView').innerHTML = [['all', '전체'], ['cdi', 'KR CDI 대응만'], ['ext', 'KR Core 확장필요만'], ['mcode', 'mCODE 대응만'], ['nomcode', 'mCODE 미대응만'],
-      ['omoplow', 'OMOP 신뢰도 낮음'], ['argo', 'ARGO 대응만'], ['noargo', 'ARGO 미대응만'], ['low', 'ARGO 신뢰도 낮음·중간'], ['unmapped', '표준항목 미매핑 컬럼']]
+    $('#mmView').innerHTML = [['all', '전체'], ['cdi', 'KR CDI 매칭만'], ['ext', 'KR Core 확장필요만'], ['mcode', 'mCODE 매칭만'], ['nomcode', 'mCODE 미매칭만'],
+      ['omoplow', 'OMOP 신뢰도 낮음'], ['argo', 'ARGO 매칭만'], ['noargo', 'ARGO 미매칭만'], ['low', 'ARGO 신뢰도 낮음·중간'], ['unmapped', '항목 미인식 컬럼']]
       .concat(tables.map(function (t) { return ['omop:' + t, 'OMOP ' + t + ' (' + s.omopTables[t] + ')']; }))
       .map(function (o) { return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('');
     $('#mmView').value = cur && $('#mmView').querySelector('option[value="' + cur + '"]') ? cur : 'all';
@@ -5923,7 +5986,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       slice.map(function (it) {
         return '<tr data-item="' + it.id + '" style="cursor:pointer"><td class="mono small">' + it.id + '</td><td><b>' + esc(it.name) + '</b></td><td>' + esc(it.domain) + '</td><td class="small">' + esc(it.type) +
           '</td><td class="small">' + (it.cdi && it.cdi.el ? esc(it.cdi.el) + ' <span class="pill">' + esc(it.cdi.req) + '</span>' : '<span class="muted">—</span>') + '</td><td class="mono small">' + esc(it.core.path) +
-          '</td><td><span class="pill ' + (it.core.judge === '직접재사용' ? 'ok' : it.core.judge === '확장필요' ? 'warn' : '') + '">' + esc(it.core.judge) + '</span></td><td class="small">' + esc(it.mcode.profile) +
+          '</td><td><span class="pill ' + KC.match.cls(it.core.judge) + '" title="원래 판정: ' + esc(it.core.judge) + '">' + esc(KC.match.label(it.core.judge)) + '</span></td><td class="small">' + esc(it.mcode.profile) +
           '</td><td>' + esc(it.grade) + '</td><td><span class="pill ' + (it.gap === 'G0' ? 'ok' : 'warn') + '">' + esc(it.gap) + '</span></td></tr>';
       }).join('') + '</tbody></table>';
     $('#specPager').innerHTML = rows.length.toLocaleString() + '개 항목 · ' + (st.specPage + 1) + ' / ' + pages + ' 쪽 <button class="btn sm" data-sp="-1"' + (st.specPage ? '' : ' disabled') + '>이전</button><button class="btn sm" data-sp="1"' + (st.specPage < pages - 1 ? '' : ' disabled') + '>다음</button>';
@@ -5936,9 +5999,9 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       ['항목ID', it.id], ['표준항목명', it.name], ['표준정의', it.def], ['분류', it.cat1 + ' / ' + it.cat2], ['우선검토구분', it.tier], ['mCODE 도메인', it.domain],
       ['의미역할', it.role], ['출현암종', it.cancers.join(', ')], ['자료형', it.type + (it.len ? '(' + it.len + (it.dec ? ',' + it.dec : '') + ')' : '') + (it.unit ? ' · 단위 ' + it.unit : '')],
       ['허용값', it.allowed || '—'], ['필수여부', it.req],
-      ['KR CDI', it.cdi && it.cdi.el ? it.cdi.cls + ' / ' + it.cdi.el + ' (' + it.cdi.req + ', ' + (it.cdi.match || '대응유형 미상') + ')' : '대응 없음'],
-      ['KR Core', it.core.profile + ' → ' + it.core.path + ' [' + it.core.judge + ']'], ['프로파일 URL', it.core.url + ' (' + it.core.urlSrc + ')'],
-      ['mCODE', it.mcode.profile + ' → ' + it.mcode.path + ' [' + it.mcode.level + ']' +
+      ['KR CDI', it.cdi && it.cdi.el ? it.cdi.cls + ' / ' + it.cdi.el + ' (' + it.cdi.req + ', ' + KC.match.both(it.cdi.match || '대응') + ')' : '미매칭'],
+      ['KR Core', it.core.profile + ' → ' + it.core.path + ' [' + KC.match.both(it.core.judge) + ']'], ['프로파일 URL', it.core.url + ' (' + it.core.urlSrc + ')'],
+      ['mCODE', it.mcode.profile + ' → ' + it.mcode.path + ' [' + KC.match.both(it.mcode.level) + ']' +
         (it.mcode.resConflict ? ' · KR Core와 리소스 상이(' + it.mcode.resConflict + ') → 기본 표현 ' + it.mcode.primary : '')],
       ['매핑 수정안', (it.review || []).map(function (r) { return r.code + ' ' + r.issue + ': ' + r.current + ' → ' + r.proposed + ' [' + r.status + ']'; }).join(' / ') || '—'], ['KR-mCODE 후보', it.prf + (KC.spec.profilesById[it.prf] ? ' ' + KC.spec.profilesById[it.prf].name : '')],
       ['심사', it.grade + '등급 · ' + it.stage], ['정의결손', it.gap], ['원천 예시', (it.examples || []).join(' · ') || '—'],

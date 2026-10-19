@@ -21,10 +21,10 @@ KC.krcdi = (function () {
         const value = c.cdiValue;
         rec.classes[it.cdi.cls] = rec.classes[it.cdi.cls] || {};
         const arr = rec.classes[it.cdi.cls][it.cdi.el] = rec.classes[it.cdi.cls][it.cdi.el] || [];
-        arr.push({ value: value, source: it.id, sourceName: it.name, match: it.cdi.match || '대응(유형 미상)' });
+        arr.push({ value: value, source: it.id, sourceName: it.name, match: KC.match.label(it.cdi.match || '대응'), matchOriginal: it.cdi.match || '' });
         filled[key] = (filled[key] || 0) + 1;
         touchedCls[it.cdi.cls] = (touchedCls[it.cdi.cls] || 0) + 1;
-        long.push([patientKey, rowIdx, def ? def.no : '', it.cdi.cls, it.cdi.el, def ? def.elEn : '', it.cdi.req, it.cdi.match || '', value, it.id, it.name]);
+        long.push([patientKey, rowIdx, def ? def.no : '', it.cdi.cls, it.cdi.el, def ? def.elEn : '', it.cdi.req, KC.match.label(it.cdi.match || '대응'), value, it.id, it.name, it.cdi.match || '']);
         if (!def) log.warn('KRCDI_UNKNOWN', 'KR CDI 80항목 사전에 없는 배정(' + key + ')', c.ctx);
       });
     }
@@ -56,7 +56,7 @@ KC.krcdi = (function () {
         if (c.level === '정보') log.info('KRCDI_R_SCOPE', 'KR CDI [' + c.cls + '] ' + c.el + ' — ' + c.msg, { target: 'KR CDI' });
         else log.warn('KRCDI_R_MISSING', 'KR CDI [' + c.cls + '] ' + c.el + ' — ' + c.msg, { target: 'KR CDI' });
       });
-      const header = ['환자키', '원천행', 'KRCDI_항목No', 'KRCDI_분류', 'KRCDI_항목', 'KRCDI_항목(영문)', '필수여부', '대응유형', '값', 'K-CURE_항목ID', 'K-CURE_항목명'];
+      const header = ['환자키', '원천행', 'KRCDI_항목No', 'KRCDI_분류', 'KRCDI_항목', 'KRCDI_항목(영문)', '필수여부', '매칭유형', '값', 'K-CURE_항목ID', 'K-CURE_항목명', '원래_판정'];
       return {
         standard: 'KR CDI V3 (한국 핵심교류데이터)',
         note: KC.spec.data.meta.stageNote,

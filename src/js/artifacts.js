@@ -18,7 +18,7 @@ KC.artifacts = (function () {
   function toKrcdi(conf, items) {
     const base = conf.kcureBase || KC.spec.data.meta.kcureBase;
     const cm = header(base, 'kcure-to-krcdi', 'K-CURE 표준항목 → KR CDI V3 항목 대응',
-      'K-CURE 9개 암종 표준항목과 KR CDI V3(14분류·80항목) 간 대응. 직접대응=equivalent, 부분대응(상위 항목으로만 교류)=wider.', conf);
+      'K-CURE 9개 암종 표준항목과 KR CDI V3(14분류·80항목) 간 매칭. 직접매칭(직접대응)=equivalent, 상위매칭(부분대응: 상위 항목으로만 교류)=wider.', conf);
     cm.sourceUri = base + 'CodeSystem/kcure-item';
     cm.targetUri = KRCDI_URI;
     const els = items.filter(function (it) { return it.cdi && it.cdi.el; }).map(function (it) {
@@ -28,7 +28,7 @@ KC.artifacts = (function () {
         target: [{
           code: def ? 'KRCDI-' + String(def.no).padStart(2, '0') : it.cdi.el, display: it.cdi.cls + ' / ' + it.cdi.el,
           equivalence: it.cdi.match === '직접대응' ? 'equivalent' : it.cdi.match === '부분대응' ? 'wider' : 'relatedto',
-          comment: '필수여부 ' + (it.cdi.req || '-') + ' · 대응유형 ' + (it.cdi.match || '미상') + ' · 심사등급 ' + (it.grade || '-')
+          comment: '필수여부 ' + (it.cdi.req || '-') + ' · 매칭유형 ' + (it.cdi.match ? KC.match.both(it.cdi.match) : '미상') + ' · 심사등급 ' + (it.grade || '-')
         }]
       };
     });
@@ -39,7 +39,7 @@ KC.artifacts = (function () {
   function toKrcore(conf, items) {
     const base = conf.kcureBase || KC.spec.data.meta.kcureBase;
     const cm = header(base, 'kcure-to-krcore', 'K-CURE 표준항목 → KR Core V2 / FHIR R4 경로 대응',
-      '항목별 KR Core 프로파일과 FHIR 경로. 직접재사용=equivalent, 제약재사용=relatedto(추가 제약 필요), 확장필요=unmatched(확장 설계 대상).', conf);
+      '항목별 KR Core 프로파일과 FHIR 경로. 직접매칭(직접재사용)=equivalent, 조건부매칭(제약재사용: 추가 제약 필요)=relatedto, 확장필요=unmatched(확장 설계 대상).', conf);
     cm.sourceUri = base + 'CodeSystem/kcure-item';
     cm.targetUri = KC.spec.data.meta.krcoreBase;
     const groups = {};
@@ -47,7 +47,7 @@ KC.artifacts = (function () {
       const tgt = it.core.url || 'http://hl7.org/fhir/StructureDefinition/' + it.core.path.split('.')[0];
       const g = groups[tgt] = groups[tgt] || { source: base + 'CodeSystem/kcure-item', target: tgt, element: [] };
       const eq = it.core.judge === '직접재사용' ? 'equivalent' : it.core.judge === '확장필요' ? 'unmatched' : 'relatedto';
-      const t = { equivalence: eq, comment: it.core.profile + ' · 판정 ' + it.core.judge + ' · mCODE ' + it.mcode.profile + ' ' + it.mcode.path + ' (' + it.mcode.level + ')' };
+      const t = { equivalence: eq, comment: it.core.profile + ' · 판정 ' + KC.match.both(it.core.judge) + ' · mCODE ' + it.mcode.profile + ' ' + it.mcode.path + ' (' + KC.match.both(it.mcode.level) + ')' };
       if (eq !== 'unmatched') { t.code = it.core.path; t.display = it.core.path; }
       else t.comment = '대상 경로 후보 ' + it.core.path + ' · ' + t.comment;
       g.element.push({ code: it.id, display: it.name, target: [t] });
@@ -83,7 +83,7 @@ KC.artifacts = (function () {
   function toMcode(conf, items) {
     const base = conf.kcureBase || KC.spec.data.meta.kcureBase;
     const cm = header(base, 'kcure-to-mcode', 'K-CURE 표준항목 → HL7 mCODE STU4',
-      '항목별 mCODE 프로파일·FHIR 경로. 직접재사용=equivalent, 부분참조=wider, 개념·구조참조=relatedto, 미대응=unmatched.', conf);
+      '항목별 mCODE 프로파일·FHIR 경로. 직접매칭(직접재사용)=equivalent, 상위매칭(부분참조)=wider, 참조매칭(개념·구조참조)=relatedto, 미매칭(미대응)=unmatched.', conf);
     cm.sourceUri = base + 'CodeSystem/kcure-item';
     cm.targetUri = 'http://hl7.org/fhir/us/mcode';
     const groups = {};
@@ -93,7 +93,7 @@ KC.artifacts = (function () {
       const tgt = none ? 'http://hl7.org/fhir/us/mcode' : m.url;
       const g = groups[tgt] = groups[tgt] || { source: base + 'CodeSystem/kcure-item', target: tgt, element: [] };
       const eq = none ? 'unmatched' : m.level === '직접재사용' ? 'equivalent' : m.level === '부분참조' ? 'wider' : 'relatedto';
-      const t = { equivalence: eq, comment: (m.title || m.profile) + ' · ' + m.level + (m.element ? ' · 데이터요소 ' + m.element : '') + (none ? ' · KR-mCODE 후보 ' + it.prf : '') +
+      const t = { equivalence: eq, comment: (m.title || m.profile) + ' · ' + KC.match.both(m.level) + (m.element ? ' · 데이터요소 ' + m.element : '') + (none ? ' · KR-mCODE 후보 ' + it.prf : '') +
         (m.resConflict ? ' · KR Core ' + it.core.path.split('.')[0] + '와 리소스 상이(mCODE ' + m.resConflict + '), 기본 표현 ' + m.primary : '') };
       if (!none) { t.code = m.path; t.display = (m.title || m.profile) + ' ' + m.path; }
       g.element.push({ code: it.id, display: it.name, target: [t] });
@@ -143,7 +143,7 @@ KC.artifacts = (function () {
       usedNames[en] = 1;
       const el = { id: root + '.' + en, path: root + '.' + en, label: e.col, min: 0, max: '1' };
       if (!it) {
-        Object.assign(el, { short: e.col, definition: '원천 컬럼(K-CURE 표준항목 미매핑)', type: [{ code: 'string' }] });
+        Object.assign(el, { short: e.col, definition: '원천 컬럼(K-CURE 표준항목 미인식)', type: [{ code: 'string' }] });
         els.push(el);
         return;
       }
@@ -154,9 +154,9 @@ KC.artifacts = (function () {
       if (it.req === '필수') el.min = 1;
       el.type = [{ code: FT[it.type] || 'string' }];
       if (it.type === 'VARCHAR' && it.len) el.maxLength = it.len;
-      el.mapping = [{ identity: 'krcore', map: it.core.path, comment: it.core.profile + ' [' + it.core.judge + ']' }];
-      if (it.cdi && it.cdi.el) el.mapping.push({ identity: 'krcdi', map: it.cdi.cls + '.' + it.cdi.el, comment: '필수여부 ' + it.cdi.req + (it.cdi.match ? ' · ' + it.cdi.match : '') });
-      if (it.mcode.path && it.mcode.path !== '해당 없음') el.mapping.push({ identity: 'mcode', map: it.mcode.path, comment: (it.mcode.title || it.mcode.profile) + ' [' + it.mcode.level + ']' + (it.mcode.element ? ' · ' + it.mcode.element : '') });
+      el.mapping = [{ identity: 'krcore', map: it.core.path, comment: it.core.profile + ' [' + KC.match.both(it.core.judge) + ']' }];
+      if (it.cdi && it.cdi.el) el.mapping.push({ identity: 'krcdi', map: it.cdi.cls + '.' + it.cdi.el, comment: '필수여부 ' + it.cdi.req + (it.cdi.match ? ' · ' + KC.match.both(it.cdi.match) : '') });
+      if (it.mcode.path && it.mcode.path !== '해당 없음') el.mapping.push({ identity: 'mcode', map: it.mcode.path, comment: (it.mcode.title || it.mcode.profile) + ' [' + KC.match.both(it.mcode.level) + ']' + (it.mcode.element ? ' · ' + it.mcode.element : '') });
       const o = KC.meta.omopOf(e);
       if (o) el.mapping.push({ identity: 'omop', map: o.table + '.' + o.field, comment: '개념 ' + o.concept + (o.vocab && o.vocab !== '-' ? ' · ' + o.vocab : '') + ' · 신뢰도 ' + o.conf });
       const a = KC.meta.argoOf(e);
@@ -184,15 +184,15 @@ KC.artifacts = (function () {
 
   function specCsv(items) {
     const rows = [['항목ID', '표준항목명', '표준정의', '대분류', '중분류', '우선검토구분', 'mCODE도메인', '의미역할', '출현암종',
-      '데이터타입', '길이', '단위', '코드여부', '표준코드명', '허용값', '필수여부', 'KR_CDI_분류', 'KR_CDI_항목', 'KR_CDI_필수', 'KR_CDI_대응유형',
-      'KR_Core_Profile', 'KR_Core_Profile_URL', 'KR_Core_FHIR_Path', 'KR_Core_판정', 'mCODE_Profile', 'mCODE_FHIR_Path', 'mCODE_참조수준',
-      'KR-mCODE_프로파일ID', '심사등급', '매핑확정단계', '정의결손코드', '원천별칭']];
+      '데이터타입', '길이', '단위', '코드여부', '표준코드명', '허용값', '필수여부', 'KR_CDI_분류', 'KR_CDI_항목', 'KR_CDI_필수', 'KR_CDI_매칭유형',
+      'KR_Core_Profile', 'KR_Core_Profile_URL', 'KR_Core_FHIR_Path', 'KR_Core_판정', 'mCODE_Profile', 'mCODE_FHIR_Path', 'mCODE_매칭유형',
+      'KR-mCODE_프로파일ID', '심사등급', '매핑확정단계', '정의결손코드', '원천별칭', '원래_판정']];
     items.forEach(function (it) {
       const c = it.cdi || {};
       rows.push([it.id, it.name, it.def, it.cat1, it.cat2, it.tier, it.domain, it.role, it.cancers.join(' '), it.type, it.len || '', it.unit,
-        it.codeYN, it.codeName, it.allowed, it.req, c.cls || '', c.el || '', c.req || '', c.match || '', it.core.profile, it.core.url,
-        it.core.path, it.core.judge, it.mcode.profile, it.mcode.path, it.mcode.level, it.prf, it.grade, it.stage, it.gap,
-        (it.aliases || []).map(function (a) { return a[0]; }).join(' | ')]);
+        it.codeYN, it.codeName, it.allowed, it.req, c.cls || '', c.el || '', c.req || '', c.el ? KC.match.label(c.match || '대응') : '', it.core.profile, it.core.url,
+        it.core.path, KC.match.label(it.core.judge), it.mcode.profile, it.mcode.path, KC.match.label(it.mcode.level), it.prf, it.grade, it.stage, it.gap,
+        (it.aliases || []).map(function (a) { return a[0]; }).join(' | '), KC.match.orig(it)]);
     });
     return U.toCsv(rows);
   }
