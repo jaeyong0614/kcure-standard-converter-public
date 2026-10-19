@@ -1013,9 +1013,28 @@ KC.readers = (function () {
     return d.getUTCFullYear() + KC.util.pad(d.getUTCMonth() + 1) + KC.util.pad(d.getUTCDate());
   }
 
+  /**
+   * File → ArrayBuffer. 브라우저가 파일을 못 읽으면(NotReadableError) 잠시 뒤 한 번 더 시도하고,
+   * 그래도 안 되면 흔한 원인(다른 프로그램에서 열림 · OneDrive 온라인 전용 · 선택 후 변경)을 알려 준다.
+   */
+  async function readBytes(file) {
+    try { return await file.arrayBuffer(); } catch (e1) {
+      if (e1 && e1.name !== 'NotReadableError') throw e1;
+      await new Promise(function (r) { setTimeout(r, 400); });
+      try { return await file.arrayBuffer(); } catch (e2) {
+        const err = new Error('브라우저가 「' + file.name + '」 파일에 접근하지 못했습니다. 다음을 확인한 뒤 파일을 다시 선택해 주세요. ' +
+          '① 엑셀 등 다른 프로그램에서 열려 있으면 닫기 ' +
+          '② OneDrive 폴더의 "온라인 전용"(구름 아이콘) 파일이면 탐색기에서 마우스 오른쪽 → "이 장치에 항상 유지"로 내려받거나, OneDrive 밖 로컬 폴더(예: C:\\kcure\\in)로 복사 ' +
+          '③ 파일을 선택한 뒤 저장·이동했다면 다시 선택. (원인: ' + (e2.name || 'NotReadableError') + ')');
+        err.name = 'FileAccessError';
+        throw err;
+      }
+    }
+  }
+
   /** File 객체 → {name, sheets:[{name, rows}], encoding} */
   async function readFile(file) {
-    const buf = await file.arrayBuffer();
+    const buf = await readBytes(file);
     const lower = file.name.toLowerCase();
     if (/\.(xlsx|xlsm)$/.test(lower)) {
       return { name: file.name, size: file.size, encoding: 'XLSX', sheets: await readXlsx(buf) };
@@ -1028,7 +1047,7 @@ KC.readers = (function () {
     return { name: file.name, size: file.size, encoding: dec.encoding, sheets: [{ name: file.name, rows: parseCsv(dec.text, delim) }] };
   }
 
-  return { readFile: readFile, readXlsx: readXlsx, parseCsv: parseCsv, decodeText: decodeText, unzip: unzip };
+  return { readFile: readFile, readBytes: readBytes, readXlsx: readXlsx, parseCsv: parseCsv, decodeText: decodeText, unzip: unzip };
 })();
 
 </script>
@@ -6016,7 +6035,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
   async function reloadSpec(file) {
     $('#specMsg').innerHTML = note('개정 항목정의서를 읽는 중…');
     try {
-      const buf = await file.arrayBuffer();
+      const buf = await KC.readers.readBytes(file);
       let sheets = await KC.readers.readXlsx(buf, { only: ['10_항목정의_최종'] });
       if (!sheets.length) sheets = await KC.readers.readXlsx(buf);
       const res = KC.spec.reloadFromSheets(sheets, file.name);

@@ -690,7 +690,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
   async function reloadSpec(file) {
     $('#specMsg').innerHTML = note('개정 항목정의서를 읽는 중…');
     try {
-      const buf = await file.arrayBuffer();
+      const buf = await KC.readers.readBytes(file);
       let sheets = await KC.readers.readXlsx(buf, { only: ['10_항목정의_최종'] });
       if (!sheets.length) sheets = await KC.readers.readXlsx(buf);
       const res = KC.spec.reloadFromSheets(sheets, file.name);
