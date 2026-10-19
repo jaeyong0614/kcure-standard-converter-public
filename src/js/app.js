@@ -155,6 +155,10 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       (KC.spec.aliasIndex.get(U.normKey(h)) || []).forEach(function (a) { a.cancers.forEach(function (c) { counts[c] = (counts[c] || 0) + 2; }); });
     });
     const best = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0];
+    // K-CURE 항목으로 잡히는 컬럼보다 범용 사전으로 잡히는 컬럼이 많으면 범용(비 K-CURE) 데이터로 본다
+    const kcure = headers.filter(function (h) { return KC.mapper.matchOne(h, '').itemId; }).length;
+    const generic = headers.filter(function (h) { const id = KC.mapper.matchOne(h, KC.spec.GENERIC).itemId; return id && KC.spec.byId[id].generic; }).length;
+    if (generic > kcure) return KC.spec.GENERIC;
     return best || '';
   }
 
@@ -398,12 +402,14 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
   /* st.msel = {cancer, source, fileName, entries:[{col,item,method,include,argoKey?}]} */
 
   function renderSelCancers() {
-    $('#selCancers').innerHTML = KC.spec.data.meta.cancers.map(function (c) {
-      const n = KC.spec.items.filter(function (it) { return it.cancers.indexOf(c) >= 0; }).length;
-      return '<label class="chip"><input type="radio" name="mcancer" value="' + esc(c) + '"' + (st.msel && st.msel.source === 'cancer' && st.msel.cancer === c ? ' checked' : '') +
-        '>' + esc(c) + ' <small>' + n + '</small></label>';
+    const G = KC.spec.GENERIC;
+    $('#selCancers').innerHTML = KC.spec.data.meta.cancers.concat([G]).map(function (c) {
+      const n = c === G ? KC.spec.generic.length : KC.spec.items.filter(function (it) { return it.cancers.indexOf(c) >= 0; }).length;
+      return '<label class="chip' + (c === G ? ' generic' : '') + '" title="' + (c === G ? 'K-CURE 가 아닌 일반 병원 데이터(입원·외래·검사·처방 등) — KR CDI V3 기반 범용 사전' : '') + '"><input type="radio" name="mcancer" value="' + esc(c) + '"' +
+        (st.msel && st.msel.source === 'cancer' && st.msel.cancer === c ? ' checked' : '') + '>' + esc(c === G ? '범용(비 K-CURE)' : c) + ' <small>' + n + '</small></label>';
     }).join('');
-    $('#selCancerLabel').innerHTML = KC.spec.data.meta.cancers.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '<option value="">(암종 미지정)</option>';
+    $('#selCancerLabel').innerHTML = KC.spec.data.meta.cancers.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') +
+      '<option value="' + G + '">범용(비 K-CURE)</option><option value="">(암종 미지정)</option>';
     $('#argoList').innerHTML = (KC.spec.data.argo ? Object.keys(KC.spec.data.argo.fields) : []).map(function (k) {
       const f = KC.spec.data.argo.fields[k];
       return '<option value="' + esc(k + ' — ' + f.label + ' [' + f.tier + ']') + '">';
@@ -417,7 +423,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
   function selectCancer(c) {
     st.msel = { cancer: c, source: 'cancer', entries: KC.meta.entriesForCancer(c).map(function (e) { e.include = true; return e; }) };
     $$('#selCancers input').forEach(function (i) { i.checked = i.value === c; });
-    afterSelection('암종 「' + c + '」의 K-CURE 항목 전체');
+    afterSelection(c === KC.spec.GENERIC ? '범용 사전 전체(비 K-CURE · KR CDI V3 기반)' : '암종 「' + c + '」의 K-CURE 항목 전체');
   }
 
   async function selectFromFile(file) {
@@ -630,7 +636,8 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     const doms = Object.keys(U.groupCount(KC.spec.items, function (i) { return i.domain; })).sort();
     $('#specDomain').innerHTML = '<option value="">도메인 전체</option>' + doms.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
     $('#itemList').innerHTML = KC.spec.items.map(function (it) { return '<option value="' + esc(it.id + ' ' + it.name) + '">'; }).join('');
-    $('#cancerSel').innerHTML = '<option value="">(암종 미지정)</option>' + m.cancers.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+    $('#cancerSel').innerHTML = '<option value="">(암종 미지정)</option>' + m.cancers.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') +
+      '<option value="' + KC.spec.GENERIC + '">범용(비 K-CURE)</option>';
     renderSelCancers();
   }
 

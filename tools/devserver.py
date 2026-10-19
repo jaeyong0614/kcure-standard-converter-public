@@ -24,6 +24,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ".json": "application/json; charset=utf-8", ".md": "text/markdown; charset=utf-8", ".txt": "text/plain; charset=utf-8",
         ".csv": "text/csv", ".py": "text/plain; charset=utf-8"})
 
+    def end_headers(self):
+        # 개발 중 수정한 스크립트가 바로 반영되도록 캐시하지 않는다
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(ROOT), **kw)
 

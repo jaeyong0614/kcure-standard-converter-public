@@ -1,0 +1,70 @@
+{
+ "A": {
+  "title": "Drive 원문 · 입원 진단",
+  "model": "qwen2.5:7b-instruct",
+  "seconds": 168.2,
+  "tokens": 1525,
+  "columns": [
+   "PAT_ID",
+   "AGE",
+   "GENDER",
+   "DIAG_CODE",
+   "ADMIT_DATE"
+  ],
+  "rows": 50,
+  "rowsRequested": 50,
+  "rowsDropped": 0,
+  "notesChars": 247,
+  "prompt": "GPT/로컬 LLM 활용 테스트용 더미 데이터셋(Dummy Data) 생성 프롬프트\n```text\n[System Context]\n당신은 의료 데이터 연구용 가상 합성 데이터(Synthetic Data) 생성기입니다.\n\n[Task]\n프로토타입 검증을 위해 실제 환자 정보가 포함되지 않은 가상의 의료 데이터셋을 생성하세요.\n1. 정형 데이터: PAT_ID, AGE, GENDER, DIAG_CODE, ADMIT_DATE 포함 50건의 CSV 텍스트\n2. 비정형 데이터: 가상의 한글 경과기록(Clinical Notes) 샘플 3건\n\n[Output Format]\n1. CSV Data Format (UTF-8 encoded string)\n2. Clinical Notes Text Samples\n```"
+ },
+ "B": {
+  "title": "변형 · 외래 혈액검사(영문 약어)",
+  "model": "qwen2.5:7b-instruct",
+  "seconds": 178.3,
+  "tokens": 1630,
+  "columns": [
+   "ID",
+   "PatientName",
+   "TestTime",
+   "TestCode",
+   "TestName",
+   "Result",
+   "Unit",
+   "RefRange",
+   "Interpretation"
+  ],
+  "rows": 30,
+  "rowsRequested": 30,
+  "rowsDropped": 0,
+  "notesChars": 57,
+  "prompt": "[System Context]\n당신은 의료 데이터 연구용 가상 합성 데이터(Synthetic Data) 생성기입니다.\n\n[Task]\n프로토타입 검증을 위해 실제 환자 정보가 포함되지 않은 가상의 의료 데이터셋을 생성하세요.\n1. 정형 데이터: 내과 외래 혈액검사 결과 30건의 CSV 텍스트. 한 행은 검사 1건(같은 환자가 여러 행에 나올 수 있음).\n   환자 식별번호, 환자 이름, 검사 일시, 검사 코드, 검사명, 결과값, 단위, 참고치, 판정(H/L/N) 컬럼을 포함하고,\n   컬럼명은 실제 병원 EMR 추출본처럼 영문 약어로 자유롭게 정하세요.\n\n[Output Format]\n1. CSV Data Format (UTF-8 encoded string)"
+ },
+ "C": {
+  "title": "변형 · 만성질환 처방(한글)",
+  "model": "qwen2.5:7b-instruct",
+  "seconds": 321.6,
+  "tokens": 2810,
+  "columns": [
+   "등록번호",
+   "성명",
+   "생년월일",
+   "성별",
+   "연락처",
+   "처방일",
+   "진단코드",
+   "약품코드",
+   "약품명",
+   "1회투여량",
+   "단위",
+   "투여경로",
+   "1일투여횟수",
+   "처방일수",
+   " 처방의 이름"
+  ],
+  "rows": 30,
+  "rowsRequested": 30,
+  "rowsDropped": 0,
+  "notesChars": 241,
+  "prompt": "[System Context]\n당신은 의료 데이터 연구용 가상 합성 데이터(Synthetic Data) 생성기입니다.\n\n[Task]\n프로토타입 검증을 위해 실제 환자 정보가 포함되지 않은 가상의 의료 데이터셋을 생성하세요.\n1. 정형 데이터: 만성질환(고혈압·당뇨) 외래 처방 30건의 CSV 텍스트. 한 행은 처방 약 1건.\n   등록번호, 성명, 생년월일, 성별, 연락처, 처방일, 진단코드, 약품코드, 약품명, 1회 투여량, 단위, 투여 경로, 1일 횟수, 처방일수, 처방의 이름 컬럼을 포함하고,\n   컬럼명은 실제 병원 EMR 추출본처럼 한글로 자유롭게 정하세요.\n2. 비정형 데이터: 가상의 한글 외래 진료기록 샘플 2건\n\n[Output Format]\n1. CSV Data Format (UTF-8 encoded string)\n2. Clinical Notes Text Samples"
+ }
+}

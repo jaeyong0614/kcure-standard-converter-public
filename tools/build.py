@@ -31,6 +31,8 @@ def main():
         subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_spec.py")])
         subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "make_samples.py")])
 
+    # 범용(비 K-CURE) 표준 사전 → spec/generic_spec.js
+    subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_generic.py")])
     # 가명처리 규칙(JSON) → file:// 에서도 읽히는 JS 래퍼
     import json
     with open(os.path.join(ROOT, "spec", "deid_rules.json"), encoding="utf-8") as f:

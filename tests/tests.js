@@ -372,6 +372,33 @@
     const ie = KC.meta.integratedRows([Object.assign({}, crcE[0], { rv: '승인' })]);
     eq('통합 엑셀 검토 상태 열', ie[1][ie[0].indexOf('검토 상태')], '승인');
 
+    /* 11. 범용(비 K-CURE) 데이터 */
+    const GN = KC.spec.GENERIC;
+    ok('범용 사전 52항목·KR CDI 연결', KC.spec.generic.length === 52 && KC.spec.generic.filter(function (i) { return i.cdi && i.cdi.el; }).length >= 45, KC.spec.generic.length);
+    eq('범용: PatientName(CamelCase) → 성명', KC.mapper.matchOne('PatientName', GN).itemId, 'GEN-G002');
+    eq('K-CURE 모드는 범용 사전 미사용', KC.mapper.matchOne('PatientName', '대장암').itemId, '');
+    eq('범용 문맥: 투여량 옆 단위 → 투여량 단위', KC.mapper.autoMap(['DOSE', '단위', 'RESULT', 'UNIT'], GN).map(function (m) { return m.itemId; }).join(','), 'GEN-G026,GEN-G027,GEN-G034,GEN-G035');
+    const gt = { headers: ['ID', 'PatientName', 'TEL', 'TestTime', 'TestCode', 'TestName', 'Result', 'Unit', 'RefRange', 'Interpretation', '약품코드', '약품명'],
+      rows: [['P1', '홍길동', '010-0000-1111', '2024-03-05 08:00', 'GLU', '혈당', '7.5', 'mmol/L', '3.9-6.1', 'H', '642101230', '메트포르민정'],
+        ['P2', '김영희', '010-0000-2222', '2024-03-06 09:00', 'HB', '혈색소', '13.1', 'g/dL', '12-16', 'N', '', '']] };
+    const gm = KC.mapper.autoMap(gt.headers, GN);
+    const gopts = Object.assign({}, OPTS, { patientCol: KC.mapper.guessPatientColumn(gm), cancer: GN });
+    const grun = await KC.pipeline.run(gt, gm, gopts);
+    const gblob = JSON.stringify(grun.bundle) + JSON.stringify(grun.krcdi.records);
+    eq('범용 FHIR 구조오류 0', grun.fhirErrors, 0);
+    ok('가명처리 ON: 성명·연락처 원문 미포함', ['홍길동', '김영희', '010-0000-1111'].every(function (v) { return gblob.indexOf(v) < 0; }));
+    ok('가명처리 ON: 직접식별자 제외 기록', grun.log.count('정보') > 0 && JSON.stringify(grun.log).indexOf('DIRECT_ID_DROPPED') >= 0);
+    const gobs = grun.bundle.entry.map(function (e) { return e.resource; }).filter(function (r) { return r.resourceType === 'Observation'; });
+    const glu = gobs.find(function (r) { return r.code && r.code.coding && r.code.coding.some(function (c) { return c.code === 'GLU'; }); });
+    ok('세로형 검사: 코드·명칭·참고구간·판정이 값 Observation 에 붙음', glu && glu.code.text === '혈당' && glu.referenceRange[0].high.value === 6.1 && glu.interpretation[0].coding[0].code === 'H' && glu.valueQuantity.value === 7.5, JSON.stringify(glu));
+    const gmed = grun.bundle.entry.map(function (e) { return e.resource; }).filter(function (r) { return r.resourceType === 'MedicationRequest'; });
+    ok('약품코드+약품명 → 처방 1건(CodeableConcept.text)', gmed.length === 1 && gmed[0].medicationCodeableConcept.text === '메트포르민정', JSON.stringify(gmed));
+    const grun2 = await KC.pipeline.run(gt, gm, Object.assign({}, gopts, { pseudonymize: false }));
+    const gpat = grun2.bundle.entry.map(function (e) { return e.resource; }).find(function (r) { return r.resourceType === 'Patient'; });
+    ok('가명처리 OFF: 성명·연락처를 Patient.name·telecom 으로 표현', gpat.name && gpat.name[0].text === '홍길동' && gpat.telecom && gpat.telecom[0].system === 'phone', JSON.stringify(gpat));
+    const gpkg = KC.meta.build(CONF, GN, KC.meta.entriesFromColumns(gt.headers, GN));
+    eq('범용 메타데이터 패키지 DCAT 오류 0', gpkg.dcatIssues.filter(function (x) { return x.level === '오류'; }).length, 0);
+
     /* 5. 항목정의 변환 */
     const all = KC.dcat.fromSpec(CONF, KC.spec.data.meta.cancers);
     eq('명세 DCAT 필수속성 오류 0', all.issues.filter(function (x) { return x.level === '오류'; }).length, 0);

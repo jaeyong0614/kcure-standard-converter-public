@@ -8,6 +8,12 @@ KC.pipeline = (function () {
   function isIdentifier(it) {
     return it.core.path === 'Patient.identifier' && it.role === '식별·인구학';
   }
+  // 직접식별자 경로: 가명처리 ON 이면 FHIR·KR CDI·로그 어디에도 원문을 남기지 않는다
+  const DIRECT_ID_PATHS = ['Patient.name', 'Patient.telecom', 'Patient.address', 'Practitioner.name', 'Practitioner.identifier',
+    'Organization.telecom', 'Organization.address'];
+  function isDirectId(it) {
+    return !!it.directId || DIRECT_ID_PATHS.indexOf(it.core.path) >= 0;
+  }
   function isBirth(it) {
     return it.core.path === 'Patient.birthDate' || /생년월일|dt_birth/i.test(it.name);
   }
@@ -27,6 +33,14 @@ KC.pipeline = (function () {
       log.info('COL_UNMAPPED', '표준항목에 매핑되지 않은 컬럼 — 변환에서 제외', { col: m.col });
     });
     const seen = {};
+    const dropped = {};
+    if (opts.pseudonymize) mapped.forEach(function (m) {
+      const it = KC.spec.byId[m.itemId];
+      if (isDirectId(it)) {
+        dropped[m.idx] = true;
+        log.info('DIRECT_ID_DROPPED', '직접식별자(' + it.name + ') — 가명처리 설정에 따라 FHIR·KR CDI 결과에서 제외', { col: m.col, item: it.id });
+      }
+    });
     mapped.forEach(function (m) {
       if (seen[m.itemId]) log.warn('COL_DUPLICATE', '같은 표준항목에 여러 컬럼이 매핑됨: ' + seen[m.itemId] + ', ' + m.col, { col: m.col, item: m.itemId });
       seen[m.itemId] = m.col;
@@ -56,9 +70,10 @@ KC.pipeline = (function () {
         const p = prof[m.idx];
         p.n++;
         if (n.empty) { p.missing++; return; }
+        if (dropped[m.idx]) return;   // 원문 값은 프로파일·로그·결과 어디에도 쓰지 않는다
         if (p.distinct.size < 1000) p.distinct.add(n.str);
         p.kinds[n.kind] = (p.kinds[n.kind] || 0) + 1;
-        const sens = isIdentifier(it) || isBirth(it);
+        const sens = isIdentifier(it) || isBirth(it) || isDirectId(it);
         const ctx = { row: rowNo, col: m.col, item: it.id, value: sens ? '***' : n.str, target: it.core.path };
         if (n.issues.length) p.issues += n.issues.length;
         n.issues.forEach(function (x) { log.add(x.level, x.code, x.msg, ctx); });
@@ -107,5 +122,5 @@ KC.pipeline = (function () {
     };
   }
 
-  return { run: run };
+  return { run: run, isDirectId: isDirectId };
 })();

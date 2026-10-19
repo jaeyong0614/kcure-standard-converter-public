@@ -4,14 +4,21 @@ window.KC = window.KC || {};
 KC.spec = (function () {
   'use strict';
   const U = KC.util;
-  const S = { data: null, items: [], byId: {}, aliasIndex: new Map(), krcdi: [], krcdiByKey: {}, profilesById: {} };
+  const S = { data: null, items: [], byId: {}, aliasIndex: new Map(), krcdi: [], krcdiByKey: {}, profilesById: {}, generic: [], genericPatterns: [] };
+  /** 범용(비 K-CURE) 데이터를 고를 때 쓰는 암종 값 */
+  const GENERIC = '범용';
 
   function init(data) {
     S.data = data;
     S.items = data.items;
     S.byId = {};
     S.aliasIndex = new Map();
-    S.items.forEach(function (it) {
+    // 범용 사전(spec/generic_spec.js)도 같은 색인에 넣는다. 목록(S.items)과 건수는 K-CURE 만 유지
+    const gen = window.KCURE_GENERIC || { items: [], patterns: [] };
+    S.generic = gen.items;
+    S.genericPatterns = gen.patterns.map(function (p) { return { rx: new RegExp(p[0], 'i'), id: p[1] }; });
+    S.genericContext = gen.context || [];
+    S.items.concat(S.generic).forEach(function (it) {
       S.byId[it.id] = it;
       const names = [[it.name, []]].concat(it.aliases || []);
       names.forEach(function (pair) {
@@ -37,6 +44,14 @@ KC.spec = (function () {
     S.profilesById = {};
     (data.profiles || []).forEach(function (p) { S.profilesById[p.id] = p; });
     return S;
+  }
+
+  /** 범용 사전 패턴으로 컬럼명 대조 (별칭 사전에 없을 때) → 항목ID 또는 '' */
+  function matchGenericPattern(header) {
+    // CamelCase 를 단어로 나눈다 (PatientName → patient_name, RefRange → ref_range)
+    const h = String(header || '').trim().replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase().replace(/[\s\-\.\/()\[\]]+/g, '_');
+    const p = S.genericPatterns.find(function (x) { return x.rx.test(h); });
+    return p && S.byId[p.id] ? p.id : '';
   }
 
   /* ----- 허용값 해석 (tools/build_spec.py parse_allowed 와 동일 규칙) ----- */
@@ -140,6 +155,8 @@ KC.spec = (function () {
     return { count: out.length, added: added, changed: changed, removed: Object.keys(prev).filter(function (k) { return !S.byId[k]; }).length };
   }
 
+  S.GENERIC = GENERIC;
+  S.matchGenericPattern = matchGenericPattern;
   S.init = init;
   S.reloadFromSheets = reloadFromSheets;
   S.parseAllowed = parseAllowed;

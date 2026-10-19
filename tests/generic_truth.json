@@ -1,0 +1,9 @@
+{
+  "_note": "범용 데이터 시험 정답: 컬럼 의미에 맞는 범용 사전 항목ID(사람이 지정). samples/generic 의 LLM 생성 컬럼명 기준",
+  "A": { "PAT_ID": "GEN-G001", "AGE": "GEN-G005", "GENDER": "GEN-G004", "DIAG_CODE": "GEN-G018", "ADMIT_DATE": "GEN-G016" },
+  "B": { "ID": "GEN-G001", "PatientName": "GEN-G002", "TestTime": "GEN-G038", "TestCode": "GEN-G032", "TestName": "GEN-G033",
+         "Result": "GEN-G034", "Unit": "GEN-G035", "RefRange": "GEN-G036", "Interpretation": "GEN-G037" },
+  "C": { "등록번호": "GEN-G001", "성명": "GEN-G002", "생년월일": "GEN-G003", "성별": "GEN-G004", "연락처": "GEN-G006", "처방일": "GEN-G031",
+         "진단코드": "GEN-G018", "약품코드": "GEN-G023", "약품명": "GEN-G024", "1회투여량": "GEN-G026", "단위": "GEN-G027", "투여경로": "GEN-G029",
+         "1일투여횟수": "GEN-G028", "처방일수": "GEN-G030", "처방의 이름": "GEN-G012" }
+}

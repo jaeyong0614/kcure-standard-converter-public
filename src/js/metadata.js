@@ -8,16 +8,19 @@ KC.meta = (function () {
 
   /* ---------- 항목 선택 ---------- */
   function entriesForCancer(cancer) {
+    if (cancer === KC.spec.GENERIC) return KC.spec.generic.map(function (it) { return { col: it.name, item: it, method: '범용 사전' }; });
     return KC.spec.items.filter(function (it) { return !cancer || it.cancers.indexOf(cancer) >= 0; })
       .map(function (it) { return { col: it.name, item: it, method: '암종 항목' }; });
   }
 
   /** 컬럼명 목록(원천 데이터 헤더 등) → 표준항목 매핑 */
   function entriesFromColumns(headers, cancer) {
-    return headers.filter(function (h) { return String(h).trim(); }).map(function (h) {
+    const list = headers.filter(function (h) { return String(h).trim(); }).map(function (h) {
       const m = KC.mapper.matchOne(h, cancer);
-      return { col: String(h).trim(), item: m.itemId ? KC.spec.byId[m.itemId] : null, method: m.itemId ? m.method : '미매핑' };
+      return { col: String(h).trim(), itemId: m.itemId, method: m.itemId ? m.method : '미매핑' };
     });
+    KC.mapper.applyContext(list, cancer);
+    return list.map(function (m) { return { col: m.col, item: m.itemId ? KC.spec.byId[m.itemId] : null, method: m.method }; });
   }
 
   /** 항목정의서 형식(항목ID/표준항목명 열) 시트 → 해당 항목들 */

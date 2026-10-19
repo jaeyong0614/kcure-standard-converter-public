@@ -170,6 +170,13 @@ KC.fhir = (function () {
         }
         return;
       }
+      // 가명처리 OFF(원문 반출을 담당자가 선택)일 때 직접식별자를 정규 요소로 표현
+      if (path === 'Patient.name') { (p.name = p.name || []).push({ text: n.str }); return; }
+      if (path === 'Patient.telecom') {
+        (p.telecom = p.telecom || []).push(/@/.test(n.str) ? { system: 'email', value: n.str } : { system: 'phone', value: n.str });
+        return;
+      }
+      if (path === 'Patient.address') { (p.address = p.address || []).push({ text: n.str }); return; }
       if (path === 'Patient.gender') {
         const k = String(n.code ? n.code.code : n.str).toUpperCase();
         const g = { M: 'male', '1': 'male', '남': 'male', '남성': 'male', MALE: 'male', F: 'female', '0': 'female', '2': 'female', '여': 'female', '여성': 'female', FEMALE: 'female', U: 'unknown', '99': 'unknown', '9': 'unknown', O: 'other' }[k];
@@ -383,7 +390,7 @@ KC.fhir = (function () {
       let bp = null;
       cells.forEach(function (c, i) {
         const it = c.item, n = c.norm, p = c.path;
-        if (OBS_MOD.indexOf(p) >= 0) { mods.push(c); return; }
+        if (OBS_MOD.indexOf(p) >= 0 || it.obsMod) { mods.push(c); return; }
         if (/^Observation\.component:(systolic|diastolic)/.test(p)) {
           if (!bp) {
             bp = newRes('Observation', seedBase.concat(['bp']));
@@ -448,9 +455,29 @@ KC.fhir = (function () {
 
       // 수식 항목(일자·방법·부위·주석·단위) 적용
       mods.forEach(function (c, i) {
-        const it = c.item, n = c.norm, key = c.path.replace('Observation.', '');
+        const it = c.item, n = c.norm, key = it.obsMod ? 'mod:' + it.obsMod : c.path.replace('Observation.', '');
         const targets = valueObs.map(function (v) { return v.e.resource; });
         const apply = function (r) {
+          // 세로형(한 행 = 검사 1건) 범용 데이터: 같은 행의 검사코드·검사명·참고치·판정을 값 Observation 에 붙인다
+          if (key === 'mod:code') { r.code = { coding: [{ system: base + 'CodeSystem/local-test-code', code: n.str }], text: (r.code && r.code.text) || n.str }; return 'ok'; }
+          if (key === 'mod:display') {
+            r.code = r.code || { coding: [] };
+            r.code.text = n.str;
+            (r.code.coding || []).forEach(function (cd) { if (/local-test-code$/.test(cd.system)) cd.display = n.str; });
+            return 'ok';
+          }
+          if (key === 'mod:referenceRange') {
+            const m = /^\s*(-?\d+(?:\.\d+)?)\s*[-~]\s*(-?\d+(?:\.\d+)?)\s*$/.exec(n.str);
+            const unit = r.valueQuantity && r.valueQuantity.unit;
+            r.referenceRange = [m ? { low: quantity(+m[1], unit || ''), high: quantity(+m[2], unit || ''), text: n.str } : { text: n.str }];
+            return 'ok';
+          }
+          if (key === 'mod:interpretation') {
+            const v = String(n.str).trim().toUpperCase();
+            const map = { H: 'H', HIGH: 'H', '높음': 'H', L: 'L', LOW: 'L', '낮음': 'L', N: 'N', NORMAL: 'N', '정상': 'N' };
+            r.interpretation = [map[v] ? { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation', code: map[v] }], text: n.str } : { text: n.str }];
+            return 'ok';
+          }
           if (key === 'effectiveDateTime') { if (n.kind !== 'date') return 'mismatch'; if (!r.effectiveDateTime) r.effectiveDateTime = dateVal(n); return 'ok'; }
           if (key === 'method' || key === 'bodySite') { if (!r[key]) r[key] = ccFromNorm(n, it); return 'ok'; }
           if (key === 'note') { (r.note = r.note || []).push(annotation(it, n)); return 'ok'; }
@@ -509,7 +536,26 @@ KC.fhir = (function () {
       });
       if (!main.length) return;
       newInst();
+      // 코드 항목을 먼저 두고, 명칭 항목(ccText)은 같은 CodeableConcept 의 text 로 합친다 (예: 약품코드 + 약품명 → 처방 1건)
+      main.sort(function (a, b) { return (a.item.ccText ? 1 : 0) - (b.item.ccText ? 1 : 0); });
       main.forEach(function (c) {
+        const key = c.path.split('.').slice(1).join('.');
+        if (type === 'Practitioner' && key === 'name') {
+          const host = instances[0].e.resource;
+          (host.name = host.name || []).push({ text: c.norm.str });
+          instances[0].urls.push(c.item.core.url);
+          trace(host, c.item);
+          return;
+        }
+        if (c.item.ccText && key.indexOf('.') < 0) {
+          const host = instances.find(function (x) { return x.e.resource[key] && typeof x.e.resource[key] === 'object'; });
+          if (host) {
+            host.e.resource[key].text = c.norm.str;
+            host.urls.push(c.item.core.url);
+            trace(host.e.resource, c.item);
+            return;
+          }
+        }
         let placed = false;
         for (let k = 0; k < instances.length && !placed; k++) {
           const st = setPath(instances[k].e.resource, c.path, c.item, c.norm);

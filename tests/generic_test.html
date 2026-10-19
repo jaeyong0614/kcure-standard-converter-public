@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>범용 데이터 자동 변환 시험</title>
+<style>
+  body { font-family: "Malgun Gothic", sans-serif; margin: 24px; font-size: 14px; color: #17221e; }
+  table { border-collapse: collapse; margin: 8px 0 18px; }
+  th, td { border: 1px solid #d9e0dc; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #f4f6f4; }
+  .ok { color: #1f7a3f; } .bad { color: #b3261e; font-weight: 600; }
+  pre { white-space: pre-wrap; background: #f4f6f4; padding: 8px; }
+</style>
+</head>
+<body>
+<h1>범용(비 K-CURE) 데이터 자동 변환 시험</h1>
+<p>samples/generic 의 로컬 LLM 생성 더미(가상값)를 '범용' 모드로 매핑 → 6개 표준 메타데이터 → FHIR·KR CDI → 가명처리 코드까지 변환합니다. <span id="status">실행 중…</span></p>
+<div id="out"></div>
+<script src="../spec/kcure_spec.js"></script>
+<script src="../spec/deid_rules.js"></script>
+<script src="../spec/generic_spec.js"></script>
+<script src="../src/js/util.js"></script>
+<script src="../src/js/sha256.js"></script>
+<script src="../src/js/readers.js"></script>
+<script src="../src/js/spec.js"></script>
+<script src="../src/js/values.js"></script>
+<script src="../src/js/mapper.js"></script>
+<script src="../src/js/fhir.js"></script>
+<script src="../src/js/krcdi.js"></script>
+<script src="../src/js/pipeline.js"></script>
+<script src="../src/js/dcat.js"></script>
+<script src="../src/js/artifacts.js"></script>
+<script src="../src/js/writers.js"></script>
+<script src="../src/js/metadata.js"></script>
+<script src="../src/js/deid.js"></script>
+<script src="../src/js/codegen.js"></script>
+<script src="generic_test.js"></script>
+</body>
+</html>

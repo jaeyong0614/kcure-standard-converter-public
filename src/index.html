@@ -43,7 +43,7 @@
   <section class="panel active" id="p-sel">
     <div class="card">
       <h2>① 암종과 변환할 항목(컬럼) 선택</h2>
-      <p class="desc">암종을 고르면 그 암종의 K-CURE 항목 전체가 선택됩니다. 특정 컬럼만 변환하려면 컬럼 목록 파일을 불러오세요. 원천 데이터의 헤더 행, 컬럼명 한 줄 목록, 항목정의서(항목ID·표준항목명 열) 모두 가능합니다.</p>
+      <p class="desc">암종을 고르면 그 암종의 K-CURE 항목 전체가 선택됩니다. K-CURE가 아닌 일반 병원 데이터는 <b>범용(비 K-CURE)</b>을 고르세요(KR CDI V3 기반 범용 사전으로 매핑). 특정 컬럼만 변환하려면 컬럼 목록 파일을 불러오세요. 원천 데이터의 헤더 행, 컬럼명 한 줄 목록, 항목정의서(항목ID·표준항목명 열) 모두 가능합니다.</p>
       <div class="row" id="selCancers"></div>
       <div class="row" style="margin-top:12px">
         <button class="btn sm" id="selFileBtn">컬럼 목록 파일 불러오기 (CSV·XLSX)</button>
@@ -383,6 +383,7 @@
 <script src="../spec/kcure_spec.js"></script>
 <script src="../spec/samples.js"></script>
 <script src="../spec/deid_rules.js"></script>
+<script src="../spec/generic_spec.js"></script>
 <script src="js/util.js"></script>
 <script src="js/sha256.js"></script>
 <script src="js/readers.js"></script>
