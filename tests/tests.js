@@ -298,6 +298,40 @@
       } catch (e) { /* 정적 서버에서는 저장하지 않음 */ }
     }
 
+    /* 9. DICOM 스크립트 · 로컬 LLM 어댑터 (v0.2 S3) */
+    const dcm = KC.dicomgen.python({ input: 'C:\\dicom_in', output: 'C:\\dicom_out' });
+    eq('DICOM 스크립트 자체검사 통과', KC.codegen.selfCheck(dcm, 'python').length, 0);
+    ok('DICOM: 입력 폴더 보호·예외처리·private 삭제', /in_root in out_root\.parents/.test(dcm) && /InvalidDicomError/.test(dcm) && /remove_private_tags/.test(dcm) && /FileNotFoundError/.test(dcm));
+    const actOf = function (o, name) { return KC.dicomgen.actions(o).find(function (a) { return a.name === name; }).action; };
+    eq('DICOM 기본: 성별 빈 값·StudyDate 이동·UID 재생성', [actOf({ shiftDates: true }, 'PatientSex'), actOf({ shiftDates: true }, 'StudyDate'), actOf({}, 'StudyInstanceUID')].join(','), 'Z,S,U');
+    eq('DICOM 옵션: 환자 특성 유지·날짜 이동 끔', [actOf({ keepPatientChar: true }, 'PatientSex'), actOf({ shiftDates: false }, 'StudyDate')].join(','), 'K,Z');
+    eq('LLM 기본 배포본에서는 꺼짐', KC.llm.enabled(), false);
+    eq('LLM JSON 추출(코드펜스·앞뒤 문장)', KC.llm.extractJson('다음과 같습니다\n```json\n{"a":{"b":"}"}}\n```').a.b, '}');
+    const lp = KC.deid.plan(['환자메모', 'no_patient', 'XYZ_CODE'], [['홍길동 님 내원', 'CRC1', 'A1']], '대장암');
+    const vr = KC.llm.validateP1({ columns: [{ raw: 'XYZ_CODE', item_id: 'KCURE-ZZZ-999999', technique: 'KEEP' }, { raw: '환자메모', item_id: null, technique: 'REGEX_PII', reason: '자유문', confidence: '높음' },
+      { raw: '없는컬럼', technique: 'KEEP' }, { raw: 'no_patient', technique: 'ENCRYPT' }] }, lp.columns);
+    eq('LLM 응답 검증: 환각 ID·잘못된 기법·없는 컬럼 거부', Object.keys(vr).join(','), '환자메모');
+    let calls = 0;
+    const mock = async function () { calls++; return calls === 1 ? '응답 형식 오류' : JSON.stringify({ columns: [{ raw: 'XYZ_CODE', item_id: null, technique: 'GROUP_RARE', reason: '희귀 코드', confidence: '중간' }] }); };
+    const sr = await KC.llm.suggest(lp, { transport: mock });
+    ok('LLM 1회 재시도 후 제안', calls === 2 && sr.suggested === 1 && sr.failedBatches === 0, JSON.stringify(sr));
+    const xc = lp.columns.find(function (c) { return c.col === 'XYZ_CODE'; });
+    ok('LLM 제안은 자동 적용하지 않음', xc.technique !== 'GROUP_RARE' && xc.llm.technique === 'GROUP_RARE');
+    KC.llm.apply(xc);
+    eq('LLM 제안 적용 → 후보 상태', xc.technique + '/' + xc.status + '/' + xc.ruleId, 'GROUP_RARE/후보/LLM');
+    const before = JSON.stringify(lp.columns.map(function (c) { return c.technique; }));
+    const fr = await KC.llm.suggest(lp, { transport: async function () { throw new Error('연결 거부'); } });
+    ok('LLM 실패 → 규칙 추천 유지', fr.failedBatches === 1 && JSON.stringify(lp.columns.map(function (c) { return c.technique; })) === before, JSON.stringify(fr));
+    let rejected = false;
+    try { KC.llm.transportFor({ adapter: 'ollama', url: 'https://api.example.com' }); } catch (e) { rejected = true; }
+    ok('LLM 외부 주소 거부(loopback만)', rejected);
+    ok('프롬프트 내보내기(P1~P3)', /## P1/.test(KC.llm.exportPrompts(lp)) && /## P3 DICOM/.test(KC.llm.exportPrompts(lp)));
+    const distMain = await (await fetch('../dist/KCURE_%ED%91%9C%EC%A4%80%EB%B3%80%ED%99%98%EA%B8%B0.html', { cache: 'no-store' })).text();
+    const distLlm = await (await fetch('../dist/KCURE_%ED%91%9C%EC%A4%80%EB%B3%80%ED%99%98%EA%B8%B0_LLM.html', { cache: 'no-store' })).text();
+    ok('기본 배포본 CSP connect-src none', /connect-src 'none'/.test(distMain) && distMain.indexOf('KC_LLM_BUILD = true') < 0);
+    ok('LLM 배포본 CSP = loopback 만', /connect-src http:\/\/127\.0\.0\.1:11434 http:\/\/localhost:11434 http:\/\/127\.0\.0\.1:1234 http:\/\/localhost:1234;/.test(distLlm) && !/connect-src[^;]*https:/.test(distLlm));
+    try { await fetch('/__save/deid_dicom.py', { method: 'POST', body: dcm }); } catch (e) { /* 정적 서버 */ }
+
     /* 5. 항목정의 변환 */
     const all = KC.dcat.fromSpec(CONF, KC.spec.data.meta.cancers);
     eq('명세 DCAT 필수속성 오류 0', all.issues.filter(function (x) { return x.level === '오류'; }).length, 0);

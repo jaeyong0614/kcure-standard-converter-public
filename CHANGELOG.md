@@ -4,6 +4,19 @@ v0.2 수정개발은 [docs/03_수정개발계획서.md](docs/03_수정개발계�
 
 ## v0.2.0-dev
 
+### S3 DICOM 헤더 비식별화 · 로컬 LLM 어댑터 (FR-04, NFR-01~03)
+- `src/js/dicomgen.js`: PS3.15 Basic Profile 주요 태그 58개(삭제·빈 값·가명키·UID 재생성·날짜 이동·연도만)로 `deid_dicom.py`를 생성합니다.
+  - pydicom 폴더 일괄 처리, InvalidDicomError·FileNotFoundError 처리, 입력 폴더 보호, 처리 로그 CSV
+  - 시퀀스 안 UID, file_meta, PatientIdentityRemoved까지 처리합니다.
+  - ④ 탭에 옵션 화면(영상 종류·날짜 이동·환자 특성·설명·private 태그)을 추가했습니다.
+- `tools/verify_dicom.py`: 합성 DICOM으로 실제 실행을 검증하며 통과했습니다.
+  - 확인 항목: 입력 불변, 가명키 = 정형 스크립트 방식, 같은 검사 같은 새 UID, 환자별 같은 날짜 이동량, private 태그 삭제, 비DICOM 건너뜀, 입력 안 출력 중단
+- `src/js/llm.js`: Ollama·OpenAI 호환(LM Studio) 어댑터, 20개 단위 비동기 요청·중단, JSON 추출·스키마 검증(환각 항목ID 거부), 1회 재시도 후 규칙 유지를 구현했습니다.
+  - loopback 주소만 허용하고, 샘플 전송은 기본 꺼짐입니다. 제안은 사람이 '적용'해야 반영됩니다.
+  - 프롬프트(P1~P3) 내보내기를 넣었습니다.
+- `tools/build.py --llm`: CSP를 loopback으로만 연 `KCURE_표준변환기_LLM.html`을 별도로 빌드합니다. 기본 배포본은 `connect-src 'none'`을 유지합니다.
+- 테스트 15개를 추가했습니다(184/184 통과). 실제 Ollama 서버가 없어 LLM은 모의 응답으로만 검증했습니다.
+
 ### S2 Level 2 가명처리 코드 추천 (Hospital sw flow FR-01~03)
 - 새 탭 **④ 가명처리 코드**를 추가했습니다. 원천 샘플(앞 10행)이나 ① 선택 항목을 넣으면 컬럼별로 기법·근거·신뢰도를 추천합니다.
   - 승인한 컬럼만 코드로 만듭니다.

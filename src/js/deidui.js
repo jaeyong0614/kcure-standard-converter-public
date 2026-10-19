@@ -64,7 +64,7 @@ KC.deidUi = (function () {
       stat('자유문 PII', by.REGEX_PII || 0, '정규식 치환') + stat('유지', by.KEEP || 0, '');
     const pidOpts = p.columns.map(function (c) { return '<option' + (c.col === (p.patientCol || '') ? ' selected' : '') + '>' + esc(c.col) + '</option>'; }).join('');
     $('#dzPid').innerHTML = '<option value="">(없음 — 날짜 이동 불가)</option>' + pidOpts;
-    $('#dzTableWrap').innerHTML = '<table><thead><tr><th>승인</th><th>원천 컬럼</th><th>표준항목</th><th>샘플 패턴</th><th>가명처리 기법</th><th>파라미터</th><th>근거 (규칙)</th><th>신뢰도</th></tr></thead><tbody>' +
+    $('#dzTableWrap').innerHTML = '<table><thead><tr><th>승인</th><th>원천 컬럼</th><th>표준항목</th><th>샘플 패턴</th><th>가명처리 기법</th><th>파라미터</th><th>근거 (규칙)</th><th>신뢰도</th><th>LLM 제안</th></tr></thead><tbody>' +
       p.columns.map(function (c, i) {
         const sel = '<select data-dzt="' + i + '">' + ORDER.map(function (t) { return '<option value="' + t + '"' + (t === c.technique ? ' selected' : '') + '>' + esc(T[t].label) + '</option>'; }).join('') + '</select>';
         const params = Object.keys(c.params || {}).map(function (k) {
@@ -77,8 +77,56 @@ KC.deidUi = (function () {
           '<td><b>' + esc(c.col) + '</b>' + exp + '</td>' +
           '<td class="small">' + (c.item ? '<span class="mono">' + c.item.id + '</span><div class="l2">' + esc(c.item.name) + ' · ' + esc(c.item.role) + '</div>' : '<span class="pill warn">미매핑</span>') + '</td>' +
           '<td class="small">' + smp + '</td><td>' + sel + '</td><td>' + (params || '<span class="muted small">—</span>') + '</td>' +
-          '<td class="small">' + esc(c.reason) + ' <span class="muted mono">' + c.ruleId + '</span></td><td><span class="pill ' + pc + '">' + esc(c.confidence) + '</span></td></tr>';
+          '<td class="small">' + esc(c.reason) + ' <span class="muted mono">' + c.ruleId + '</span></td><td><span class="pill ' + pc + '">' + esc(c.confidence) + '</span></td>' +
+          '<td class="small">' + (c.llm ? esc((KC.deid.techniques()[c.llm.technique] || {}).label || c.llm.technique) + (c.llm.itemId ? ' · ' + esc(c.llm.itemId) : '') +
+            '<div class="l2">' + esc(c.llm.reason) + ' (' + esc(c.llm.confidence) + ')</div><button class="btn sm" data-dzl="' + i + '">적용</button>' : '<span class="muted">—</span>') + '</td></tr>';
       }).join('') + '</tbody></table>';
+  }
+
+  /* ---------- LLM 보조 ---------- */
+  let llmCtl = null;
+  async function llmRun() {
+    if (!st.plan) { $('#dzLlmMsg').textContent = '먼저 추천 계획을 만드세요.'; return; }
+    if (!KC.llm.enabled()) { $('#dzLlmMsg').textContent = '이 배포본에서는 LLM 연결이 차단되어 있습니다.'; return; }
+    llmCtl = new AbortController();
+    $('#dzLlmMsg').textContent = '요청 중…';
+    try {
+      const r = await KC.llm.suggest(st.plan, { adapter: $('#dzLlmAdapter').value, url: $('#dzLlmUrl').value.trim(), model: $('#dzLlmModel').value.trim(),
+        withSamples: $('#dzLlmSamples').checked, signal: llmCtl.signal,
+        onProgress: function (d, t) { $('#dzLlmMsg').textContent = '진행 ' + d + ' / ' + t + ' 컬럼'; } });
+      $('#dzLlmMsg').textContent = '제안 ' + r.suggested + ' / 대상 ' + r.asked + (r.failedBatches ? ' · 실패 묶음 ' + r.failedBatches + '(규칙 추천 유지): ' + r.errors[0] : '');
+    } catch (e) { $('#dzLlmMsg').textContent = 'LLM 오류(규칙 추천 유지): ' + e.message; }
+    render();
+  }
+  function initLlm() {
+    const on = KC.llm.enabled();
+    $('#dzLlmOff').classList.toggle('hidden', on);
+    ['#dzLlmForm', '#dzLlmRun', '#dzLlmStop'].forEach(function (s) { $(s).classList.toggle('hidden', !on); });
+    $('#dzLlmAdapter').innerHTML = Object.keys(KC.llm.ADAPTERS).map(function (k) { return '<option value="' + k + '">' + esc(KC.llm.ADAPTERS[k].label) + '</option>'; }).join('');
+    const setDef = function () { const a = KC.llm.ADAPTERS[$('#dzLlmAdapter').value]; $('#dzLlmUrl').value = a.url; $('#dzLlmModel').value = a.model; };
+    setDef();
+    $('#dzLlmAdapter').addEventListener('change', setDef);
+    $('#dzLlmRun').addEventListener('click', llmRun);
+    $('#dzLlmStop').addEventListener('click', function () { if (llmCtl) llmCtl.abort(); });
+    $('#dzLlmPrompts').addEventListener('click', function () { U.download('KCURE_맞춤형_프롬프트.md', KC.llm.exportPrompts(st.plan), 'text/markdown'); });
+  }
+
+  /* ---------- DICOM ---------- */
+  function dicomOpts() {
+    return { modality: $('#dcMod').value, range: +$('#dcRange').value || 30, input: $('#dcIn').value.trim(), output: $('#dcOut').value.trim(),
+      shiftDates: $('#dcShift').checked, birthYear: $('#dcYear').checked, keepPatientChar: $('#dcChar').checked, keepDescriptions: $('#dcDesc').checked,
+      removePrivate: $('#dcPriv').checked };
+  }
+  function dicomCode() {
+    const code = KC.dicomgen.python(dicomOpts());
+    const bad = KC.codegen.selfCheck(code, 'python');
+    $('#dcMsg').textContent = bad.length ? '자체 검사 실패: ' + bad.map(function (b) { return b.line + '행'; }).join(', ') : '자체 검사 통과 · 태그 ' + KC.dicomgen.TAGS.length + '개';
+    return bad.length ? null : code;
+  }
+  function initDicom() {
+    $('#dcMod').innerHTML = Object.keys(KC.dicomgen.MODALITIES).map(function (k) { return '<option value="' + k + '">' + esc(KC.dicomgen.MODALITIES[k]) + '</option>'; }).join('');
+    $('#dcPv').addEventListener('click', function () { const c = dicomCode(); if (c) { $('#dcView').classList.remove('hidden'); $('#dcView').textContent = c; } });
+    $('#dcDl').addEventListener('click', function () { const c = dicomCode(); if (c) U.download('deid_dicom.py', c, 'text/x-python'); });
   }
 
   function onChange(e) {
@@ -147,6 +195,12 @@ KC.deidUi = (function () {
     $('#dzRx').addEventListener('click', function () { preview('rx'); });
     $('#dzZip').addEventListener('click', download);
     $('#dzScanBtn').addEventListener('click', scan);
+    $('#dzTableWrap').addEventListener('click', function (e) {
+      const b = e.target.closest('[data-dzl]');
+      if (b && st.plan) { KC.llm.apply(st.plan.columns[+b.dataset.dzl]); render(); }
+    });
+    initLlm();
+    initDicom();
     $('#dzDialect').innerHTML = Object.keys(KC.codegen.DIALECTS).map(function (k) { return '<option value="' + k + '">' + esc(KC.codegen.DIALECTS[k]) + '</option>'; }).join('');
   }
 

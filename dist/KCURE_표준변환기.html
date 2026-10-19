@@ -288,6 +288,43 @@ pre.view { background: var(--code-bg); border: 1px solid var(--line); border-rad
       <div class="note warn small">추천은 규칙 기반 후보입니다. 신뢰도 '높음'만 자동으로 승인되고, 나머지는 담당자가 확인한 뒤 승인해야 코드에 들어갑니다. 가명처리 수준은 「가명정보 처리 가이드라인」과 기관 심의 기준으로 최종 판단하세요.</div>
       <div class="tbl-wrap" id="dzTableWrap" style="max-height:560px"></div>
       <pre class="view hidden" id="dzView"></pre>
+      <details style="margin-top:12px" id="dzLlmBox">
+        <summary><b>LLM 보조 (선택)</b> — 로컬 소형 LLM(7B~14B, Ollama·LM Studio)에 신뢰도 '중간·낮음' 컬럼의 매핑·기법 제안을 받습니다</summary>
+        <div id="dzLlmOff" class="note small">이 배포본은 네트워크 연결이 차단되어 있습니다(CSP <code>connect-src 'none'</code>). LLM 보조는 <code>python tools/build.py --llm</code>으로 만든 <b>KCURE_표준변환기_LLM.html</b>에서만 동작하며, 이 PC(127.0.0.1)의 LLM에만 연결합니다. 아래 버튼으로 프롬프트를 내보내 수동으로 쓸 수 있습니다.</div>
+        <div class="grid2" id="dzLlmForm" style="margin:8px 0">
+          <label class="f"><span>어댑터</span><select id="dzLlmAdapter"></select></label>
+          <label class="f"><span>주소 (127.0.0.1만 허용)</span><input type="text" id="dzLlmUrl" class="mono"></label>
+          <label class="f"><span>모델</span><input type="text" id="dzLlmModel" class="mono"></label>
+          <label class="chk"><input type="checkbox" id="dzLlmSamples"><span>샘플값도 보내기 <small>기본 꺼짐. 켜도 이 PC의 LLM에만 전송</small></span></label>
+        </div>
+        <div class="row">
+          <button class="btn sm" id="dzLlmRun">LLM 제안 받기</button>
+          <button class="btn sm" id="dzLlmStop">중단</button>
+          <button class="btn sm" id="dzLlmPrompts">프롬프트 내보내기 (.md)</button>
+          <span class="muted small" id="dzLlmMsg"></span>
+        </div>
+      </details>
+    </div>
+    <div class="card">
+      <h2>DICOM 영상 헤더 비식별화 스크립트</h2>
+      <p class="desc">DICOM PS3.15 Basic Profile의 주요 태그(58개) 기준으로 pydicom 폴더 일괄 처리 스크립트를 만듭니다. 브라우저는 영상 파일을 읽지 않습니다. 스크립트는 입력 폴더를 바꾸지 않고 출력 폴더에 새로 씁니다.</p>
+      <div class="grid2">
+        <label class="f"><span>영상 종류</span><select id="dcMod"></select></label>
+        <label class="f"><span>날짜 이동 범위(±일)</span><input type="number" id="dcRange" value="30" min="1" max="365"></label>
+        <label class="f"><span>입력 폴더</span><input type="text" id="dcIn" class="mono" value="C:\dicom_in"></label>
+        <label class="f"><span>출력 폴더 (입력 폴더 밖)</span><input type="text" id="dcOut" class="mono" value="C:\dicom_out"></label>
+        <label class="chk"><input type="checkbox" id="dcShift" checked><span>날짜 이동 (끄면 날짜를 비움)</span></label>
+        <label class="chk"><input type="checkbox" id="dcYear" checked><span>생년월일 연도만</span></label>
+        <label class="chk"><input type="checkbox" id="dcChar"><span>환자 특성 유지 (성별·나이·키·체중)</span></label>
+        <label class="chk"><input type="checkbox" id="dcDesc"><span>검사·시리즈 설명 유지</span></label>
+        <label class="chk"><input type="checkbox" id="dcPriv" checked><span>private 태그 삭제</span></label>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sm" id="dcPv">스크립트 미리보기</button>
+        <button class="btn primary sm" id="dcDl">deid_dicom.py 내려받기</button>
+        <span class="muted small" id="dcMsg"></span>
+      </div>
+      <pre class="view hidden" id="dcView"></pre>
     </div>
     <div class="card">
       <h2>비정형 텍스트 PII 시험</h2>
@@ -4121,6 +4158,323 @@ KC.codegen = (function () {
 })();
 
 </script>
+<script>/* dicomgen.js */
+/* DICOM 헤더 비식별화 스크립트 생성 (Hospital sw flow FR-04)
+ * DICOM PS3.15 Annex E Basic Application Level Confidentiality Profile 의 주요 태그 동작을 내장하고,
+ * 옵션(날짜 이동·환자 특성 유지·private 태그 삭제)에 맞춘 pydicom 폴더 일괄 처리 스크립트를 만든다.
+ * 브라우저는 DICOM 파일을 읽지 않는다. 스크립트는 입력 폴더를 바꾸지 않고 출력 폴더에 새 파일을 쓴다. */
+window.KC = window.KC || {};
+
+KC.dicomgen = (function () {
+  'use strict';
+  // 동작: X 삭제, Z 빈 값, D 가명값(환자 가명키), U UID 재생성, S 날짜 이동(옵션 off 이면 Z/X), K 유지
+  // group: patientChar(환자 특성 유지 옵션), desc(설명 유지 옵션)
+  const TAGS = [
+    ['0008,0050', 'AccessionNumber', 'Z'], ['0008,0080', 'InstitutionName', 'X'], ['0008,0081', 'InstitutionAddress', 'X'],
+    ['0008,0090', 'ReferringPhysicianName', 'Z'], ['0008,0092', 'ReferringPhysicianAddress', 'X'], ['0008,0094', 'ReferringPhysicianTelephoneNumbers', 'X'],
+    ['0008,1010', 'StationName', 'X'], ['0008,1030', 'StudyDescription', 'X', 'desc'], ['0008,103E', 'SeriesDescription', 'X', 'desc'],
+    ['0008,1040', 'InstitutionalDepartmentName', 'X'], ['0008,1048', 'PhysiciansOfRecord', 'X'], ['0008,1050', 'PerformingPhysicianName', 'X'],
+    ['0008,1060', 'NameOfPhysiciansReadingStudy', 'X'], ['0008,1070', 'OperatorsName', 'X'], ['0008,1080', 'AdmittingDiagnosesDescription', 'X'],
+    ['0008,0014', 'InstanceCreatorUID', 'U'], ['0008,0018', 'SOPInstanceUID', 'U'], ['0020,000D', 'StudyInstanceUID', 'U'],
+    ['0020,000E', 'SeriesInstanceUID', 'U'], ['0020,0052', 'FrameOfReferenceUID', 'U'], ['0008,1155', 'ReferencedSOPInstanceUID', 'U'],
+    ['0040,A124', 'UID', 'U'], ['0020,0200', 'SynchronizationFrameOfReferenceUID', 'U'],
+    ['0010,0010', 'PatientName', 'D'], ['0010,0020', 'PatientID', 'D'], ['0010,0030', 'PatientBirthDate', 'Y'],
+    ['0010,0032', 'PatientBirthTime', 'X'], ['0010,0040', 'PatientSex', 'Z', 'patientChar'], ['0010,1010', 'PatientAge', 'X', 'patientChar'],
+    ['0010,1020', 'PatientSize', 'X', 'patientChar'], ['0010,1030', 'PatientWeight', 'X', 'patientChar'],
+    ['0010,1000', 'OtherPatientIDs', 'X'], ['0010,1001', 'OtherPatientNames', 'X'], ['0010,1002', 'OtherPatientIDsSequence', 'X'],
+    ['0010,1040', 'PatientAddress', 'X'], ['0010,1060', 'PatientMotherBirthName', 'X'], ['0010,2154', 'PatientTelephoneNumbers', 'X'],
+    ['0010,2160', 'EthnicGroup', 'X'], ['0010,21B0', 'AdditionalPatientHistory', 'X'], ['0010,4000', 'PatientComments', 'X'],
+    ['0020,0010', 'StudyID', 'Z'], ['0032,1032', 'RequestingPhysician', 'X'], ['0032,1060', 'RequestedProcedureDescription', 'X', 'desc'],
+    ['0040,0275', 'RequestAttributesSequence', 'X'], ['0040,0253', 'PerformedProcedureStepID', 'X'], ['0040,0254', 'PerformedProcedureStepDescription', 'X', 'desc'],
+    ['0018,1000', 'DeviceSerialNumber', 'X'], ['0018,1030', 'ProtocolName', 'X', 'desc'], ['0008,4000', 'IdentifyingComments', 'X'],
+    ['0008,0020', 'StudyDate', 'S'], ['0008,0021', 'SeriesDate', 'S'], ['0008,0022', 'AcquisitionDate', 'S'], ['0008,0023', 'ContentDate', 'S'],
+    ['0040,0244', 'PerformedProcedureStepStartDate', 'S'], ['0008,0030', 'StudyTime', 'Z'], ['0008,0031', 'SeriesTime', 'X'],
+    ['0008,0032', 'AcquisitionTime', 'X'], ['0008,0033', 'ContentTime', 'X']
+  ];
+  const MODALITIES = { CT: 'CT', MR: 'MR', MG: '유방촬영(MG)', US: '초음파(US)', PT: 'PET(PT)', DX: '일반촬영(DX)', SM: '병리 WSI(SM)' };
+
+  function actions(o) {
+    return TAGS.map(function (t) {
+      let a = t[2];
+      if (t[3] === 'patientChar' && o.keepPatientChar) a = 'K';
+      if (t[3] === 'desc' && o.keepDescriptions) a = 'K';
+      if (a === 'S' && !o.shiftDates) a = t[1] === 'StudyDate' || t[1] === 'ContentDate' ? 'Z' : 'X';
+      if (a === 'Y' && !o.birthYear) a = 'Z';
+      return { tag: t[0], name: t[1], action: a };
+    });
+  }
+
+  function py(o) {
+    o = Object.assign({ input: 'C:\\dicom_in', output: 'C:\\dicom_out', shiftDates: true, range: 30, keepPatientChar: false, keepDescriptions: false,
+      removePrivate: true, birthYear: true, modality: 'CT' }, o || {});
+    const acts = actions(o);
+    const pyPath = function (p) { p = String(p); return /["\\]$/.test(p) || p.indexOf('"') >= 0 ? JSON.stringify(p) : 'r"' + p + '"'; };
+    const L = ['# -*- coding: utf-8 -*-',
+      '# K-CURE DICOM 헤더 비식별화 스크립트 — K-CURE 표준변환기 ' + KC.APP_VERSION + ' 자동 생성',
+      '# 기준: DICOM PS3.15 Annex E Basic Application Level Confidentiality Profile (주요 태그) · 대상 ' + (MODALITIES[o.modality] || o.modality),
+      '# 옵션: 날짜 이동 ' + (o.shiftDates ? '±' + o.range + '일' : '안 함') + ' · 환자 특성(성별·나이·키·체중) ' + (o.keepPatientChar ? '유지' : '삭제') +
+        ' · 설명 ' + (o.keepDescriptions ? '유지' : '삭제') + ' · private 태그 ' + (o.removePrivate ? '삭제' : '유지') + ' · 생년월일 ' + (o.birthYear ? '연도만(0101)' : '빈 값'),
+      '# 입력 폴더는 읽기만 합니다. 결과는 출력 폴더에 같은 하위 구조로 새로 씁니다. 솔트는 환경변수 KCURE_SALT.',
+      '# 주의: 픽셀에 새겨진 글자(burned-in annotation)는 지우지 못합니다. 해당 파일은 로그에 경고로 남깁니다.',
+      'import csv', 'import hashlib', 'import os', 'import sys', 'from datetime import datetime, timedelta', 'from pathlib import Path', '',
+      'import pydicom', 'from pydicom.errors import InvalidDicomError', '',
+      'try:', '    sys.stdout.reconfigure(encoding="utf-8")', 'except (AttributeError, ValueError):', '    pass', '',
+      'INPUT_DIR = Path(' + pyPath(o.input) + ')', 'OUTPUT_DIR = Path(' + pyPath(o.output) + ')',
+      'SALT = os.environ.get("KCURE_SALT", "")', 'DATE_RANGE = ' + (+o.range || 30), 'REMOVE_PRIVATE = ' + (o.removePrivate ? 'True' : 'False'), '',
+      '# (group, element) → 동작  X 삭제 · Z 빈 값 · D 환자 가명키 · U UID 재생성 · S 날짜 이동 · Y 연도만 · K 유지',
+      'ACTIONS = {'];
+    acts.forEach(function (a) { const g = a.tag.split(','); L.push('    (0x' + g[0] + ', 0x' + g[1] + '): ' + JSON.stringify(a.action) + ',  # ' + a.name); });
+    L.push('}', '', '',
+      'def sha(v):', '    return hashlib.sha256((SALT + "|" + str(v).strip()).encode("utf-8")).hexdigest()', '', '',
+      'def new_uid(uid):', '    """원 UID → 2.25.<정수> (솔트 기반, 같은 UID는 항상 같은 새 UID)"""', '    return "2.25." + str(int(sha(uid)[:30], 16))', '', '',
+      'def shift(value, offset):',
+      '    try:',
+      '        return (datetime.strptime(str(value)[:8], "%Y%m%d") + timedelta(days=offset)).strftime("%Y%m%d")',
+      '    except ValueError:',
+      '        return ""', '', '',
+      'def deidentify(ds, offset, pseudo):',
+      '    burned = str(ds.get("BurnedInAnnotation", "")).upper() == "YES"',
+      '    if REMOVE_PRIVATE:',
+      '        ds.remove_private_tags()',
+      '',
+      '    def visit(d):',
+      '        for elem in list(d):',
+      '            if elem.VR == "SQ":',
+      '                act = ACTIONS.get((elem.tag.group, elem.tag.element))',
+      '                if act == "X":',
+      '                    del d[elem.tag]',
+      '                    continue',
+      '                for item in elem.value:',
+      '                    visit(item)',
+      '                continue',
+      '            act = ACTIONS.get((elem.tag.group, elem.tag.element))',
+      '            if act is None or act == "K":',
+      '                continue',
+      '            if act == "X":',
+      '                del d[elem.tag]',
+      '            elif act == "Z":',
+      '                elem.value = ""',
+      '            elif act == "D":',
+      '                elem.value = pseudo',
+      '            elif act == "U" and elem.value:',
+      '                elem.value = new_uid(elem.value)',
+      '            elif act == "S":',
+      '                elem.value = shift(elem.value, offset) if elem.value else ""',
+      '            elif act == "Y":',
+      '                elem.value = (str(elem.value)[:4] + "0101") if elem.value else ""',
+      '',
+      '    visit(ds)',
+      '    if "SOPInstanceUID" in ds and hasattr(ds, "file_meta"):',
+      '        ds.file_meta.MediaStorageSOPInstanceUID = ds.SOPInstanceUID',
+      '    ds.PatientIdentityRemoved = "YES"',
+      '    ds.DeidentificationMethod = "K-CURE PS3.15 Basic Profile (subset)' + (o.shiftDates ? ', date shift' : '') + '"',
+      '    return burned', '', '',
+      'def main():',
+      '    if not SALT:',
+      '        raise SystemExit("환경변수 KCURE_SALT 를 설정하세요 (예: set KCURE_SALT=기관비밀값)")',
+      '    if not INPUT_DIR.is_dir():',
+      '        raise FileNotFoundError(f"입력 폴더가 없습니다: {INPUT_DIR}")',
+      '    out_root = OUTPUT_DIR.resolve()',
+      '    in_root = INPUT_DIR.resolve()',
+      '    if out_root == in_root or in_root in out_root.parents:',
+      '        raise SystemExit("출력 폴더가 입력 폴더와 같거나 그 안에 있습니다 — 원본 보호를 위해 중단")',
+      '    log = []',
+      '    for src in sorted(p for p in INPUT_DIR.rglob("*") if p.is_file()):',
+      '        rel = src.relative_to(INPUT_DIR)',
+      '        try:',
+      '            ds = pydicom.dcmread(src)',
+      '        except InvalidDicomError:',
+      '            log.append([str(rel), "건너뜀", "DICOM 아님"])',
+      '            continue',
+      '        except (OSError, ValueError) as e:',
+      '            log.append([str(rel), "오류", str(e)[:200]])',
+      '            continue',
+      '        pid = str(ds.get("PatientID", ""))',
+      '        h = sha(pid)',
+      '        offset = int(h[:8], 16) % (2 * DATE_RANGE + 1) - DATE_RANGE',
+      '        burned = deidentify(ds, offset, h[:32])',
+      '        dst = OUTPUT_DIR / rel',
+      '        dst.parent.mkdir(parents=True, exist_ok=True)',
+      '        ds.save_as(dst)',
+      '        log.append([str(rel), "완료", "픽셀 문자 확인 필요(BurnedInAnnotation=YES)" if burned else ""])',
+      '    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)',
+      '    with open(OUTPUT_DIR / "_비식별화로그.csv", "w", newline="", encoding="utf-8-sig") as f:',
+      '        csv.writer(f).writerows([["파일", "결과", "비고"]] + log)',
+      '    done = sum(1 for r in log if r[1] == "완료")',
+      '    print(f"완료 {done}개 · 건너뜀 {sum(1 for r in log if r[1] == \'건너뜀\')}개 · 오류 {sum(1 for r in log if r[1] == \'오류\')}개 → {OUTPUT_DIR}")',
+      '', '',
+      'if __name__ == "__main__":', '    main()', '');
+    return L.join('\n');
+  }
+
+  return { TAGS: TAGS, MODALITIES: MODALITIES, actions: actions, python: py };
+})();
+
+</script>
+<script>/* llm.js */
+/* 로컬 소형 LLM 보조 (Hospital sw flow 3.1 Router/Adapter, NFR-01~03)
+ * - 기본 배포본은 CSP connect-src 'none' 이라 동작하지 않는다. `python tools/build.py --llm` 빌드에서만
+ *   127.0.0.1:11434(Ollama)·127.0.0.1:1234(LM Studio 등 OpenAI 호환)로 연결할 수 있다.
+ * - LLM 은 '제안'만 한다. 응답은 JSON 스키마로 검증하고, 실패하면 1회 재시도한 뒤 규칙 추천을 그대로 둔다.
+ * - 샘플값 전송은 기본 OFF. 켜더라도 loopback 주소로만 보낸다. */
+window.KC = window.KC || {};
+
+KC.llm = (function () {
+  'use strict';
+  const BATCH = 20;
+  const ADAPTERS = {
+    ollama: { label: 'Ollama (127.0.0.1:11434)', url: 'http://127.0.0.1:11434', model: 'qwen2.5:7b-instruct' },
+    openai: { label: 'OpenAI 호환 · LM Studio (127.0.0.1:1234)', url: 'http://127.0.0.1:1234', model: 'local-model' }
+  };
+  const LOOPBACK = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?(\/|$)/;
+
+  /* ---------- 프롬프트 (docs/04_맞춤형_프롬프트.md P1~P3, 소형 LLM용) ---------- */
+  const P1_SYSTEM = [
+    '당신은 한국 암 데이터(K-CURE) 표준화와 가명처리 규칙을 판정하는 데이터 엔지니어입니다.',
+    '병원 원본 데이터는 절대 수정하지 않습니다. 당신은 판단만 하고, 코드는 별도 템플릿이 만듭니다.',
+    'JSON만 출력하고 다른 문장은 쓰지 마세요. 모르면 null 과 confidence "낮음"을 쓰세요.'
+  ].join('\n');
+  const TECH = ['DELETE', 'MASK', 'HASH_SALT', 'YEAR_ONLY', 'DATE_SHIFT', 'DATE_TO_INTERVAL', 'BIN', 'TOP_BOTTOM', 'GROUP_RARE', 'REGEX_PII', 'KEEP'];
+
+  function p1User(cancer, cols, withSamples) {
+    return [
+      '[입력]', '- 암종: ' + (cancer || '미지정'),
+      '- 원천 컬럼' + (withSamples ? '과 샘플값(고유값 최대 3개)' : '') + ', 그리고 규칙이 고른 표준 후보:',
+      cols.map(function (c) {
+        return '  ' + c.col + (withSamples && c.sample.examples.length ? ' | 샘플: ' + c.sample.examples.join(', ') : '') +
+          ' | 후보: ' + (c.candidates.length ? c.candidates.map(function (x) { return x.id + ' ' + x.name + '(' + x.type + ',' + x.role + ')'; }).join('; ') : '없음');
+      }).join('\n'),
+      '', '[작업] 각 컬럼마다 1) 후보 중 맞는 item_id 하나(없으면 null) 2) 가명처리 기법 하나 3) 근거 30자 이내',
+      '기법 목록: ' + TECH.join(' | '),
+      '[판정 규칙] 성명·주민번호·전화·상세주소·이메일 → DELETE / 병원 환자번호·등록번호 → HASH_SALT / 생년월일 → YEAR_ONLY /',
+      '사건 일자 → DATE_SHIFT / 자유문 → REGEX_PII / 임상 측정값·코드값 → KEEP (극단값 재식별 위험이면 TOP_BOTTOM)',
+      '[출력: JSON만] {"columns":[{"raw":"<원천컬럼>","item_id":"KCURE-...|null","technique":"<기법>","reason":"<30자 이내>","confidence":"높음|중간|낮음"}]}'
+    ].join('\n');
+  }
+
+  const P2_TEMPLATE = '[역할] 한국어 의무기록 PII 탐지 전문가\n[입력] 문서 유형: {doc_type}\n샘플 텍스트:\n{sample_clinical_text}\n' +
+    '[작업] NAME|RRN|PATIENT_NO|PHONE|DATE|ADDRESS|HOSPITAL|DOCTOR|EMAIL 유형별 Python re 정규식과 예외어를 제시\n' +
+    '[출력: JSON만] {"patterns":[{"type":"PHONE","regex":"...","examples":["..."],"false_positive_risk":"낮음|중간|높음"}],"exceptions":[],"needs_review":true}';
+  const P3_TEMPLATE = '[역할] DICOM PS3.15 Annex E 비식별화 전문가\n[입력] 영상 종류: {modality}\n태그 목록: {tag_list}\n연구 목적: {purpose}\n' +
+    '[작업] 태그마다 REMOVE|EMPTY|REPLACE_DUMMY|HASH_UID|SHIFT_DATE|KEEP 중 하나\n' +
+    '[출력: JSON만] {"tags":[{"tag":"(0010,0010)","name":"PatientName","action":"REMOVE"}],"pixel_warning":false,"needs_review":true}';
+
+  /* ---------- 응답 검증 ---------- */
+  /** 텍스트에서 첫 JSON 객체를 꺼낸다 (코드펜스·앞뒤 문장 허용) */
+  function extractJson(text) {
+    const s = String(text || '');
+    const start = s.indexOf('{');
+    if (start < 0) throw new Error('JSON 없음');
+    let depth = 0, inStr = false, esc = false;
+    for (let i = start; i < s.length; i++) {
+      const ch = s[i];
+      if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') inStr = true;
+      else if (ch === '{') depth++;
+      else if (ch === '}' && --depth === 0) return JSON.parse(s.slice(start, i + 1));
+    }
+    throw new Error('JSON 미완결');
+  }
+
+  /** P1 응답 검증 → 컬럼명별 제안 {raw, itemId, technique, reason, confidence}. 잘못된 항목은 버린다 */
+  function validateP1(obj, cols) {
+    if (!obj || !Array.isArray(obj.columns)) throw new Error('columns 배열 없음');
+    const byCol = {};
+    cols.forEach(function (c) { byCol[c.col] = c; });
+    const out = {};
+    obj.columns.forEach(function (r) {
+      if (!r || typeof r.raw !== 'string' || !byCol[r.raw]) return;
+      if (TECH.indexOf(r.technique) < 0) return;
+      const id = r.item_id && r.item_id !== 'null' ? String(r.item_id) : null;
+      if (id && !KC.spec.byId[id]) return;            // 존재하지 않는 항목ID(환각) 거부
+      out[r.raw] = { raw: r.raw, itemId: id, technique: r.technique, reason: String(r.reason || '').slice(0, 60),
+        confidence: ['높음', '중간', '낮음'].indexOf(r.confidence) >= 0 ? r.confidence : '낮음' };
+    });
+    return out;
+  }
+
+  /* ---------- 전송 ---------- */
+  function transportFor(cfg) {
+    const url = String(cfg.url || '').replace(/\/+$/, '');
+    if (!LOOPBACK.test(url + '/')) throw new Error('LLM 주소는 이 PC(127.0.0.1·localhost)만 허용합니다: ' + url);
+    return async function (messages, signal) {
+      if (cfg.adapter === 'openai') {
+        const r = await fetch(url + '/v1/chat/completions', { method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: cfg.model, messages: messages, temperature: 0, response_format: { type: 'json_object' } }) });
+        if (!r.ok) throw new Error('LLM 응답 ' + r.status);
+        return (await r.json()).choices[0].message.content;
+      }
+      const r = await fetch(url + '/api/chat', { method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: cfg.model, messages: messages, stream: false, format: 'json', options: { temperature: 0 } }) });
+      if (!r.ok) throw new Error('LLM 응답 ' + r.status);
+      return (await r.json()).message.content;
+    };
+  }
+
+  function candidatesOf(c, cancer) {
+    const m = KC.mapper.matchOne(c.col, cancer || '');
+    const ids = [m.itemId].concat((m.alternatives || []).map(function (a) { return a.itemId || a.id || a; })).filter(Boolean);
+    if (!ids.length) {
+      // 별칭 사전에 없는 컬럼: 이름이 서로 포함되는 항목을 후보로 (최대 5개)
+      const k = KC.util.normKey(c.col);
+      if (k.length >= 2) KC.spec.items.forEach(function (it) { const n = KC.util.normKey(it.name); if (ids.length < 5 && (n.indexOf(k) >= 0 || k.indexOf(n) >= 0) && n.length >= 2) ids.push(it.id); });
+    }
+    const seen = {};
+    return ids.filter(function (id) { if (seen[id] || !KC.spec.byId[id]) return false; seen[id] = 1; return true; }).slice(0, 5)
+      .map(function (id) { const it = KC.spec.byId[id]; return { id: id, name: it.name, type: it.type, role: it.role }; });
+  }
+
+  /**
+   * 계획(plan)의 '높음'이 아닌 컬럼에 LLM 제안을 붙인다(c.llm). 적용은 사람이 한다.
+   * opts = {adapter,url,model,withSamples, transport?(테스트용), signal?, onProgress?(done,total)}
+   * 반환 {asked, suggested, failedBatches, errors}
+   */
+  async function suggest(plan, opts) {
+    const send = opts.transport || transportFor(opts);
+    const targets = plan.columns.filter(function (c) { return c.confidence !== '높음' && c.confidence !== '수동'; });
+    const res = { asked: targets.length, suggested: 0, failedBatches: 0, errors: [] };
+    for (let i = 0; i < targets.length; i += BATCH) {
+      if (opts.signal && opts.signal.aborted) { res.errors.push('취소됨'); break; }
+      const batch = targets.slice(i, i + BATCH).map(function (c) { return Object.assign(c, { candidates: candidatesOf(c, plan.cancer) }); });
+      const messages = [{ role: 'system', content: P1_SYSTEM }, { role: 'user', content: p1User(plan.cancer, batch, !!opts.withSamples) }];
+      let got = null;
+      for (let attempt = 0; attempt < 2 && !got; attempt++) {
+        try { got = validateP1(extractJson(await send(messages, opts.signal)), batch); }
+        catch (e) { if (attempt === 1) { res.failedBatches++; res.errors.push(String(e.message || e)); } }
+      }
+      if (got) batch.forEach(function (c) { if (got[c.col]) { c.llm = got[c.col]; res.suggested++; } });
+      if (opts.onProgress) opts.onProgress(Math.min(i + BATCH, targets.length), targets.length);
+    }
+    return res;
+  }
+
+  /** 사람이 'LLM 제안 적용'을 누르면 기법·항목을 바꾼다 (승인은 별도) */
+  function apply(c) {
+    if (!c.llm) return;
+    c.technique = c.llm.technique;
+    c.params = Object.assign({}, (KC.deid.techniques()[c.technique] || {}).params || {});
+    if (c.llm.itemId) c.item = KC.spec.byId[c.llm.itemId];
+    c.ruleId = 'LLM';
+    c.reason = 'LLM 제안: ' + c.llm.reason;
+    c.confidence = c.llm.confidence;
+    c.status = '후보';
+  }
+
+  /** 수동 사용(ChatGPT·로컬 LLM 창)을 위한 프롬프트 묶음 — 현재 계획으로 P1을 채워 준다 */
+  function exportPrompts(plan) {
+    const cols = (plan ? plan.columns : []).map(function (c) { return Object.assign({}, c, { candidates: candidatesOf(c, plan.cancer) }); });
+    return ['# K-CURE 맞춤형 프롬프트 (변환기에서 생성)', '', '## P1 정형 로우 항목 → 표준 매핑 + 가명처리', '', '```text', P1_SYSTEM, '', p1User(plan ? plan.cancer : '', cols, false), '```', '',
+      '## P2 비정형 PII', '', '```text', P2_TEMPLATE, '```', '', '## P3 DICOM', '', '```text', P3_TEMPLATE, '```', ''].join('\n');
+  }
+
+  return {
+    enabled: function () { return !!window.KC_LLM_BUILD; }, ADAPTERS: ADAPTERS, BATCH: BATCH,
+    extractJson: extractJson, validateP1: validateP1, suggest: suggest, apply: apply, exportPrompts: exportPrompts,
+    transportFor: transportFor, prompts: { P1_SYSTEM: P1_SYSTEM, p1User: p1User, P2: P2_TEMPLATE, P3: P3_TEMPLATE }
+  };
+})();
+
+</script>
 <script>/* deidui.js */
 /* ④ 가명처리 코드 탭 — 샘플 분석 → 컬럼별 기법 추천·승인 → 코드 미리보기·패키지 내려받기 */
 window.KC = window.KC || {};
@@ -4188,7 +4542,7 @@ KC.deidUi = (function () {
       stat('자유문 PII', by.REGEX_PII || 0, '정규식 치환') + stat('유지', by.KEEP || 0, '');
     const pidOpts = p.columns.map(function (c) { return '<option' + (c.col === (p.patientCol || '') ? ' selected' : '') + '>' + esc(c.col) + '</option>'; }).join('');
     $('#dzPid').innerHTML = '<option value="">(없음 — 날짜 이동 불가)</option>' + pidOpts;
-    $('#dzTableWrap').innerHTML = '<table><thead><tr><th>승인</th><th>원천 컬럼</th><th>표준항목</th><th>샘플 패턴</th><th>가명처리 기법</th><th>파라미터</th><th>근거 (규칙)</th><th>신뢰도</th></tr></thead><tbody>' +
+    $('#dzTableWrap').innerHTML = '<table><thead><tr><th>승인</th><th>원천 컬럼</th><th>표준항목</th><th>샘플 패턴</th><th>가명처리 기법</th><th>파라미터</th><th>근거 (규칙)</th><th>신뢰도</th><th>LLM 제안</th></tr></thead><tbody>' +
       p.columns.map(function (c, i) {
         const sel = '<select data-dzt="' + i + '">' + ORDER.map(function (t) { return '<option value="' + t + '"' + (t === c.technique ? ' selected' : '') + '>' + esc(T[t].label) + '</option>'; }).join('') + '</select>';
         const params = Object.keys(c.params || {}).map(function (k) {
@@ -4201,8 +4555,56 @@ KC.deidUi = (function () {
           '<td><b>' + esc(c.col) + '</b>' + exp + '</td>' +
           '<td class="small">' + (c.item ? '<span class="mono">' + c.item.id + '</span><div class="l2">' + esc(c.item.name) + ' · ' + esc(c.item.role) + '</div>' : '<span class="pill warn">미매핑</span>') + '</td>' +
           '<td class="small">' + smp + '</td><td>' + sel + '</td><td>' + (params || '<span class="muted small">—</span>') + '</td>' +
-          '<td class="small">' + esc(c.reason) + ' <span class="muted mono">' + c.ruleId + '</span></td><td><span class="pill ' + pc + '">' + esc(c.confidence) + '</span></td></tr>';
+          '<td class="small">' + esc(c.reason) + ' <span class="muted mono">' + c.ruleId + '</span></td><td><span class="pill ' + pc + '">' + esc(c.confidence) + '</span></td>' +
+          '<td class="small">' + (c.llm ? esc((KC.deid.techniques()[c.llm.technique] || {}).label || c.llm.technique) + (c.llm.itemId ? ' · ' + esc(c.llm.itemId) : '') +
+            '<div class="l2">' + esc(c.llm.reason) + ' (' + esc(c.llm.confidence) + ')</div><button class="btn sm" data-dzl="' + i + '">적용</button>' : '<span class="muted">—</span>') + '</td></tr>';
       }).join('') + '</tbody></table>';
+  }
+
+  /* ---------- LLM 보조 ---------- */
+  let llmCtl = null;
+  async function llmRun() {
+    if (!st.plan) { $('#dzLlmMsg').textContent = '먼저 추천 계획을 만드세요.'; return; }
+    if (!KC.llm.enabled()) { $('#dzLlmMsg').textContent = '이 배포본에서는 LLM 연결이 차단되어 있습니다.'; return; }
+    llmCtl = new AbortController();
+    $('#dzLlmMsg').textContent = '요청 중…';
+    try {
+      const r = await KC.llm.suggest(st.plan, { adapter: $('#dzLlmAdapter').value, url: $('#dzLlmUrl').value.trim(), model: $('#dzLlmModel').value.trim(),
+        withSamples: $('#dzLlmSamples').checked, signal: llmCtl.signal,
+        onProgress: function (d, t) { $('#dzLlmMsg').textContent = '진행 ' + d + ' / ' + t + ' 컬럼'; } });
+      $('#dzLlmMsg').textContent = '제안 ' + r.suggested + ' / 대상 ' + r.asked + (r.failedBatches ? ' · 실패 묶음 ' + r.failedBatches + '(규칙 추천 유지): ' + r.errors[0] : '');
+    } catch (e) { $('#dzLlmMsg').textContent = 'LLM 오류(규칙 추천 유지): ' + e.message; }
+    render();
+  }
+  function initLlm() {
+    const on = KC.llm.enabled();
+    $('#dzLlmOff').classList.toggle('hidden', on);
+    ['#dzLlmForm', '#dzLlmRun', '#dzLlmStop'].forEach(function (s) { $(s).classList.toggle('hidden', !on); });
+    $('#dzLlmAdapter').innerHTML = Object.keys(KC.llm.ADAPTERS).map(function (k) { return '<option value="' + k + '">' + esc(KC.llm.ADAPTERS[k].label) + '</option>'; }).join('');
+    const setDef = function () { const a = KC.llm.ADAPTERS[$('#dzLlmAdapter').value]; $('#dzLlmUrl').value = a.url; $('#dzLlmModel').value = a.model; };
+    setDef();
+    $('#dzLlmAdapter').addEventListener('change', setDef);
+    $('#dzLlmRun').addEventListener('click', llmRun);
+    $('#dzLlmStop').addEventListener('click', function () { if (llmCtl) llmCtl.abort(); });
+    $('#dzLlmPrompts').addEventListener('click', function () { U.download('KCURE_맞춤형_프롬프트.md', KC.llm.exportPrompts(st.plan), 'text/markdown'); });
+  }
+
+  /* ---------- DICOM ---------- */
+  function dicomOpts() {
+    return { modality: $('#dcMod').value, range: +$('#dcRange').value || 30, input: $('#dcIn').value.trim(), output: $('#dcOut').value.trim(),
+      shiftDates: $('#dcShift').checked, birthYear: $('#dcYear').checked, keepPatientChar: $('#dcChar').checked, keepDescriptions: $('#dcDesc').checked,
+      removePrivate: $('#dcPriv').checked };
+  }
+  function dicomCode() {
+    const code = KC.dicomgen.python(dicomOpts());
+    const bad = KC.codegen.selfCheck(code, 'python');
+    $('#dcMsg').textContent = bad.length ? '자체 검사 실패: ' + bad.map(function (b) { return b.line + '행'; }).join(', ') : '자체 검사 통과 · 태그 ' + KC.dicomgen.TAGS.length + '개';
+    return bad.length ? null : code;
+  }
+  function initDicom() {
+    $('#dcMod').innerHTML = Object.keys(KC.dicomgen.MODALITIES).map(function (k) { return '<option value="' + k + '">' + esc(KC.dicomgen.MODALITIES[k]) + '</option>'; }).join('');
+    $('#dcPv').addEventListener('click', function () { const c = dicomCode(); if (c) { $('#dcView').classList.remove('hidden'); $('#dcView').textContent = c; } });
+    $('#dcDl').addEventListener('click', function () { const c = dicomCode(); if (c) U.download('deid_dicom.py', c, 'text/x-python'); });
   }
 
   function onChange(e) {
@@ -4271,6 +4673,12 @@ KC.deidUi = (function () {
     $('#dzRx').addEventListener('click', function () { preview('rx'); });
     $('#dzZip').addEventListener('click', download);
     $('#dzScanBtn').addEventListener('click', scan);
+    $('#dzTableWrap').addEventListener('click', function (e) {
+      const b = e.target.closest('[data-dzl]');
+      if (b && st.plan) { KC.llm.apply(st.plan.columns[+b.dataset.dzl]); render(); }
+    });
+    initLlm();
+    initDicom();
     $('#dzDialect').innerHTML = Object.keys(KC.codegen.DIALECTS).map(function (k) { return '<option value="' + k + '">' + esc(KC.codegen.DIALECTS[k]) + '</option>'; }).join('');
   }
 
