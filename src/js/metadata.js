@@ -114,6 +114,11 @@ KC.meta = (function () {
     return f.values.length > 12 ? f.values.slice(0, 12).join(' | ') + ' … (' + f.values.length + '개)' : f.values.join(' | ');
   }
 
+  /** 항목에 붙은 매핑 수정안(spec/corrections.json) 요약 */
+  function reviewText(it) {
+    return (it.review || []).map(function (r) { return r.code + ' ' + r.current + ' → ' + r.proposed + ' [' + r.status + ']'; }).join(' | ');
+  }
+
   /* ---------- 표 생성 ---------- */
   function integratedRows(entries) {
     const head = ['No', '원천 컬럼', '항목ID', '표준항목명', '표준정의', '대분류', '중분류', 'mCODE 도메인', '데이터타입', '길이', '단위', '허용값', '필수여부',
@@ -123,7 +128,7 @@ KC.meta = (function () {
       'mCODE 프로파일', 'mCODE 프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', 'mCODE 참조수준',
       'OMOP 테이블', 'OMOP 필드', 'OMOP 개념 필드', 'OMOP 일자 필드', 'OMOP 원천값 필드', 'OMOP 어휘', 'OMOP 변환·주의', 'OMOP 신뢰도',
       'ARGO 스키마', 'ARGO 필드', 'ARGO 표시명', 'ARGO Tier', 'ARGO 필수조건', 'ARGO 유형', 'ARGO 허용값', 'ARGO 변환·주의', 'ARGO 신뢰도',
-      '매핑 단계', '정의결손'];
+      '매핑 단계', '정의결손', 'mCODE·KR Core 리소스', '기본 표현', '매핑 수정안'];
     const rows = [head];
     entries.forEach(function (e, i) {
       const it = e.item;
@@ -136,18 +141,20 @@ KC.meta = (function () {
         m.title || m.profile, m.url || '', m.path, m.element || '', m.level,
         o ? o.table : '', o ? o.field : '', o ? o.concept : '', o ? o.date : '', o ? o.source : '', o ? o.vocab : '', o ? o.note : '', o ? o.conf : '',
         a ? a.schema : '', a ? a.field : '', a ? a.label : '', a ? a.tier : '', a ? a.req : '', a ? a.type : '', a ? argoValues(a) : '', a ? a.note : '', a ? a.conf : '',
-        it.stage, it.gap]);
+        it.stage, it.gap, m.resConflict ? '상이(KR Core ' + it.core.path.split('.')[0] + ' / mCODE ' + m.resConflict + ')' : '일치',
+        m.resConflict ? m.primary : '', reviewText(it)]);
     });
     return rows;
   }
 
   /* ---------- mCODE 표 ---------- */
   function mcodeMapRows(entries) {
-    const rows = [['원천 컬럼', '항목ID', '표준항목명', 'mCODE 프로파일', '프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', '데이터요소 필수', '참조수준', 'KR Core 경로', '비고']];
+    const rows = [['원천 컬럼', '항목ID', '표준항목명', 'mCODE 프로파일', '프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', '데이터요소 필수', '참조수준', 'KR Core 경로', '리소스 일치', '기본 표현', '비고']];
     entries.forEach(function (e) {
       if (!e.item) return;
       const m = e.item.mcode;
       rows.push([e.col, e.item.id, e.item.name, m.title || m.profile, m.url || '', m.path, m.element || '', m.elRequired || '', m.level, e.item.core.path,
+        m.resConflict ? '상이' : (m.path && m.path !== '해당 없음' ? '일치' : ''), m.resConflict ? m.primary : '',
         /미정의/.test(m.profile) ? 'mCODE STU4에 대응 프로파일 없음 — KR-mCODE 신규 후보(' + e.item.prf + ')' : (m.level === '구조참조(KR-mCODE 자체정의)' ? 'mCODE Draft 구조 참조, KR-mCODE에서 자체 정의' : '')]);
     });
     return rows;
@@ -234,12 +241,12 @@ KC.meta = (function () {
     });
     const touched = {};
     Object.keys(byKey).forEach(function (k) { touched[k.split('|')[0]] = 1; });
-    const rows = [['No', 'KR CDI 분류', 'KR CDI 항목', '영문명', '필수여부', '데이터타입', '참조 용어체계', 'KR Core 1순위 경로', '대응 K-CURE 컬럼', '대응 수', '상태']];
+    const rows = [['No', 'KR CDI 분류', 'KR CDI 항목', '영문명', '필수여부', '데이터타입', '참조 용어체계', 'KR Core 1순위 경로', '대응 K-CURE 컬럼', '대응 수', '상태', '수집범위 사유']];
     KC.spec.krcdi.forEach(function (k) {
       const hit = byKey[k.cls + '|' + k.el] || [];
-      const state = hit.length ? '대응' : (touched[k.cls] && k.req === 'R' ? 'R(필수) 미대응 — 사용 분류' : '미대응');
+      const state = hit.length ? '대응' : k.scope ? '수집범위외 — ' + k.scope : (touched[k.cls] && k.req === 'R' ? 'R(필수) 미대응 — 사용 분류' : '미대응');
       rows.push([k.no, k.cls, k.el, k.elEn, k.req, k.type, k.term, k.corePath,
-        hit.map(function (e) { return e.col + ' (' + e.item.id + (e.item.cdi.match ? ', ' + e.item.cdi.match : '') + ')'; }).join(' | '), hit.length, state]);
+        hit.map(function (e) { return e.col + ' (' + e.item.id + (e.item.cdi.match ? ', ' + e.item.cdi.match : '') + ')'; }).join(' | '), hit.length, state, k.scopeNote || '']);
     });
     return rows;
   }
@@ -274,19 +281,30 @@ KC.meta = (function () {
   function argoCoverage(entries) {
     const by = {};
     entries.forEach(function (e) { const a = argoOf(e); if (a) (by[a.key] = by[a.key] || []).push(e.col); });
-    const rows = [['ARGO 스키마', '필드', '표시명', 'Tier', '필수조건', '유형', '대응 K-CURE 컬럼', '상태']];
-    const stat = { core: 0, coreHit: 0, req: 0, reqHit: 0, all: 0, hit: 0 };
+    const rows = [['ARGO 스키마', '필드', '표시명', 'Tier', '필수조건', '유형', '대응 K-CURE 컬럼', '상태', '파생·지정 규칙']];
+    const stat = { core: 0, coreHit: 0, coreDerived: 0, coreFixed: 0, req: 0, reqHit: 0, all: 0, hit: 0 };
+    const derived = (KC.spec.data.argo && KC.spec.data.argo.derived) || {};
     (KC.spec.data.argo ? KC.spec.data.argo.schemas : []).forEach(function (s) {
       s.fields.forEach(function (fn) {
         const k = s.name + '.' + fn, f = KC.spec.data.argo.fields[k], hit = by[k] || [];
         const isId = f.tier === 'ID';
         let state = hit.length ? '대응' : isId ? '식별자(제출 시 생성)' : (f.req === 'Required' ? '미대응 — Required' : f.tier === 'Core' ? '미대응 — Core' : '미대응');
+        // 직접 대응이 없을 때만 파생·지정값으로 본다 (직접 대응 수와 섞지 않음)
+        const dv = derived[k];
+        let how = '';
+        if (!hit.length && dv) {
+          if (dv.kind === '지정값') { state = '제출 시 지정값'; how = dv.rule; }
+          else if (dv.from.some(function (x) { return by[x]; })) { state = '파생 가능'; how = dv.rule + ' (← ' + dv.from.filter(function (x) { return by[x]; }).join(', ') + ')'; }
+        }
         if (!isId) {
           stat.all++; if (hit.length) stat.hit++;
-          if (f.tier === 'Core') { stat.core++; if (hit.length) stat.coreHit++; }
+          if (f.tier === 'Core') {
+            stat.core++; if (hit.length) stat.coreHit++;
+            if (state === '파생 가능') stat.coreDerived++; else if (state === '제출 시 지정값') stat.coreFixed++;
+          }
           if (f.req === 'Required') { stat.req++; if (hit.length) stat.reqHit++; }
         }
-        rows.push([s.name, fn, f.label, f.tier, f.req, f.type, hit.join(' | '), state]);
+        rows.push([s.name, fn, f.label, f.tier, f.req, f.type, hit.join(' | '), state, how]);
       });
     });
     return { rows: rows, stat: stat };
@@ -326,7 +344,9 @@ KC.meta = (function () {
   function summarize(entries) {
     const mapped = entries.filter(function (e) { return e.item; });
     const cdi = mapped.filter(function (e) { return e.item.cdi && e.item.cdi.el; });
-    const cdiEls = Object.keys(U.groupCount(cdi, function (e) { return e.item.cdi.cls + '|' + e.item.cdi.el; })).length;
+    const cdiKeys = U.groupCount(cdi, function (e) { return e.item.cdi.cls + '|' + e.item.cdi.el; });
+    const cdiEls = Object.keys(cdiKeys).length;
+    const cdiOut = KC.spec.krcdi.filter(function (k) { return k.scope && !cdiKeys[k.cls + '|' + k.el]; }).length;
     const judge = U.groupCount(mapped, function (e) { return e.item.core.judge; });
     const argo = mapped.filter(function (e) { return argoOf(e); });
     const argoConf = U.groupCount(argo, function (e) { return argoOf(e).conf; });
@@ -337,7 +357,9 @@ KC.meta = (function () {
     const om = mapped.filter(function (e) { return omopOf(e); });
     return {
       columns: entries.length, mapped: mapped.length, unmapped: entries.length - mapped.length,
-      krcdi: cdi.length, krcdiElements: cdiEls,
+      krcdi: cdi.length, krcdiElements: cdiEls, krcdiOutOfScope: cdiOut, krcdiGap: KC.spec.krcdi.length - cdiEls - cdiOut,
+      mcodeConflict: mapped.filter(function (e) { return e.item.mcode.resConflict; }).length,
+      review: mapped.filter(function (e) { return e.item.review && e.item.review.length; }).length,
       krcoreDirect: judge['직접재사용'] || 0, krcoreConstrained: judge['제약재사용'] || 0, krcoreExtension: judge['확장필요'] || 0,
       krcoreProfiles: Object.keys(U.groupCount(mapped, function (e) { return e.item.core.profile; })).length,
       mcode: mc.length, mcodeDirect: mcLevel['직접재사용'] || 0, mcodePartial: mcLevel['부분참조'] || 0,
@@ -345,7 +367,8 @@ KC.meta = (function () {
       mcodeProfiles: mcProfiles, mcodeProfilesTotal: (KC.spec.data.mcode || { profiles: [] }).profiles.length,
       omop: om.length, omopConf: U.groupCount(om, function (e) { return omopOf(e).conf; }),
       omopTables: U.groupCount(om, function (e) { return omopOf(e).table; }),
-      argo: argo.length, argoConf: argoConf, argoCoreHit: cov.coreHit, argoCore: cov.core, argoReqHit: cov.reqHit, argoReq: cov.req
+      argo: argo.length, argoConf: argoConf, argoCoreHit: cov.coreHit, argoCore: cov.core, argoReqHit: cov.reqHit, argoReq: cov.req,
+      argoCoreDerived: cov.coreDerived, argoCoreFixed: cov.coreFixed
     };
   }
 
@@ -370,16 +393,18 @@ KC.meta = (function () {
 
     const summaryRows = [['구분', '값', '비고'],
       ['암종', label, ''], ['원천 컬럼', sum.columns, '표준항목 매핑 ' + sum.mapped + ' · 미매핑 ' + sum.unmapped],
-      ['KR CDI 대응 컬럼', sum.krcdi, 'KR CDI 80항목 중 ' + sum.krcdiElements + '개 항목에 대응'],
+      ['KR CDI 대응 컬럼', sum.krcdi, 'KR CDI 80항목 중 ' + sum.krcdiElements + '개 항목에 대응 · 수집범위외 ' + sum.krcdiOutOfScope + ' · 실제 미대응 ' + sum.krcdiGap],
       ['KR Core 직접재사용', sum.krcoreDirect, ''], ['KR Core 제약재사용', sum.krcoreConstrained, '추가 제약 필요'], ['KR Core 확장필요', sum.krcoreExtension, '확장 설계 대상'],
       ['KR Core 프로파일 수', sum.krcoreProfiles, 'KR Core 및 KR-mCODE 후보 포함'],
       ['mCODE 대응 컬럼', sum.mcode, '직접 ' + sum.mcodeDirect + ' · 부분 ' + sum.mcodePartial + ' · 개념/구조참조 ' + sum.mcodeRef + ' · 미대응 ' + sum.mcodeNone],
+      ['mCODE·KR Core 리소스 상이', sum.mcodeConflict, '기본 표현 규칙: KR Core 우선, KR Core 확장필요·mCODE 직접재사용이면 mCODE'],
+      ['매핑 수정안 대상 컬럼', sum.review, 'spec/corrections.json (승인된 건만 명세 반영)'],
       ['mCODE 프로파일 충족', sum.mcodeProfiles + ' / ' + sum.mcodeProfilesTotal, 'mCODE STU4 데이터 사전 프로파일 기준'],
       ['OMOP CDM 대응 컬럼', sum.omop, confText(sum.omopConf)],
       ['OMOP 사용 테이블', Object.keys(sum.omopTables).length, Object.keys(sum.omopTables).map(function (k) { return k + ' ' + sum.omopTables[k]; }).join(', ')],
       ['OMOP 필수 필드 충족', ocov.reqOk + ' / ' + ocov.req, '사용 테이블의 필수 필드(키·유형은 ETL 생성 포함)'],
       ['ICGC ARGO 대응 컬럼', sum.argo, '높음 ' + (sum.argoConf['높음'] || 0) + ' · 중간 ' + (sum.argoConf['중간'] || 0) + ' · 낮음 ' + (sum.argoConf['낮음'] || 0) + (sum.argoConf['수동'] ? ' · 수동 ' + sum.argoConf['수동'] : '')],
-      ['ARGO Core 필드 충족', sum.argoCoreHit + ' / ' + sum.argoCore, 'ID 계층 제외'], ['ARGO Required 필드 충족', sum.argoReqHit + ' / ' + sum.argoReq, 'ID 계층 제외'],
+      ['ARGO Core 필드 충족', sum.argoCoreHit + ' / ' + sum.argoCore, 'ID 계층 제외 · 직접 대응만. 별도로 파생 가능 ' + sum.argoCoreDerived + ' · 제출 시 지정값 ' + sum.argoCoreFixed], ['ARGO Required 필드 충족', sum.argoReqHit + ' / ' + sum.argoReq, 'ID 계층 제외'],
       ['DCAT 필수속성 누락', dc.issues.filter(function (x) { return x.level === '오류'; }).length, 'NIA 가이드 [표 5]'],
       ['기준 명세', KC.spec.data.meta.source, KC.spec.data.meta.stageNote], ['mCODE', 'mCODE STU4', KC.spec.data.meta.mcodeNote || ''],
       ['OMOP 매핑', 'OMOP CDM v5.4', KC.spec.data.meta.omopNote || ''], ['ARGO 매핑', 'ICGC ARGO v1.34', KC.spec.data.meta.argoNote || ''],

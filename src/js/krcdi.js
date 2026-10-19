@@ -40,16 +40,22 @@ KC.krcdi = (function () {
       });
       const coverage = KC.spec.krcdi.map(function (k) {
         const key = k.cls + '|' + k.el;
-        return { no: k.no, cls: k.cls, el: k.el, elEn: k.elEn, req: k.req, corePath: k.corePath, mapped: mappedByKey[key] || [], values: filled[key] || 0 };
+        return { no: k.no, cls: k.cls, el: k.el, elEn: k.elEn, req: k.req, corePath: k.corePath, mapped: mappedByKey[key] || [], values: filled[key] || 0,
+          scope: k.scope || '', scopeNote: k.scopeNote || '' };
       });
       // 적합성: 데이터가 존재하는 분류의 R(필수) 항목 누락
       const conformance = [];
       Object.keys(touchedCls).forEach(function (cls) {
         coverage.filter(function (c) { return c.cls === cls && c.req === 'R' && !c.values; }).forEach(function (c) {
-          conformance.push({ level: '경고', cls: cls, el: c.el, msg: '사용 중인 분류의 R(필수) 항목 값 없음' });
+          // 수집범위외(직접식별자 제외 등)는 의도된 미수집이므로 경고가 아니라 정보로 남긴다
+          conformance.push(c.scope ? { level: '정보', cls: cls, el: c.el, scope: c.scope, msg: 'R(필수) 항목이지만 수집범위외 — ' + c.scope + ' (' + c.scopeNote + ')' }
+            : { level: '경고', cls: cls, el: c.el, msg: '사용 중인 분류의 R(필수) 항목 값 없음' });
         });
       });
-      conformance.forEach(function (c) { log.warn('KRCDI_R_MISSING', 'KR CDI [' + c.cls + '] ' + c.el + ' — ' + c.msg, { target: 'KR CDI' }); });
+      conformance.forEach(function (c) {
+        if (c.level === '정보') log.info('KRCDI_R_SCOPE', 'KR CDI [' + c.cls + '] ' + c.el + ' — ' + c.msg, { target: 'KR CDI' });
+        else log.warn('KRCDI_R_MISSING', 'KR CDI [' + c.cls + '] ' + c.el + ' — ' + c.msg, { target: 'KR CDI' });
+      });
       const header = ['환자키', '원천행', 'KRCDI_항목No', 'KRCDI_분류', 'KRCDI_항목', 'KRCDI_항목(영문)', '필수여부', '대응유형', '값', 'K-CURE_항목ID', 'K-CURE_항목명'];
       return {
         standard: 'KR CDI V3 (한국 핵심교류데이터)',

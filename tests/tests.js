@@ -227,6 +227,28 @@
     eq('9개 암종 DCAT 오류 0', all9.reduce(function (s, p) { return s + p.dcatIssues.filter(function (x) { return x.level === '오류'; }).length; }, 0), 0);
     window.TEST_XLSX_SAMPLE = KC.meta.build(CONF, '대장암', fe).files[0].content;
 
+    /* 7. 매핑 품질 보강 (v0.2 S1) */
+    eq('KR CDI 수집범위외 17항목', KC.spec.krcdi.filter(function (k) { return k.scope; }).length, 17);
+    const nameScope = crc.run.krcdi.conformance.find(function (c) { return c.el === '성명' && c.cls === '환자 정보'; });
+    eq('KR CDI 성명 = 수집범위외 정보', nameScope && nameScope.level, '정보');
+    const allE = KC.meta.entriesForCancer('');
+    const sAll = KC.meta.summarize(allE);
+    eq('KR CDI 대응 36 + 범위외 17 + 미대응 27 = 80', [sAll.krcdiElements, sAll.krcdiOutOfScope, sAll.krcdiGap].join('+'), '36+17+27');
+    eq('mCODE·KR Core 리소스 상이 167', sAll.mcodeConflict, 167);
+    ok('리소스 상이 항목은 기본 표현 지정', KC.spec.items.every(function (i) { return !i.mcode.resConflict || /^(KR Core|mCODE)$/.test(i.mcode.primary); }));
+    eq('매핑 수정안 171건(168항목)', KC.spec.data.meta.corrections.total + '/' + sAll.review, '171/168');
+    ok('수정안 미승인 → 경로 미변경', KC.spec.items.every(function (i) { return !i.core.pathOrig; }));
+    const dDrink = KC.spec.items.find(function (i) { return i.name === '음주량'; });
+    ok('음주량 수정안 D1 → valueQuantity', dDrink.review.some(function (r) { return r.code === 'D1' && r.proposed === 'Observation.valueQuantity' && r.status === '후보'; }), JSON.stringify(dDrink.review));
+    const acAll = KC.meta.argoCoverage(allE).stat;
+    ok('ARGO Core 직접 충족 ≥ 48', acAll.coreHit >= 48, acAll.coreHit);
+    eq('ARGO Core 지정값 4', acAll.coreFixed, 4);
+    ok('ARGO Core 파생 가능 ≥ 8', acAll.coreDerived >= 8, acAll.coreDerived);
+    ok('ARGO 직접·파생·지정 중복 없음', acAll.coreHit + acAll.coreDerived + acAll.coreFixed <= acAll.core);
+    eq('전신항암제 차수값 → ARGO line_of_treatment', KC.spec.items.find(function (i) { return i.name === '전신항암제 차수값'; }).argo.key, 'treatment.line_of_treatment');
+    const cmM2 = KC.artifacts.toMcode(CONF, KC.spec.items);
+    ok('mCODE ConceptMap 리소스 상이 주석', cmM2.group.some(function (g) { return g.element.some(function (e) { return /리소스 상이/.test(e.target[0].comment); }); }));
+
     /* 5. 항목정의 변환 */
     const all = KC.dcat.fromSpec(CONF, KC.spec.data.meta.cancers);
     eq('명세 DCAT 필수속성 오류 0', all.issues.filter(function (x) { return x.level === '오류'; }).length, 0);

@@ -45,6 +45,40 @@ KRCORE_IDS = {
     "KR Core Observation Profile for Vital Signs: Blood Pressure": ("krcore-bloodpressure", "확인"),
 }
 
+# KR CDI 80항목 중 K-CURE 연구 데이터에 일부러 담지 않는 항목(항목No → 구분, 사유).
+# 커버리지 보고에서 '실제 누락'과 나누어 표시한다. 목록은 항목정의 업무 결정에 따라 고친다.
+KRCDI_SCOPE = {
+    2: ("직접식별자 제외", "가명처리 대상 직접식별자 — 연구 데이터 수집범위 밖"),
+    5: ("직접식별자 제외", "가명처리 대상 직접식별자"),
+    6: ("직접식별자 제외", "가명처리 대상 직접식별자"),
+    7: ("직접식별자 제외", "가명처리 대상 직접식별자(상세주소)"),
+    10: ("직접식별자 제외", "의료인 식별자 — 연구 데이터 수집범위 밖"),
+    11: ("직접식별자 제외", "의료인 성명 — 연구 데이터 수집범위 밖"),
+    14: ("기관 메타데이터", "제공기관 정보는 DCAT 카탈로그(dct:publisher)로 표현"),
+    15: ("기관 메타데이터", "제공기관 정보는 DCAT 카탈로그로 표현"),
+    16: ("기관 메타데이터", "제공기관 정보는 DCAT 카탈로그로 표현"),
+    17: ("기관 메타데이터", "제공기관 정보는 DCAT 카탈로그로 표현"),
+    18: ("기관 메타데이터", "제공기관 정보는 DCAT 카탈로그로 표현"),
+    32: ("전송 시 생성", "FHIR Procedure.status — 변환 시 기본값(completed/unknown) 생성"),
+    42: ("전송 시 생성", "FHIR MedicationRequest.status — 변환 시 기본값 생성"),
+    51: ("전송 시 생성", "FHIR Observation.status — 변환 시 기본값(final) 생성"),
+    55: ("전송 시 생성", "FHIR DiagnosticReport.status — 변환 시 기본값(final) 생성"),
+    57: ("전송 시 생성", "FHIR ImagingStudy.status — 변환 시 기본값 생성"),
+    61: ("전송 시 생성", "FHIR Observation.status — 변환 시 기본값(final) 생성"),
+}
+
+# mCODE 와 KR Core 의 기반 리소스가 다를 때 기본 표현(전송) 결정 규칙.
+# 국내 원칙: KR Core(전송표준)를 우선 재사용하고, KR Core 판정이 '확장필요'인데 mCODE 는 직접재사용이면 mCODE 표현을 권고한다.
+def mcode_primary(core_judge, mcode_level):
+    return "mCODE" if core_judge == "확장필요" and mcode_level == "직접재사용" else "KR Core"
+
+
+def load_corrections(path):
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        return json.load(f).get("corrections", [])
+
 
 def norm_key(s):
     """별칭 대조용 정규화: 소문자, 공백·기호 제거."""
@@ -108,6 +142,7 @@ def main():
     ap.add_argument("--aux", help="보조 워크북 V1.2 (기본: spec/sources)")
     ap.add_argument("--argo", help="ICGC ARGO 데이터 사전 (기본: spec/sources)")
     ap.add_argument("--mcode", help="mCODE STU4 데이터 사전 (기본: spec/sources)")
+    ap.add_argument("--corrections", default=os.path.join(ROOT, "spec", "corrections.json"))
     ap.add_argument("--out", default=os.path.join(ROOT, "spec", "kcure_spec.json"))
     a = ap.parse_args()
     a.final = a.final or source_path("final")
@@ -250,6 +285,8 @@ def main():
             "term": clean(r["참조 용어체계(원문)"]), "coreProfile": clean(r["1순위 KR Core Profile"]),
             "corePath": clean(r["1순위 FHIR Path"]), "alt": clean(r["허용 대안"]), "cond": clean(r["선택 조건"]),
         })
+        if no in KRCDI_SCOPE:
+            krcdi[-1]["scope"], krcdi[-1]["scopeNote"] = KRCDI_SCOPE[no]
 
     # ICGC ARGO 후보 매핑 (항목정의서에 없는 대응 → 규칙 기반 자동 후보)
     import argo_map
@@ -260,6 +297,34 @@ def main():
     # OMOP CDM v5.4 후보 매핑 (항목정의서에 없는 대응 → 규칙 기반 자동 후보)
     import omop_map
     omop_d = omop_map.apply(items)
+
+    # mCODE·KR Core 기반 리소스 일치 여부와 기본 표현
+    n_conflict = 0
+    for it in items:
+        m = it["mcode"]
+        mp, cp = (m.get("path") or ""), it["core"]["path"]
+        if mp and mp != "해당 없음" and mp.split(".")[0] != cp.split(".")[0]:
+            m["resConflict"] = mp.split(".")[0]
+            m["primary"] = mcode_primary(it["core"]["judge"], m.get("level"))
+            n_conflict += 1
+
+    # 매핑 수정안(spec/corrections.json): 모든 건을 항목에 붙이고, 승인된 건만 경로에 반영
+    corrections = load_corrections(a.corrections)
+    by_id = {it["id"]: it for it in items}
+    n_applied = 0
+    for c in corrections:
+        it = by_id.get(c["id"])
+        if not it:
+            print(f"[경고] 수정안 항목 없음: {c['id']}", file=sys.stderr)
+            continue
+        it.setdefault("review", []).append({k: c.get(k, "") for k in ("code", "issue", "current", "proposed", "status", "reason")})
+        if c.get("status") == "승인" and c.get("proposed") and c.get("field") == "core.path":
+            if it["core"]["path"] != c["current"]:
+                print(f"[경고] {c['id']} 현재 경로가 수정안 작성 시점과 다름({it['core']['path']} ≠ {c['current']}) — 반영 보류", file=sys.stderr)
+                continue
+            it["core"]["pathOrig"] = it["core"]["path"]
+            it["core"]["path"] = c["proposed"]
+            n_applied += 1
 
     code_systems = {}
     for r in sheet_rows(wa, "05_코드값_정의", 1):
@@ -289,6 +354,9 @@ def main():
     }
     spec["meta"]["argoNote"] = f"ICGC ARGO v{argo_dict['version']} 매핑은 규칙 기반 자동 후보({n_argo}개 항목) — 전문가 검토 전"
     spec["meta"]["omopNote"] = "OMOP CDM v5.4 매핑은 규칙 기반 자동 후보(1,255개 항목, 테이블·필드 수준) — 개념 ID(concept_id) 매핑은 Athena 어휘로 별도 수행"
+    spec["meta"]["mcodeConflicts"] = n_conflict
+    spec["meta"]["corrections"] = {"total": len(corrections), "applied": n_applied,
+                                   "byStatus": {st: sum(1 for c in corrections if c.get("status") == st) for st in sorted({c.get("status", "") for c in corrections})}}
     spec["meta"]["mcodeNote"] = f"mCODE {mcode_d['version']} 대응은 항목정의서 v2.4 기준(규칙승인 후보), 프로파일 URL·데이터요소는 mCODE 데이터 사전 연결({n_mp}개 항목 프로파일, {n_me}개 항목 데이터요소)"
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:
@@ -300,7 +368,8 @@ def main():
         f.write(";\n")
     n_alias = sum(len(i["aliases"]) for i in items)
     print(f"items={len(items)} aliases={n_alias} krcdi={len(krcdi)} profiles={len(profiles)} "
-          f"codeSystems={len(code_systems)} size={os.path.getsize(a.out)//1024}KB -> {a.out}")
+          f"codeSystems={len(code_systems)} mcodeConflicts={n_conflict} corrections={len(corrections)}(반영 {n_applied}) "
+          f"size={os.path.getsize(a.out)//1024}KB -> {a.out}")
 
 
 if __name__ == "__main__":

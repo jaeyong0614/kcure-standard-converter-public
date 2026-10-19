@@ -93,7 +93,8 @@ KC.artifacts = (function () {
       const tgt = none ? 'http://hl7.org/fhir/us/mcode' : m.url;
       const g = groups[tgt] = groups[tgt] || { source: base + 'CodeSystem/kcure-item', target: tgt, element: [] };
       const eq = none ? 'unmatched' : m.level === '직접재사용' ? 'equivalent' : m.level === '부분참조' ? 'wider' : 'relatedto';
-      const t = { equivalence: eq, comment: (m.title || m.profile) + ' · ' + m.level + (m.element ? ' · 데이터요소 ' + m.element : '') + (none ? ' · KR-mCODE 후보 ' + it.prf : '') };
+      const t = { equivalence: eq, comment: (m.title || m.profile) + ' · ' + m.level + (m.element ? ' · 데이터요소 ' + m.element : '') + (none ? ' · KR-mCODE 후보 ' + it.prf : '') +
+        (m.resConflict ? ' · KR Core ' + it.core.path.split('.')[0] + '와 리소스 상이(mCODE ' + m.resConflict + '), 기본 표현 ' + m.primary : '') };
       if (!none) { t.code = m.path; t.display = (m.title || m.profile) + ' ' + m.path; }
       g.element.push({ code: it.id, display: it.name, target: [t] });
     });

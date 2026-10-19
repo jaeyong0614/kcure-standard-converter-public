@@ -487,11 +487,11 @@ KC.APP_VERSION = 'v0.1.0 (프로토타입)';
     $('#selTitle').textContent = '선택 항목 — ' + (st.msel.cancer || '암종 미지정');
     $('#selStats').innerHTML = stat('선택 컬럼', used.length + ' / ' + all.length) +
       stat('표준항목 매핑', s.mapped, s.unmapped ? '미매핑 ' + s.unmapped : '', s.unmapped ? 'warn' : 'ok') +
-      stat('KR CDI 대응', s.krcdi, '80항목 중 ' + s.krcdiElements + '개') +
+      stat('KR CDI 대응', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 · 범위외 ' + s.krcdiOutOfScope) +
       stat('KR Core', s.krcoreDirect + ' / ' + s.krcoreConstrained + ' / ' + s.krcoreExtension, '직접 / 제약 / 확장') +
       stat('mCODE 대응', s.mcode, '프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal) +
       stat('OMOP 대응(후보)', s.omop, '테이블 ' + Object.keys(s.omopTables).length + '개') +
-      stat('ARGO 대응(후보)', s.argo, 'Core 필드 ' + s.argoCoreHit + '/' + s.argoCore);
+      stat('ARGO 대응(후보)', s.argo, 'Core 필드 ' + s.argoCoreHit + '/' + s.argoCore + ' (+파생 ' + s.argoCoreDerived + ')');
     const rows = selFiltered();
     $('#selTable').innerHTML = '<table><thead><tr><th>포함</th><th>원천 컬럼</th><th>항목ID</th><th>표준항목명</th><th>도메인</th><th>분류</th><th>자료형</th><th>선택 방식</th></tr></thead><tbody>' +
       rows.map(function (e) {
@@ -556,13 +556,14 @@ KC.APP_VERSION = 'v0.1.0 (프로토타입)';
     if (!has) { $('#mmStats').innerHTML = ''; $('#mmTable').innerHTML = ''; $('#mmPager').innerHTML = ''; return; }
     const s = KC.meta.summarize(usedEntries());
     $('#mmStats').innerHTML = stat('컬럼', s.columns, (st.msel.cancer || '') + (s.unmapped ? ' · 미매핑 ' + s.unmapped : '')) +
-      stat('KR CDI', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 대응') +
+      stat('KR CDI', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 대응 · 수집범위외 ' + s.krcdiOutOfScope + ' · 실제 미대응 ' + s.krcdiGap) +
       stat('KR Core', s.krcoreDirect + ' / ' + s.krcoreConstrained + ' / ' + s.krcoreExtension, '직접 / 제약 / 확장 · 프로파일 ' + s.krcoreProfiles) +
-      stat('mCODE', s.mcode, '직접 ' + s.mcodeDirect + ' · 부분 ' + s.mcodePartial + ' · 참조 ' + s.mcodeRef + ' · 프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal) +
+      stat('mCODE', s.mcode, '직접 ' + s.mcodeDirect + ' · 부분 ' + s.mcodePartial + ' · 참조 ' + s.mcodeRef + ' · 프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal + ' · KR Core와 리소스 상이 ' + s.mcodeConflict) +
       stat('OMOP CDM', s.omop, '높음 ' + (s.omopConf['높음'] || 0) + ' · 중간 ' + (s.omopConf['중간'] || 0) + ' · 낮음 ' + (s.omopConf['낮음'] || 0) + ' · 테이블 ' + Object.keys(s.omopTables).length) +
       stat('DCAT 변수', s.columns, '데이터셋 1개 · ndi:profile') +
       stat('ARGO 대응', s.argo, '높음 ' + (s.argoConf['높음'] || 0) + ' · 중간 ' + (s.argoConf['중간'] || 0) + ' · 낮음 ' + (s.argoConf['낮음'] || 0) + (s.argoConf['수동'] ? ' · 수동 ' + s.argoConf['수동'] : '')) +
-      stat('ARGO Core 충족', s.argoCoreHit + ' / ' + s.argoCore, 'Required ' + s.argoReqHit + ' / ' + s.argoReq);
+      stat('ARGO Core 충족', s.argoCoreHit + ' / ' + s.argoCore, '직접 대응 · 파생 가능 ' + s.argoCoreDerived + ' · 지정값 ' + s.argoCoreFixed + ' · Required ' + s.argoReqHit + ' / ' + s.argoReq) +
+      stat('매핑 수정안', s.review, '검토 대상 컬럼(spec/corrections.json)', s.review ? 'warn' : '');
     const rows = mmFiltered();
     const per = 100, pages = Math.max(1, Math.ceil(rows.length / per));
     st.mmPage = Math.min(st.mmPage || 0, pages - 1);
@@ -659,7 +660,9 @@ KC.APP_VERSION = 'v0.1.0 (프로토타입)';
       ['허용값', it.allowed || '—'], ['필수여부', it.req],
       ['KR CDI', it.cdi && it.cdi.el ? it.cdi.cls + ' / ' + it.cdi.el + ' (' + it.cdi.req + ', ' + (it.cdi.match || '대응유형 미상') + ')' : '대응 없음'],
       ['KR Core', it.core.profile + ' → ' + it.core.path + ' [' + it.core.judge + ']'], ['프로파일 URL', it.core.url + ' (' + it.core.urlSrc + ')'],
-      ['mCODE', it.mcode.profile + ' → ' + it.mcode.path + ' [' + it.mcode.level + ']'], ['KR-mCODE 후보', it.prf + (KC.spec.profilesById[it.prf] ? ' ' + KC.spec.profilesById[it.prf].name : '')],
+      ['mCODE', it.mcode.profile + ' → ' + it.mcode.path + ' [' + it.mcode.level + ']' +
+        (it.mcode.resConflict ? ' · KR Core와 리소스 상이(' + it.mcode.resConflict + ') → 기본 표현 ' + it.mcode.primary : '')],
+      ['매핑 수정안', (it.review || []).map(function (r) { return r.code + ' ' + r.issue + ': ' + r.current + ' → ' + r.proposed + ' [' + r.status + ']'; }).join(' / ') || '—'], ['KR-mCODE 후보', it.prf + (KC.spec.profilesById[it.prf] ? ' ' + KC.spec.profilesById[it.prf].name : '')],
       ['심사', it.grade + '등급 · ' + it.stage], ['정의결손', it.gap], ['원천 예시', (it.examples || []).join(' · ') || '—'],
       ['원천 별칭', (it.aliases || []).map(function (a) { return a[0] + (a[1].length ? '(' + a[1].join(',') + ')' : ''); }).join(' · ')]
     ];

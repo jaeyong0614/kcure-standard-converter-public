@@ -94,6 +94,7 @@ RULES = [
     (r"수술\s*(일자|일)$|^dt_op$|수술일자|시술\s*일자", "treatment.treatment_start_interval", "중간", "treatment_type=Surgical; " + IV),
     (r"수술\s*명|op_name|수술\s*방법|op_method|^surgery|수술명|시술\s*명|절제술", "surgery.surgery_type", "중간", "ARGO surgery_type 허용값으로 매핑"),
     # ---- radiation ----
+    (r"방사선\s*치료\s*처방\s*종류", "radiation.radiation_therapy_modality", "낮음", "처방 종류 → Photon/Electron/Proton/Heavy Ions 매핑 확인"),
     (r"방사선\s*(선량|총선량)|radiation.*dos|\bgy\b|rt_dose", "radiation.radiation_therapy_dosage", "높음", "단위 Gy"),
     (r"방사선\s*(횟수|분할)|fraction", "radiation.radiation_therapy_fractions", "높음", ""),
     (r"방사선\s*치료\s*부위|조사\s*부위|irradiat", "radiation.anatomical_site_irradiated", "높음", ""),
@@ -102,6 +103,9 @@ RULES = [
     (r"방사선\s*치료\s*(명|종류)|rt_type|radiation.*type|방사선\s*치료\s*방법|modality", "radiation.radiation_therapy_type", "중간", "External/Internal"),
     (r"방사선.*(여부|유무)|^postrt_yn|^prert_yn|ccrt", "treatment.treatment_type", "중간", "Y → treatment_type=Radiation therapy"),
     # ---- systemic therapy ----
+    (r"(주\s*)?성분\s*코드", "chemotherapy.drug_id", "낮음", "국내 주성분코드 → PubChem/NCI Thesaurus ID 변환 필요(drug_database 지정, RxNorm CUI 우선)"),
+    (r"(항암제?|약제).*총\s*(처방)?\s*용량|cumulative", "chemotherapy.prescribed_cumulative_drug_dose", "중간", "단위(chemotherapy_drug_dose_units: mg/m2 등)를 함께 지정"),
+    (r"(항암제?|약제|치료)\s*차수(값)?$", "treatment.line_of_treatment", "중간", "1차 → is_primary_treatment=Yes(파생), 2차 이상 → line_of_treatment"),
     (r"호르몬제?\s*(성분명|약제명)", "hormone_therapy.drug_name", "중간", "RxNorm 연계 권장"),
     (r"호르몬.*(투여|치료).*(여부|유무)|호르몬치료제\s*여부|차세대?호르몬", "treatment.treatment_type", "중간", "Y → treatment_type=Hormonal therapy"),
     (r"면역\s*항암|immuno", "immunotherapy.immunotherapy_type", "중간", ""),
@@ -170,6 +174,30 @@ RULES = [
 
 COMPILED = [(re.compile(p, re.I), t, c, n) for p, t, c, n in RULES]
 
+# 직접 대응 컬럼은 없지만 다른 ARGO 필드나 제출 정보로 채울 수 있는 필드.
+# 커버리지에서 '직접 대응'과 섞지 않고 따로 센다.
+#   파생: from 필드 중 하나가 대응되면 규칙으로 계산 가능
+#   지정값: K-CURE 항목이 아니라 검체·제출 단계에서 기관이 지정
+DERIVED = {
+    "treatment.is_primary_treatment": ("파생", ["treatment.line_of_treatment", "treatment.treatment_setting"], "치료 차수 1 또는 진단 후 첫 치료 → Yes, 그 외 → No"),
+    "primary_diagnosis.lymph_nodes_examined_status": ("파생", ["primary_diagnosis.number_lymph_nodes_examined"], "검사 림프절 수 > 0 → Yes, 0 → No lymph nodes found in resected specimen"),
+    "specimen.tumour_grading_system": ("파생", ["specimen.tumour_grade"], "암종별 등급체계 지정: 유방암 Scarff-Bloom-Richardson, 전립선암 Gleason grade group, 신장암 ISUP, 그 외 Three/Four-tier"),
+    "treatment.response_to_treatment_criteria_method": ("파생", ["treatment.response_to_treatment"], "평가 기준 지정: 고형암 RECIST 1.1, 혈액암 기관 기준(Physician Assessed)"),
+    "chemotherapy.drug_rxnormcui": ("파생", ["chemotherapy.drug_name", "chemotherapy.drug_id"], "약물 매핑 테이블(국내 성분명·주성분코드 → RxNorm CUI)"),
+    "chemotherapy.drug_database": ("파생", ["chemotherapy.drug_name", "chemotherapy.drug_id"], "RxNorm에 없을 때 PubChem/NCI Thesaurus 중 지정"),
+    "chemotherapy.drug_term": ("파생", ["chemotherapy.drug_name", "chemotherapy.drug_id"], "drug_database 의 표준 용어명"),
+    "chemotherapy.drug_id": ("파생", ["chemotherapy.drug_name"], "약물 매핑 테이블에서 drug_database ID 조회"),
+    "chemotherapy.chemotherapy_drug_dose_units": ("파생", ["chemotherapy.prescribed_cumulative_drug_dose"], "용량 컬럼의 단위(mg/m2 등) 지정"),
+    "hormone_therapy.drug_rxnormcui": ("파생", ["hormone_therapy.drug_name"], "약물 매핑 테이블(국내 성분명 → RxNorm CUI)"),
+    "hormone_therapy.drug_database": ("파생", ["hormone_therapy.drug_name"], "RxNorm에 없을 때 PubChem/NCI Thesaurus 중 지정"),
+    "hormone_therapy.drug_term": ("파생", ["hormone_therapy.drug_name"], "drug_database 의 표준 용어명"),
+    "hormone_therapy.drug_id": ("파생", ["hormone_therapy.drug_name"], "약물 매핑 테이블에서 drug_database ID 조회"),
+    "sample_registration.specimen_type": ("지정값", [], "검체 정보 — 바이오뱅크·제출 기관이 지정(예: Primary tumour, Normal)"),
+    "sample_registration.sample_type": ("지정값", [], "분자 검체 유형 — 시퀀싱 제출 시 지정(예: Total DNA)"),
+    "sample_registration.tumour_normal_designation": ("지정값", [], "Tumour/Normal — 제출 시 지정"),
+    "specimen.reference_pathology_confirmed": ("지정값", [], "중앙 병리 재확인 여부 — 제출 기관이 지정"),
+}
+
 
 def load_dictionary(path=None):
     path = path or source_path("argo")
@@ -210,7 +238,11 @@ def load_dictionary(path=None):
             }
             names.append(str(r[0]))
         schemas.append({"name": ws.title, "desc": idx.get(ws.title, ""), "fields": names})
-    return {"version": "1.34", "source": "https://docs.icgc-argo.org/dictionary", "schemas": schemas, "fields": fields}
+    for k, (kind, src, rule) in DERIVED.items():
+        if k not in fields or any(x not in fields for x in src):
+            raise KeyError(f"파생 규칙 필드 없음: {k} ← {src}")
+    derived = {k: {"kind": kind, "from": src, "rule": rule} for k, (kind, src, rule) in DERIVED.items()}
+    return {"version": "1.34", "source": "https://docs.icgc-argo.org/dictionary", "schemas": schemas, "fields": fields, "derived": derived}
 
 
 def map_item(item, fields):

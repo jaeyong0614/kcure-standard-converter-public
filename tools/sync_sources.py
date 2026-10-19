@@ -46,7 +46,7 @@ def main():
         print(f"{'일치' if ok else '불일치'}  {name}")
         bad += 0 if ok else 1
     if not a.check:
-        with open(MANIFEST, "w", encoding="utf-8") as f:
+        with open(MANIFEST, "w", encoding="utf-8", newline="\n") as f:
             json.dump(man, f, ensure_ascii=False, indent=2)
     sys.exit(1 if (a.check and bad) else 0)
 
