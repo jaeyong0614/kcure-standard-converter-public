@@ -185,7 +185,7 @@ KCURE_표준변환기_프로토타입/
 │   └─ js/ util · sha256 · readers(CSV/XLSX) · spec · values · mapper · fhir · krcdi · pipeline · dcat · artifacts · app
 ├─ spec/kcure_spec.json(.js)   ← 내장 명세 (v2.4 + V1.2에서 추출)
 ├─ samples/                    ← 합성(가상) 샘플: 대장암 CSV, 유방암 XLSX·CP949 CSV
-├─ spec/sources/               ← 명세 원본 고정 사본(항목정의서 v2.4·V1.2, ARGO·mCODE 사전, OMOP 명세) + manifest.json(SHA-256)
+├─ spec/sources/               ← 명세 원본 고정 사본(ARGO·mCODE 사전, OMOP 명세) + manifest.json(SHA-256). 기관 내부 항목정의서 v2.4·V1.2는 저장소에 없음
 ├─ tests/test.html, tests.js   ← 브라우저 자동 테스트 125개
 ├─ tools/                      ← build_spec.py · argo_map.py(ARGO 규칙) · omop_map.py(OMOP 규칙) · mcode_dict.py(mCODE 사전) · make_samples.py · build.py · audit_spec.py · sync_sources.py(원본 고정) · common.py
 └─ docs/                       ← 개발계획서, 매핑검토대상, 03 수정개발계획서(v0.2), 04 맞춤형 프롬프트
@@ -213,6 +213,11 @@ venv\Scripts\python.exe toolsuild.py --all
 python tools/build.py --all
 ```
 (명세 추출 → 샘플 생성 → 단일 HTML 빌드. openpyxl 필요)
+
+- **공개 저장소에는 기관 내부 항목정의서 원본(`중개포털_SW겸용_항목정의서_*.xlsx`)이 없습니다.** 빌드된 명세(`spec/kcure_spec.json`·`.js`)만 들어 있습니다.
+  - `python tools/build.py`와 `--llm`은 원본 없이 그대로 빌드됩니다.
+  - `--all`은 원본이 없으면 명세 재생성을 건너뛰고, 들어 있는 명세로 빌드합니다.
+  - 원본이 있는 기관 내부 PC에서는 `spec/sources/`(git 제외 대상)에 원본을 두면 명세를 다시 만들 수 있습니다.
 
 명세 원본은 `spec/sources/`의 고정 사본을 씁니다. 원본(상위 폴더의 항목정의서 등)이 개정되면 다음 명령을 실행합니다.
 ```bash

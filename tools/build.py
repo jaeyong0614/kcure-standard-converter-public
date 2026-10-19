@@ -26,9 +26,25 @@ def safe_inline(js):
     return re.sub(r"</(script)", r"<\\/\1", js, flags=re.I)
 
 
+def spec_sources_ready():
+    """내부 항목정의서 원본은 공개 저장소에 없다. 있으면(기관 내부 PC) 명세를 다시 만들고, 없으면 빌드된 명세를 쓴다."""
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from common import source_path
+    try:
+        for key in ("final", "aux"):
+            source_path(key)
+        return True
+    except FileNotFoundError:
+        return False
+
+
 def main():
     if "--all" in sys.argv:
-        subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_spec.py")])
+        if spec_sources_ready():
+            subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_spec.py")])
+        else:
+            print("[안내] 항목정의서 원본(spec/sources/중개포털_SW겸용_항목정의서_*.xlsx)이 없어 명세 재생성을 건너뜁니다. "
+                  "저장소에 들어 있는 spec/kcure_spec.json(빌드된 명세)으로 빌드합니다.")
         subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "make_samples.py")])
 
     # 범용(비 K-CURE) 표준 사전 → spec/generic_spec.js
