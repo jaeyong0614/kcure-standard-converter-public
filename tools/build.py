@@ -14,6 +14,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "src")
 DIST = os.path.join(ROOT, "dist")
 OUT_NAME = "KCURE_표준변환기.html"
+CG_NAME = "KCURE_변환코드생성기.html"
 
 
 def read(path):
@@ -38,25 +39,9 @@ def spec_sources_ready():
         return False
 
 
-def main():
-    if "--all" in sys.argv:
-        if spec_sources_ready():
-            subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_spec.py")])
-        else:
-            print("[안내] 항목정의서 원본(spec/sources/중개포털_SW겸용_항목정의서_*.xlsx)이 없어 명세 재생성을 건너뜁니다. "
-                  "저장소에 들어 있는 spec/kcure_spec.json(빌드된 명세)으로 빌드합니다.")
-        subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "make_samples.py")])
-
-    # 범용(비 K-CURE) 표준 사전 → spec/generic_spec.js
-    subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_generic.py")])
-    # 가명처리 규칙(JSON) → file:// 에서도 읽히는 JS 래퍼
-    import json
-    with open(os.path.join(ROOT, "spec", "deid_rules.json"), encoding="utf-8") as f:
-        deid = json.load(f)
-    with open(os.path.join(ROOT, "spec", "deid_rules.js"), "w", encoding="utf-8", newline="\n") as f:
-        f.write("window.KCURE_DEID=" + json.dumps(deid, ensure_ascii=False, separators=(",", ":")) + ";\n")
-
-    html = read(os.path.join(SRC, "index.html"))
+def inline_page(src_name):
+    """src/<src_name> 의 CSS·JS 를 모두 인라인한 단일 HTML 문자열"""
+    html = read(os.path.join(SRC, src_name))
 
     def css_block(m):
         hrefs = re.findall(r'href="([^"]+)"', m.group(0))
@@ -75,11 +60,39 @@ def main():
     html = html.replace("script-src 'self' 'unsafe-inline' file:", "script-src 'unsafe-inline'")
     html = html.replace("style-src 'self' 'unsafe-inline' file:", "style-src 'unsafe-inline'")
 
+    return html
+
+
+def main():
+    if "--all" in sys.argv:
+        if spec_sources_ready():
+            subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_spec.py")])
+        else:
+            print("[안내] 항목정의서 원본(spec/sources/중개포털_SW겸용_항목정의서_*.xlsx)이 없어 명세 재생성을 건너뜁니다. "
+                  "저장소에 들어 있는 spec/kcure_spec.json(빌드된 명세)으로 빌드합니다.")
+        subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "make_samples.py")])
+
+    # 범용(비 K-CURE) 표준 사전 → spec/generic_spec.js
+    subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build_generic.py")])
+    # 가명처리 규칙(JSON) → file:// 에서도 읽히는 JS 래퍼
+    import json
+    with open(os.path.join(ROOT, "spec", "deid_rules.json"), encoding="utf-8") as f:
+        deid = json.load(f)
+    with open(os.path.join(ROOT, "spec", "deid_rules.js"), "w", encoding="utf-8", newline="\n") as f:
+        f.write("window.KCURE_DEID=" + json.dumps(deid, ensure_ascii=False, separators=(",", ":")) + ";\n")
+
+    html = inline_page("index.html")
     os.makedirs(DIST, exist_ok=True)
     out = os.path.join(DIST, OUT_NAME)
     with open(out, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"built {out} ({os.path.getsize(out) / 1024 / 1024:.2f} MB)")
+
+    # 변환코드생성기: 컬럼명 파일 → 매핑 → Python 변환 코드 (데이터는 변환하지 않음)
+    out_cg = os.path.join(DIST, CG_NAME)
+    with open(out_cg, "w", encoding="utf-8") as f:
+        f.write(inline_page("convgen.html"))
+    print(f"built {out_cg} ({os.path.getsize(out_cg) / 1024 / 1024:.2f} MB)")
 
     if "--llm" in sys.argv:
         # 로컬 LLM 연동본: 연결 허용 대상은 이 PC의 Ollama(11434)·LM Studio(1234)뿐. 기본 배포본은 'none' 유지

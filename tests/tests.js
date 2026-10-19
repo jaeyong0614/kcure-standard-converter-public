@@ -415,6 +415,31 @@
     const gpkg = KC.meta.build(CONF, GN, KC.meta.entriesFromColumns(gt.headers, GN));
     eq('범용 메타데이터 패키지 DCAT 오류 0', gpkg.dcatIssues.filter(function (x) { return x.level === '오류'; }).length, 0);
 
+    /* 변환코드생성기: 컬럼명 → 매핑 → Python 변환 패키지 */
+    const cgRows = KC.readers.parseCsv((await (await fetch('../samples/' + encodeURIComponent('합성샘플_대장암_원천영문컬럼.csv'))).text()).replace(/^\uFEFF/, ''));
+    const cgEnt = KC.meta.entriesFromColumns(cgRows[0], '대장암');
+    cgEnt.forEach(function (e, j) { e.samples = cgRows.slice(1, 11).map(function (r) { return r[j]; }).filter(Boolean).slice(0, 3); });
+    const cgp = KC.convgen.plan(cgEnt, '대장암');
+    const cgm = function (p, col) { return (p.columns.find(function (c) { return c.col === col; }) || {}).method; };
+    eq('변환코드: 환자키 = no_patient', cgp.patientCol, 'no_patient');
+    eq('변환코드: 생년월일 → 연도만, 입원일 → 날짜, 성별 → 코드', [cgm(cgp, 'dt_birth'), cgm(cgp, 'dt_admission'), cgm(cgp, 'sex')].join('/'), 'year/date/code');
+    eq('변환코드: VARCHAR 키·몸무게는 샘플이 숫자라 수치', cgm(cgp, 'height') + '/' + cgm(cgp, 'weight'), 'number/number');
+    const cgPy = KC.convgen.python(cgp, { input: 'C:\\kcure\\in\\a.csv', outdir: 'C:\\kcure\\out' });
+    ok('변환코드: 자체 검사 통과·매핑 40건 내장', KC.convgen.selfCheck(cgPy).length === 0 && (cgPy.match(/^    \{"col": /mg) || []).length === 40);
+    const gdRows = KC.readers.parseCsv((await (await fetch('../samples/generic/' + encodeURIComponent('D_정형.csv'))).text()).replace(/^\uFEFF/, ''));
+    const gdEnt = KC.meta.entriesFromColumns(gdRows[0], KC.spec.GENERIC);
+    gdEnt.forEach(function (e, j) { e.samples = gdRows.slice(1, 11).map(function (r) { return r[j]; }).filter(Boolean).slice(0, 3); });
+    const gdp = KC.convgen.plan(gdEnt, KC.spec.GENERIC);
+    eq('변환코드(범용): 환자키·이름 제외', gdp.patientCol + '/' + cgm(gdp, 'patient_name'), 'patient_id/drop');
+    const cgPkg = KC.convgen.buildPackage(cgp, { input: 'C:\\kcure\\in\\a.csv' });
+    eq('변환코드 패키지 파일 6개', cgPkg.files.map(function (f) { return f.path; }).join(','), 'convert.py,매핑표.csv,매핑.json,requirements.txt,run.bat,README_실행안내.md');
+    try {
+      for (const [nm, p] of [['conv_pkg_crc.zip', cgp], ['conv_pkg_D.zip', gdp]]) {
+        const pk = KC.convgen.buildPackage(p, {});
+        await fetch('/__save/' + encodeURIComponent(nm), { method: 'POST', body: KC.writers.zip(pk.files.map(function (f) { return { name: f.path, content: f.content }; })) });
+      }
+    } catch (e) { /* 정적 서버 */ }
+
     /* 5. 항목정의 변환 */
     const all = KC.dcat.fromSpec(CONF, KC.spec.data.meta.cancers);
     eq('명세 DCAT 필수속성 오류 0', all.issues.filter(function (x) { return x.level === '오류'; }).length, 0);

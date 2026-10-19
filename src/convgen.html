@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 외부 전송 원천 차단: 네트워크 요청(connect), 외부 스크립트·폼 전송 불가. 모든 처리는 이 PC 브라우저 안에서만 수행 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' file:; style-src 'self' 'unsafe-inline' file:; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>K-CURE 변환코드생성기</title>
+<!--BUILD:CSS--><link rel="stylesheet" href="css/app.css"><!--/BUILD:CSS-->
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand">
+      <h1>K-CURE 변환코드생성기 <span class="muted small" id="appVersion"></span></h1>
+      <p>컬럼명(항목명) 파일 → 표준항목 자동 매핑 → 병원 내부에서 실행할 <b>Python 변환 코드</b> (KR CDI V3 · KR Core V2 FHIR 경로 · OMOP CDM v5.4 · 표준화 CSV)</p>
+    </div>
+    <div class="badges">
+      <span class="badge ok" title="Content-Security-Policy connect-src 'none' — 네트워크 전송 차단">● 오프라인 실행 · 외부 전송 차단</span>
+      <span class="badge" id="specBadge">명세 로딩 중</span>
+      <span class="badge warn" title="항목정의서 규칙 기반 자동 매핑 — 담당자 검토 필요">매핑: 후보 단계</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="panel active" id="p-cg">
+    <div class="card">
+      <h2>① 컬럼명 파일 불러오기</h2>
+      <p class="desc">원천 데이터의 <b>컬럼명(항목명)</b>이 담긴 CSV·XLSX를 넣습니다. 다음 세 형식을 모두 받습니다.</p>
+      <ul class="desc small">
+        <li>원천 데이터 파일 자체(첫 행이 컬럼명) — 앞부분만 읽고, 값은 화면 미리보기에만 씁니다.</li>
+        <li>컬럼명을 세로로 적은 목록(한 열)</li>
+        <li>항목정의서 형식(<code>항목ID</code>·<code>표준항목명</code> 열)</li>
+      </ul>
+      <p class="desc">이 SW는 데이터를 변환하지 않습니다. 컬럼명을 표준항목에 매핑하고, <b>어떻게 변환할지를 Python 코드로</b> 만들어 줍니다. 담당자가 코드를 검토한 뒤 병원 내부에서 직접 실행합니다.</p>
+      <div class="drop" id="cgDrop" tabindex="0">
+        <b>파일을 여기에 끌어다 놓거나 클릭해서 선택</b>
+        <div class="muted small">.csv · .tsv · .txt · .xlsx</div>
+      </div>
+      <input type="file" id="cgFile" accept=".csv,.tsv,.txt,.xlsx,.xlsm" hidden>
+      <div class="row" style="margin-top:8px">
+        <span class="muted small">합성(가상) 예시로 시험:</span>
+        <button class="btn sm" id="cgDemoCrc">대장암 원천 컬럼</button>
+        <button class="btn sm" id="cgDemoGen">범용(응급실) 컬럼</button>
+      </div>
+      <div id="cgMsg"></div>
+    </div>
+
+    <div class="card hidden" id="cgCard">
+      <h2>② 매핑 검토</h2>
+      <div class="row">
+        <label>기준 <select id="cgCancer"></select></label>
+        <label>담당자 <input type="text" id="cgOperator" placeholder="이름(감사용, 선택)" style="width:140px"></label>
+        <span class="muted small" id="cgSource"></span>
+      </div>
+      <div class="stats" id="cgStats"></div>
+      <div class="row">
+        <label class="small">보기 <select id="cgFilter"><option value="all">전체</option><option value="unmapped">항목 미인식만</option><option value="drop">제외(직접식별자)만</option><option value="code">코드·여부만</option></select></label>
+        <span class="muted small">표준항목 칸에 항목ID나 이름을 입력하면 매핑이 바뀝니다. 변환 방식은 항목 자료형으로 정해지며 바꿀 수 있습니다.</span>
+      </div>
+      <div class="tbl-wrap" id="cgTable"></div>
+      <datalist id="cgItems"></datalist>
+    </div>
+
+    <div class="card hidden" id="cgOutCard">
+      <h2>③ Python 변환 코드 만들기</h2>
+      <div class="row">
+        <label>원천 파일 경로 (INPUT) <input type="text" id="cgIn" class="mono" style="width:300px" placeholder="C:\kcure\in\source.csv"></label>
+        <label>결과 폴더 (OUTDIR) <input type="text" id="cgOut" class="mono" style="width:300px" placeholder="C:\kcure\out\standard"></label>
+      </div>
+      <div class="row">
+        <button class="btn" id="cgPreview">convert.py 미리보기</button>
+        <button class="btn" id="cgMapCsv">매핑표 (.csv)</button>
+        <button class="btn primary" id="cgZip">코드 패키지 내려받기 (.zip)</button>
+      </div>
+      <div id="cgOutMsg"></div>
+      <p class="desc small">패키지: <code>convert.py</code>(매핑 내장 변환 코드) · <code>매핑표.csv</code> · <code>매핑.json</code> · <code>run.bat</code> · <code>requirements.txt</code> · <code>README_실행안내.md</code>.
+        실행하면 <code>01_표준화.csv</code> · <code>02_KRCDI_long.csv</code> · <code>03_OMOP_staging.csv</code> · <code>04_FHIR_staging.csv</code> · <code>변환로그.csv</code>가 만들어집니다.
+        직접식별자는 넣지 않고, 환자번호는 <code>KCURE_SALT</code> 기반 가명키로 바꾸며, 생년월일은 연도만 남깁니다.</p>
+      <pre class="view hidden" id="cgView"></pre>
+    </div>
+  </section>
+</main>
+
+<!--BUILD:JS-->
+<script src="../spec/kcure_spec.js"></script>
+<script src="../spec/deid_rules.js"></script>
+<script src="../spec/generic_spec.js"></script>
+<script src="../spec/samples.js"></script>
+<script src="js/util.js"></script>
+<script src="js/sha256.js"></script>
+<script src="js/readers.js"></script>
+<script src="js/spec.js"></script>
+<script src="js/values.js"></script>
+<script src="js/mapper.js"></script>
+<script src="js/pipeline.js"></script>
+<script src="js/metadata.js"></script>
+<script src="js/writers.js"></script>
+<script src="js/deid.js"></script>
+<script src="js/codegen.js"></script>
+<script src="js/convgen.js"></script>
+<script src="js/convui.js"></script>
+<!--/BUILD:JS-->
+</body>
+</html>
