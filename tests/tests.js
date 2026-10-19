@@ -332,6 +332,41 @@
     ok('LLM 배포본 CSP = loopback 만', /connect-src http:\/\/127\.0\.0\.1:11434 http:\/\/localhost:11434 http:\/\/127\.0\.0\.1:1234 http:\/\/localhost:1234;/.test(distLlm) && !/connect-src[^;]*https:/.test(distLlm));
     try { await fetch('/__save/deid_dicom.py', { method: 'POST', body: dcm }); } catch (e) { /* 정적 서버 */ }
 
+    /* 10. 승인 · 감사 이력 · 규칙팩 (v0.2 S4) */
+    await KC.audit.clear();
+    KC.audit.log('test.a', { col: 'x' });
+    KC.audit.log('test.b', { col: 'y' });
+    const evs = await KC.audit.all();
+    eq('감사 이력 2건 기록', evs.length, 2);
+    ok('감사 이력 체인 정상', KC.audit.verify(evs).ok && evs[1].prev === evs[0].hash);
+    const forged = evs.map(function (x) { return Object.assign({}, x); });
+    forged.splice(0, 0, { action: 'forged', hash: 'zzzz', prev: '' });
+    ok('감사 이력 중간 삽입 탐지', !KC.audit.verify(forged).ok);
+    ok('감사 이력 JSONL', (await KC.audit.toJsonl()).trim().split('\n').length === 2);
+    await KC.audit.clear();
+    const pack = KC.rulepack.exportPack(window.KCURE_DEID, 'tester');
+    ok('규칙팩 검증 통과(SHA-256)', KC.rulepack.validate(pack).ok, KC.rulepack.validate(pack).errors.join('/'));
+    const tampered = JSON.parse(JSON.stringify(pack));
+    tampered.deid_rules.rules[0].technique = 'KEEP';
+    ok('규칙팩 변조 탐지', !KC.rulepack.validate(tampered).ok && /SHA-256/.test(KC.rulepack.validate(tampered).errors.join()));
+    const next = JSON.parse(JSON.stringify(window.KCURE_DEID));
+    next.version = '0.2.1';
+    next.rules.splice(next.rules.length - 1, 0, { id: 'DR-50', when: { name: '^보험번호$' }, technique: 'DELETE', reason: '보험번호', confidence: '높음' });
+    next.rules = next.rules.filter(function (r) { return r.id !== 'DR-09'; });
+    const np = KC.rulepack.exportPack(next, 'central');
+    const df = KC.rulepack.diff(window.KCURE_DEID, next);
+    eq('규칙팩 비교(추가·삭제)', df.added.join() + '|' + df.removed.join() + '|' + df.from + '→' + df.to, 'DR-50|DR-09|0.2.0→0.2.1');
+    const orig = window.KCURE_DEID;
+    KC.rulepack.apply(np);
+    eq('규칙팩 교체 후 새 규칙 적용', KC.deid.recommend({ col: '보험번호' }, []).ruleId, 'DR-50');
+    window.KCURE_DEID = orig; KC.deid.reload();
+    eq('원래 규칙팩 복원', KC.deid.rules().src.version, '0.2.0');
+    const badRule = JSON.parse(JSON.stringify(window.KCURE_DEID));
+    badRule.rules.push({ id: 'DR-X', when: { name: 'a' }, technique: 'KEEP' });
+    ok('규칙팩: 마지막 규칙이 기본 규칙이 아니면 거부', !KC.rulepack.validate(KC.rulepack.exportPack(badRule)).ok);
+    const ie = KC.meta.integratedRows([Object.assign({}, crcE[0], { rv: '승인' })]);
+    eq('통합 엑셀 검토 상태 열', ie[1][ie[0].indexOf('검토 상태')], '승인');
+
     /* 5. 항목정의 변환 */
     const all = KC.dcat.fromSpec(CONF, KC.spec.data.meta.cancers);
     eq('명세 DCAT 필수속성 오류 0', all.issues.filter(function (x) { return x.level === '오류'; }).length, 0);

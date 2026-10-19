@@ -128,7 +128,7 @@ KC.meta = (function () {
       'mCODE 프로파일', 'mCODE 프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', 'mCODE 참조수준',
       'OMOP 테이블', 'OMOP 필드', 'OMOP 개념 필드', 'OMOP 일자 필드', 'OMOP 원천값 필드', 'OMOP 어휘', 'OMOP 변환·주의', 'OMOP 신뢰도',
       'ARGO 스키마', 'ARGO 필드', 'ARGO 표시명', 'ARGO Tier', 'ARGO 필수조건', 'ARGO 유형', 'ARGO 허용값', 'ARGO 변환·주의', 'ARGO 신뢰도',
-      '매핑 단계', '정의결손', 'mCODE·KR Core 리소스', '기본 표현', '매핑 수정안'];
+      '매핑 단계', '정의결손', 'mCODE·KR Core 리소스', '기본 표현', '매핑 수정안', '검토 상태'];
     const rows = [head];
     entries.forEach(function (e, i) {
       const it = e.item;
@@ -142,7 +142,7 @@ KC.meta = (function () {
         o ? o.table : '', o ? o.field : '', o ? o.concept : '', o ? o.date : '', o ? o.source : '', o ? o.vocab : '', o ? o.note : '', o ? o.conf : '',
         a ? a.schema : '', a ? a.field : '', a ? a.label : '', a ? a.tier : '', a ? a.req : '', a ? a.type : '', a ? argoValues(a) : '', a ? a.note : '', a ? a.conf : '',
         it.stage, it.gap, m.resConflict ? '상이(KR Core ' + it.core.path.split('.')[0] + ' / mCODE ' + m.resConflict + ')' : '일치',
-        m.resConflict ? m.primary : '', reviewText(it)]);
+        m.resConflict ? m.primary : '', reviewText(it), e.rv || '후보']);
     });
     return rows;
   }

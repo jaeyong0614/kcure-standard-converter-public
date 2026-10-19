@@ -153,6 +153,7 @@ KC.deid = (function () {
   return {
     MAX_SAMPLE_ROWS: MAX_SAMPLE_ROWS, rules: rules, detectPattern: detectPattern, expandColumn: expandColumn,
     recommend: recommend, plan: plan, planFromEntries: planFromEntries, scanText: scanText,
+    reload: function () { R = null; return rules().src.version; },
     techniques: function () { return rules().src.techniques; }
   };
 })();

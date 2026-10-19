@@ -80,6 +80,7 @@
       <div class="stats" id="mmStats"></div>
       <div class="row" style="margin:10px 0">
         <input type="search" id="mmQ" placeholder="컬럼·항목·FHIR 경로·mCODE·OMOP·ARGO 검색" style="max-width:320px">
+        <button class="btn sm" id="mmApproveHigh" title="OMOP 신뢰도 높음이고 ARGO가 없거나 높음이며 매핑 수정안이 없는 행만">신뢰도 '높음' 행 일괄 승인</button>
         <select id="mmView" style="width:220px">
           <option value="all">전체</option><option value="cdi">KR CDI 대응만</option><option value="ext">KR Core 확장필요만</option>
           <option value="argo">ARGO 대응만</option><option value="noargo">ARGO 미대응만</option><option value="low">ARGO 신뢰도 낮음·중간</option><option value="unmapped">표준항목 미매핑 컬럼</option>
@@ -196,6 +197,24 @@
       <textarea id="dzText" rows="6" style="width:100%" placeholder="예: 환자명: 홍길동, 등록번호 0012345, 2026.03.02 내원. 연락처 010-1234-5678"></textarea>
       <div class="row" style="margin-top:8px"><button class="btn sm" id="dzScanBtn">PII 탐지</button></div>
       <div id="dzScan"></div>
+    </div>
+    <div class="card">
+      <h2>규칙팩 · 감사 이력</h2>
+      <p class="desc"><b>규칙팩</b>은 가명처리 추천 규칙·PII 정규식을 버전과 SHA-256으로 묶은 파일입니다. 중앙에서 검증한 규칙팩을 불러오면 차이를 확인한 뒤 교체합니다(현재 창에만 적용). <b>감사 이력</b>은 검토·승인·코드 생성 기록입니다. 환자 값은 담지 않고 컬럼명·규칙·해시만 남기며, 이 브라우저(IndexedDB)에 임시로 보관합니다. 기관 기록용으로 내려받아 보관하세요.</p>
+      <div class="row">
+        <span class="muted small" id="rpInfo"></span>
+        <div class="grow"></div>
+        <button class="btn sm" id="rpExport">규칙팩 내보내기</button>
+        <button class="btn sm" id="rpImportBtn">규칙팩 불러오기</button>
+        <input type="file" id="rpImport" accept=".json" hidden>
+      </div>
+      <div id="rpMsg"></div>
+      <div class="row" style="margin-top:10px">
+        <span class="muted small" id="auInfo"></span>
+        <div class="grow"></div>
+        <button class="btn sm" id="auExport">감사 이력 내려받기 (.jsonl)</button>
+        <button class="btn sm" id="auClear">감사 이력 비우기</button>
+      </div>
     </div>
   </section>
 
@@ -378,6 +397,8 @@
 <script src="js/metadata.js"></script>
 <script src="js/deid.js"></script>
 <script src="js/codegen.js"></script>
+<script src="js/audit.js"></script>
+<script src="js/rulepack.js"></script>
 <script src="js/dicomgen.js"></script>
 <script src="js/llm.js"></script>
 <script src="js/deidui.js"></script>

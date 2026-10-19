@@ -548,7 +548,16 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       '<td class="std"><div class="l1 mono small">' + KC.dcat.xsdType(it.type) + '</div><div class="l2">ndi:profile 변수</div></td>' +
       '<td class="std"><input type="text" class="argo" list="argoList" data-argo="' + i + '" value="' + esc(a ? a.key : '') + '" placeholder="대응 없음 — schema.field 입력">' +
       (a ? '<div class="l2">' + esc(a.label) + ' · ' + esc(a.tier + (a.req ? '·' + a.req : '')) + ' · ' + esc(a.type) + ' <span class="pill ' + ac + '">' + esc(a.conf) + '</span></div>' +
-        (a.note ? '<div class="l2">변환: ' + esc(a.note) + '</div>' : '') : '') + '</td></tr>';
+        (a.note ? '<div class="l2">변환: ' + esc(a.note) + '</div>' : '') : '') + '</td>' +
+      '<td><select data-rv="' + i + '">' + ['후보', '승인', '수정', '반려'].map(function (s) { return '<option' + (s === (e.rv || '후보') ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
+      (it.review && it.review.length ? '<div class="l2">수정안 ' + it.review.length + '건</div>' : '') + '</td></tr>';
+  }
+
+  /** 행 전체가 '신뢰도 높음'인지: OMOP 높음, ARGO 없음·높음, 매핑 수정안 없음 */
+  function rowHigh(e) {
+    if (!e.item || (e.item.review && e.item.review.length)) return false;
+    const a = KC.meta.argoOf(e), o = KC.meta.omopOf(e);
+    return !!o && o.conf === '높음' && (!a || a.conf === '높음');
   }
 
   function renderMm() {
@@ -575,7 +584,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       .concat(tables.map(function (t) { return ['omop:' + t, 'OMOP ' + t + ' (' + s.omopTables[t] + ')']; }))
       .map(function (o) { return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('');
     $('#mmView').value = cur && $('#mmView').querySelector('option[value="' + cur + '"]') ? cur : 'all';
-    $('#mmTable').innerHTML = '<table><thead><tr><th>컬럼 · K-CURE 항목</th><th>KR CDI V3</th><th>KR Core V2 (FHIR)</th><th>mCODE STU4</th><th>OMOP CDM v5.4 (수정 가능)</th><th>DCAT</th><th>ICGC ARGO v1.34 (수정 가능)</th></tr></thead><tbody>' +
+    $('#mmTable').innerHTML = '<table><thead><tr><th>컬럼 · K-CURE 항목</th><th>KR CDI V3</th><th>KR Core V2 (FHIR)</th><th>mCODE STU4</th><th>OMOP CDM v5.4 (수정 가능)</th><th>DCAT</th><th>ICGC ARGO v1.34 (수정 가능)</th><th>검토</th></tr></thead><tbody>' +
       rows.slice(st.mmPage * per, st.mmPage * per + per).map(mmRowHtml).join('') + '</tbody></table>';
     $('#mmPager').innerHTML = rows.length + '개 · ' + (st.mmPage + 1) + ' / ' + pages + ' 쪽 <button class="btn sm" data-mp="-1"' + (st.mmPage ? '' : ' disabled') + '>이전</button><button class="btn sm" data-mp="1"' + (st.mmPage < pages - 1 ? '' : ' disabled') + '>다음</button>';
   }
@@ -819,6 +828,14 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     $('#mmView').addEventListener('change', function () { st.mmPage = 0; renderMm(); });
     $('#mmPager').addEventListener('click', function (e) { const b = e.target.closest('[data-mp]'); if (b) { st.mmPage += +b.dataset.mp; renderMm(); } });
     $('#mmTable').addEventListener('change', function (e) {
+      const rv = e.target.closest('[data-rv]');
+      if (rv) {
+        const en = st.msel.entries[+rv.dataset.rv];
+        KC.audit.log('map.review', { col: en.col, itemId: en.item && en.item.id, from: en.rv || '후보', to: rv.value });
+        en.rv = rv.value;
+        st.mpkg = null;
+        return;
+      }
       const oin = e.target.closest('[data-omop]');
       if (oin) {
         const en = st.msel.entries[+oin.dataset.omop];
@@ -827,6 +844,8 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
         else if (KC.meta.omopField(key)) en.omopKey = (en.item.omop && en.item.omop.table + '.' + en.item.omop.field === key) ? undefined : key;
         else { oin.style.borderColor = 'var(--err)'; oin.title = 'OMOP 필드(table.field)를 목록에서 고르세요'; return; }
         if (en.omopKey === undefined) delete en.omopKey;
+        KC.audit.log('map.omop', { col: en.col, itemId: en.item.id, to: v || '(대응 없음)' });
+        if (en.omopKey !== undefined) en.rv = '수정';
         st.mpkg = null;
         renderMm();
         return;
@@ -840,11 +859,21 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       else if (KC.meta.argoField(key)) en.argoKey = (en.item.argo && en.item.argo.key === key) ? undefined : key;
       else { inp.style.borderColor = 'var(--err)'; inp.title = 'ARGO 필드(schema.field)를 목록에서 고르세요'; return; }
       if (en.argoKey === undefined) delete en.argoKey;
+      KC.audit.log('map.argo', { col: en.col, itemId: en.item.id, to: v || '(대응 없음)' });
+      if (en.argoKey !== undefined) en.rv = '수정';
       st.mpkg = null;
       renderMm();
       markDone('mmap');
     });
     $('#toMout').addEventListener('click', function () { markDone('mmap'); showTab('mout'); });
+    $('#mmApproveHigh').addEventListener('click', function () {
+      let n = 0;
+      usedEntries().forEach(function (en) { if ((en.rv || '후보') === '후보' && rowHigh(en)) { en.rv = '승인'; n++; } });
+      KC.audit.log('map.approve_high', { cancer: st.msel ? st.msel.cancer : '', count: n });
+      st.mpkg = null;
+      renderMm();
+      $('#mmPager').insertAdjacentHTML('afterbegin', '<span class="pill ok">' + n + '행 승인</span> ');
+    });
     $('#p-mout').addEventListener('click', function (e) {
       const dl = e.target.closest('[data-mdl]'), pv = e.target.closest('[data-mpv]');
       if (dl) { const f = st.mpkg.files[+dl.dataset.mdl]; U.download(metaFileName(f.path), new Blob([f.content], { type: f.mime }), f.mime); }
@@ -852,6 +881,8 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       if (e.target.id === 'moZip') {
         const p = st.mpkg || buildMeta();
         U.download('KCURE_' + cancerLabel() + '_메타데이터_' + stamp() + '.zip', new Blob([KC.meta.toZip([p])], { type: 'application/zip' }));
+        KC.audit.log('meta.package', { cancer: cancerLabel(), files: p.files.length, columns: p.summary.columns,
+          review: U.groupCount(usedEntries(), function (x) { return x.rv || '후보'; }) });
         markDone('mout');
       }
       if (e.target.id === 'moXlsx') {

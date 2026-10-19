@@ -8,6 +8,11 @@ KC.deidUi = (function () {
   const st = { plan: null, source: '', host: null };
   const ORDER = ['DELETE', 'HASH_SALT', 'YEAR_ONLY', 'DATE_SHIFT', 'DATE_TO_INTERVAL', 'MASK', 'BIN', 'TOP_BOTTOM', 'GROUP_RARE', 'REGEX_PII', 'KEEP'];
 
+  function by() { const el = document.querySelector('#dzOperator'); return el ? el.value.trim() : ''; }
+  function planLogged(how) {
+    KC.audit.log('deid.plan', { source: how, cancer: st.plan.cancer, columns: st.plan.columns.length, sampleRows: st.plan.sampleRows,
+      rulepack: st.plan.version, autoApproved: st.plan.columns.filter(function (c) { return c.status === '승인'; }).length, by: by() });
+  }
   function note(msg, cls) { return '<div class="note ' + (cls || '') + '">' + msg + '</div>'; }
   function stat(k, v, s, cls) {
     return '<div class="stat ' + (cls || '') + '"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div>' + (s ? '<div class="s">' + esc(s) + '</div>' : '') + '</div>';
@@ -32,6 +37,7 @@ KC.deidUi = (function () {
       const headers = rows[0].map(function (v) { return String(v == null ? '' : v).trim(); }).filter(Boolean);
       const cancer = st.host.cancer() || '';
       st.plan = KC.deid.plan(headers, rows.slice(1), cancer);
+      planLogged('file');
       st.source = '샘플 파일 「' + file.name + '」 · 컬럼 ' + headers.length + ' · 분석 ' + st.plan.sampleRows + '행 (최대 ' + KC.deid.MAX_SAMPLE_ROWS + '행, 샘플값은 화면에서만 사용)';
       $('#dzIn').value = $('#dzIn').value || 'C:\\kcure\\in\\' + file.name;
       $('#dzOut').value = $('#dzOut').value || 'C:\\kcure\\out\\' + file.name.replace(/\.[^.]+$/, '') + '_deid.csv';
@@ -45,11 +51,13 @@ KC.deidUi = (function () {
     const entries = st.host.entries();
     if (!entries.length) { $('#dzMsg').innerHTML = note('① 에서 암종이나 컬럼을 먼저 선택하세요.', 'warn'); return; }
     st.plan = KC.deid.planFromEntries(entries, st.host.cancer());
+    planLogged('selection');
     st.source = '① 선택 항목 ' + entries.length + '개 (샘플 없음 — 컬럼명·표준항목 기준 추천)';
     render();
   }
 
   function render() {
+    renderGov();
     const has = !!st.plan;
     $('#dzCard').classList.toggle('hidden', !has);
     if (!has) return;
@@ -73,7 +81,8 @@ KC.deidUi = (function () {
         const pc = c.confidence === '높음' ? 'ok' : c.confidence === '낮음' ? 'warn' : 'info';
         const smp = c.sample.n ? esc(c.sample.pattern) + (c.sample.dateFormats.length ? ' ' + esc(c.sample.dateFormats.join('/')) : '') + '<div class="l2">고유값 ' + c.sample.distinct + '/' + c.sample.n + '</div>' : '<span class="muted small">샘플 없음</span>';
         const exp = c.expand.length ? '<div class="l2">전개 제안: ' + esc(c.expand.map(function (x) { return x.parts.join('·') + ' (' + x.hint + ')'; }).join(' / ')) + '</div>' : '';
-        return '<tr><td><input type="checkbox" data-dza="' + i + '"' + (c.status === '승인' ? ' checked' : '') + '></td>' +
+        return '<tr class="' + (c.status === '반려' ? 'muted' : '') + '"><td><select data-dzs="' + i + '">' + ['후보', '승인', '반려'].map(function (s) {
+            return '<option' + (s === c.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>' +
           '<td><b>' + esc(c.col) + '</b>' + exp + '</td>' +
           '<td class="small">' + (c.item ? '<span class="mono">' + c.item.id + '</span><div class="l2">' + esc(c.item.name) + ' · ' + esc(c.item.role) + '</div>' : '<span class="pill warn">미매핑</span>') + '</td>' +
           '<td class="small">' + smp + '</td><td>' + sel + '</td><td>' + (params || '<span class="muted small">—</span>') + '</td>' +
@@ -126,16 +135,70 @@ KC.deidUi = (function () {
   function initDicom() {
     $('#dcMod').innerHTML = Object.keys(KC.dicomgen.MODALITIES).map(function (k) { return '<option value="' + k + '">' + esc(KC.dicomgen.MODALITIES[k]) + '</option>'; }).join('');
     $('#dcPv').addEventListener('click', function () { const c = dicomCode(); if (c) { $('#dcView').classList.remove('hidden'); $('#dcView').textContent = c; } });
-    $('#dcDl').addEventListener('click', function () { const c = dicomCode(); if (c) U.download('deid_dicom.py', c, 'text/x-python'); });
+    $('#dcDl').addEventListener('click', function () {
+      const c = dicomCode();
+      if (c) { U.download('deid_dicom.py', c, 'text/x-python'); KC.audit.log('dicom.script', { options: dicomOpts(), sha256: KC.sha256(c), by: by() }); renderGov(); }
+    });
+  }
+
+  /* ---------- 규칙팩 · 감사 이력 ---------- */
+  async function renderGov() {
+    const r = window.KCURE_DEID;
+    $('#rpInfo').textContent = '현재 규칙팩 v' + r.version + ' · 규칙 ' + r.rules.length + ' · PII 패턴 ' + r.pii.length + ' · SHA-256 ' + KC.rulepack.digest(r).slice(0, 12) + '…';
+    const ev = await KC.audit.all();
+    const v = KC.audit.verify(ev);
+    $('#auInfo').textContent = '감사 이력 ' + ev.length + '건' + (ev.length ? ' · 체인 ' + (v.ok ? '정상' : (v.at + '번째에서 끊김')) : '');
+  }
+  function initGov() {
+    $('#rpExport').addEventListener('click', function () {
+      const pack = KC.rulepack.exportPack(window.KCURE_DEID, by());
+      U.download('rulepack_' + pack.version + '.json', JSON.stringify(pack, null, 2), 'application/json');
+      KC.audit.log('rulepack.export', { version: pack.version, sha256: pack.sha256, by: by() });
+      renderGov();
+    });
+    $('#rpImportBtn').addEventListener('click', function () { $('#rpImport').click(); });
+    $('#rpImport').addEventListener('change', async function (e) {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      try {
+        const pack = JSON.parse(await f.text());
+        const v = KC.rulepack.validate(pack);
+        if (!v.ok) { $('#rpMsg').innerHTML = note('규칙팩을 적용하지 않았습니다: ' + esc(v.errors.join(' / ')), 'err'); return; }
+        const d = KC.rulepack.diff(window.KCURE_DEID, pack.deid_rules);
+        const msg = 'v' + d.from + ' → v' + d.to + ' · 추가 ' + d.added.length + ' · 삭제 ' + d.removed.length + ' · 변경 ' + d.changed.length + (d.piiChanged ? ' · PII 패턴 변경' : '');
+        if (!window.confirm('규칙팩을 교체할까요?\n' + msg + '\n(현재 창에만 적용, 기존 추천 계획은 다시 만들어야 합니다)')) { $('#rpMsg').innerHTML = note('취소했습니다. ' + esc(msg)); return; }
+        KC.rulepack.apply(pack);
+        KC.audit.log('rulepack.apply', { from: d.from, to: d.to, sha256: pack.sha256, added: d.added, removed: d.removed, changed: d.changed, by: by() });
+        st.plan = null;
+        render();
+        $('#rpMsg').innerHTML = note('규칙팩을 교체했습니다: ' + esc(msg) + '. 추천을 다시 실행하세요.', 'ok');
+      } catch (err) { $('#rpMsg').innerHTML = note('규칙팩을 읽지 못했습니다: ' + esc(err.message), 'err'); }
+      renderGov();
+    });
+    $('#auExport').addEventListener('click', async function () {
+      U.download('KCURE_감사이력_' + U.nowIso().replace(/[-:T]/g, '').slice(0, 12) + '.jsonl', await KC.audit.toJsonl(), 'application/x-ndjson');
+    });
+    $('#auClear').addEventListener('click', async function () {
+      if (!window.confirm('이 브라우저의 감사 이력을 비울까요? 먼저 내려받아 보관했는지 확인하세요.')) return;
+      await KC.audit.clear();
+      renderGov();
+    });
+    renderGov();
   }
 
   function onChange(e) {
     const p = st.plan;
     if (!p) return;
     const t = e.target;
-    if (t.dataset.dza !== undefined) { p.columns[+t.dataset.dza].status = t.checked ? '승인' : '후보'; }
+    if (t.dataset.dzs !== undefined) {
+      const c = p.columns[+t.dataset.dzs];
+      KC.audit.log('deid.status', { col: c.col, from: c.status, to: t.value, technique: c.technique, ruleId: c.ruleId, by: by() });
+      c.status = t.value;
+    }
     else if (t.dataset.dzt !== undefined) {
       const c = p.columns[+t.dataset.dzt];
+      KC.audit.log('deid.technique', { col: c.col, from: c.technique, to: t.value, by: by() });
       c.technique = t.value;
       c.params = Object.assign({}, KC.deid.techniques()[t.value].params || {});
       c.ruleId = '수동';
@@ -144,6 +207,7 @@ KC.deidUi = (function () {
     } else if (t.dataset.dzp !== undefined) {
       const c = p.columns[+t.dataset.dzp], v = t.value.trim();
       c.params[t.dataset.k] = v === '' ? null : (/^-?\d+(\.\d+)?$/.test(v) ? +v : v);
+      KC.audit.log('deid.param', { col: c.col, param: t.dataset.k, value: c.params[t.dataset.k], by: by() });
     } else if (t.id === 'dzPid') { p.patientCol = t.value; }
     else return;
     render();
@@ -170,6 +234,9 @@ KC.deidUi = (function () {
       const zip = KC.writers.zip(pkg.files.map(function (f) { return { name: f.path, content: f.content }; }));
       const name = 'KCURE_가명처리코드_' + (st.plan.cancer || '선택') + '_' + U.nowIso().replace(/[-:T]/g, '').slice(0, 12) + '.zip';
       U.download(name, new Blob([zip], { type: 'application/zip' }));
+      KC.audit.log('deid.package', { file: name, dialect: opts().dialect, approved: KC.codegen.approved(st.plan).map(function (c) { return c.col; }),
+        hashes: pkg.hashes, rulepack: st.plan.version, by: by() });
+      renderGov();
       $('#dzMsg').innerHTML = note('패키지를 만들었습니다: 파일 ' + pkg.files.length + '개 · 자체 검사 통과 · deid.py SHA-256 ' + pkg.hashes['deid.py'].slice(0, 16) + '…', 'ok');
     } catch (e) { $('#dzMsg').innerHTML = note(esc(e.message), 'err'); }
   }
@@ -197,10 +264,15 @@ KC.deidUi = (function () {
     $('#dzScanBtn').addEventListener('click', scan);
     $('#dzTableWrap').addEventListener('click', function (e) {
       const b = e.target.closest('[data-dzl]');
-      if (b && st.plan) { KC.llm.apply(st.plan.columns[+b.dataset.dzl]); render(); }
+      if (b && st.plan) {
+        const c = st.plan.columns[+b.dataset.dzl];
+        KC.audit.log('deid.llm_apply', { col: c.col, from: c.technique, to: c.llm.technique, itemId: c.llm.itemId, by: by() });
+        KC.llm.apply(c); render();
+      }
     });
     initLlm();
     initDicom();
+    initGov();
     $('#dzDialect').innerHTML = Object.keys(KC.codegen.DIALECTS).map(function (k) { return '<option value="' + k + '">' + esc(KC.codegen.DIALECTS[k]) + '</option>'; }).join('');
   }
 
