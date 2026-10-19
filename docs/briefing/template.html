@@ -153,7 +153,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
   </div>
   <div class="strip">
     <div><span class="k">브라우저 자동 테스트</span><span class="v ok">__PASS__ / __TOTAL__</span><span class="s">실패 __FAIL__건 · v0.1 대비 +__DELTA__</span></div>
-    <div><span class="k">생성 코드 실제 실행 검증</span><span class="v ok">4 / 4</span><span class="s">Python 정형 2 · DICOM 1 · 원본 해시 1</span></div>
+    <div><span class="k">생성 코드 실제 실행 검증</span><span class="v ok">7 / 7</span><span class="s">K-CURE 정형 2 · 범용 3 · DICOM 1 · 원본 해시 1</span></div>
     <div><span class="k">앱 내장 자체 점검</span><span class="v ok">통과</span><span class="s">9개 암종 패키지 + 합성 환자 2종</span></div>
     <div><span class="k">로컬 LLM 실모델 PoC</span><span class="v ok">36 → 44</span><span class="s">46개 컬럼 정답 · 규칙만 → 규칙+LLM(샘플 포함 46)</span></div>
   </div>
@@ -174,6 +174,8 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
         </ul>
       </li>
       <li>로컬 소형 LLM 연동은 별도 빌드로 분리했습니다. 이 PC(127.0.0.1)에만 연결하고, 제안은 사람이 적용해야 반영됩니다.</li>
+      <li><b>범용(비 K-CURE) 데이터:</b> KR CDI V3 기반 범용 사전(52항목)을 추가해 입원·검사·처방 데이터도 변환합니다. Drive 더미 프롬프트로 만든 샘플 3세트에서 매핑 29/29(블라인드 26/29), FHIR 구조 오류 0이었습니다.</li>
+      <li><b>보안 수정:</b> 범용 시험 중 가명처리 ON인데도 성명·연락처 원문이 FHIR·KR CDI 결과에 남는 문제를 발견해 고쳤습니다(직접식별자 제외, 노출 0건 확인).</li>
       <li><b>S5 1차:</b> Ollama + qwen2.5 7B로 실제 시험했습니다(CPU, 20개 묶음당 1~2분). 46개 컬럼 중 정답이 규칙만으로는 36개, LLM 안전 병합으로는 44개(샘플값 포함 시 46개)였습니다. 7B 모델에는 기법 대신 '의미 범주'만 판정하게 해야 정확합니다.</li>
       <li>모든 단계는 git에 단계별 커밋으로 남겼고 GitHub 비공개 저장소에 올렸습니다.</li>
     </ul>
@@ -215,6 +217,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
       <div class="tl done"><span class="t">S4 승인 · 감사 이력 · 규칙팩</span><span class="r">efd36bb · 테스트 195</span><span class="d">3·4단계 검토 상태, 해시 체인 감사 이력, 규칙팩 검증·비교·교체, 통합 엑셀 '검토 상태' 열.</span></div>
       <div class="tl done"><span class="t">브리핑 페이지</span><span class="r">3fa328a</span><span class="d">진행 상황과 테스트 결과를 한 페이지로 정리.</span></div>
       <div class="tl done"><span class="t">S5(1차) 로컬 LLM 실모델 PoC</span><span class="r">c2f2acc · 테스트 198</span><span class="d">Ollama + qwen2.5 7B 설치·시험. 프롬프트 v1~v3.1 비교, 의미 범주 판정 방식 채택, 누락 재요청·안전 병합, 127.0.0.1 실행기.</span></div>
+      <div class="tl done"><span class="t">범용(비 K-CURE) 데이터 변환 · 직접식별자 차단</span><span class="r">016443b · 테스트 209</span><span class="d">범용 사전 52항목, 범용 모드 자동 판정, 세로형 검사·코드+명칭 합치기, 가명처리 ON 시 직접식별자 제외.</span></div>
       <div class="tl todo"><span class="t">S5(2차) 실제 병원 컬럼으로 재측정</span><span class="r">예정</span><span class="d">가명 처리된 실제 헤더로 정답셋 구성, 14B 모델 비교, PII 재현율·코드 실행률 측정.</span></div>
       <div class="tl todo"><span class="t">S6 병원 인터뷰·보완</span><span class="r">예정</span><span class="d">현장 피드백 반영 목록과 v0.3 범위 확정.</span></div>
     </div>
@@ -286,8 +289,34 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
   </div>
 </section>
 
+<section id="generic">
+  <div class="head"><span class="no">06</span><h2>범용(비 K-CURE) 데이터 변환</h2><p class="note">Drive 더미 프롬프트 샘플 · 2026-10-19</p></div>
+  <div class="body">
+    <p>K-CURE 항목정의서에 없는 일반 병원 데이터를 같은 엔진으로 변환합니다. 샘플은 Google Drive「테스트용 더미 데이터셋 생성 프롬프트」로 로컬 LLM(qwen2.5 7B)이 만든 가상 데이터입니다. A는 원문 프롬프트, B·C는 같은 형식의 변형이며 B·C의 컬럼명은 LLM이 자유롭게 지었습니다.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>세트</th><th>내용</th><th class="num">행</th><th class="num">매핑 (블라인드 → 보완)</th><th>FHIR 리소스 (구조 오류)</th><th>가명처리 코드 실행</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>입원 진단 (PAT_ID·AGE·GENDER·DIAG_CODE·ADMIT_DATE)</td><td class="num">50</td><td class="num">5/5 → 5/5</td><td>200 (0)</td><td><span class="pill ok">통과</span></td></tr>
+        <tr><td>B</td><td>외래 혈액검사, 영문 CamelCase 컬럼</td><td class="num">30</td><td class="num">7/9 → 9/9</td><td>60 (0) · 검사코드·참고구간·판정 30건</td><td><span class="pill ok">통과</span></td></tr>
+        <tr><td>C</td><td>고혈압·당뇨 처방, 한글 컬럼</td><td class="num">30</td><td class="num">14/15 → 15/15</td><td>90 (0) · 처방 코드+명칭 1건으로 합침</td><td><span class="pill ok">통과</span></td></tr>
+      </tbody>
+    </table></div>
+    <ul class="facts note">
+      <li>블라인드(샘플을 보기 전 작성한 사전)는 26/29였습니다. 틀린 3건은 일반 규칙으로 보완했습니다: CamelCase 분해, 단독 ID, 앞 컬럼 문맥('단위' → 투여량/결과 단위).</li>
+      <li>6개 표준 메타데이터 패키지(파일 24개)의 DCAT 필수 누락은 세 세트 모두 0이었습니다. 범용 항목에는 mCODE·ARGO 대응이 없습니다.</li>
+      <li>7B 모델 더미의 한계도 있었습니다. 진단코드가 KCD 형식이 아니고, 검사명이 중국어로 나왔고, 경과기록에 PII가 거의 없었습니다.</li>
+    </ul>
+    <div class="verify">
+      <div class="card"><div class="top"><h3>보안 수정: 직접식별자 노출</h3><span class="pill bad">발견 → 수정</span></div>
+        <ul><li>가명처리 ON인데도 성명·연락처 원문이 FHIR 확장과 KR CDI 결과에 남았습니다. K-CURE 항목에는 이름·연락처가 없어 드러나지 않던 경로입니다.</li><li>이제 성명·연락처·주소·의료인 이름/ID는 결과·로그에서 제외하고, 제외 사실만 기록합니다.</li><li>세 세트에서 원문 노출 0건을 확인했고, 회귀 테스트 2건을 추가했습니다.</li></ul></div>
+      <div class="card"><div class="top"><h3>K-CURE 영향 없음</h3><span class="pill ok">확인</span></div>
+        <ul><li>범용 사전은 '범용'을 고를 때만 씁니다. 파일을 불러오면 범용 사전 매칭이 더 많을 때만 자동으로 범용으로 판정합니다.</li><li>K-CURE 대장암 샘플은 그대로 대장암(39/40)으로 판정되고, 기존 테스트는 모두 통과합니다.</li></ul></div>
+    </div>
+  </div>
+</section>
+
 <section id="tests">
-  <div class="head"><span class="no">06</span><h2>SW 테스트 결과</h2><p class="note">tests/test.html 자동 테스트 __TOTAL__건</p></div>
+  <div class="head"><span class="no">07</span><h2>SW 테스트 결과</h2><p class="note">tests/test.html 자동 테스트 __TOTAL__건</p></div>
   <div class="body">
     <div class="tbl"><table id="groupTable">
       <thead><tr><th>영역</th><th>도입</th><th class="num">통과</th><th class="num">전체</th><th>결과</th></tr></thead>
@@ -327,7 +356,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
 </section>
 
 <section id="next">
-  <div class="head"><span class="no">07</span><h2>남은 과제</h2><p class="note">결정·확인이 필요한 사항</p></div>
+  <div class="head"><span class="no">08</span><h2>남은 과제</h2><p class="note">결정·확인이 필요한 사항</p></div>
   <div class="body">
     <div class="tbl"><table>
       <thead><tr><th>구분</th><th>내용</th><th>현재 상태</th></tr></thead>
@@ -347,7 +376,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
 </section>
 
 <section id="files">
-  <div class="head"><span class="no">08</span><h2>산출물 위치</h2></div>
+  <div class="head"><span class="no">09</span><h2>산출물 위치</h2></div>
   <div class="body">
     <div class="tbl"><table>
       <thead><tr><th>산출물</th><th>경로 (KCURE_표준변환기_프로토타입/)</th></tr></thead>
@@ -357,6 +386,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px 
         <tr><td>수정개발계획서 · 맞춤형 프롬프트</td><td class="mono">docs/03_수정개발계획서.md · docs/04_맞춤형_프롬프트.md</td></tr>
         <tr><td>변경 이력</td><td class="mono">CHANGELOG.md</td></tr>
         <tr><td>LLM PoC 결과 · 시험 페이지</td><td class="mono">docs/05_LLM_PoC결과.md · docs/poc/*.json · tests/llm_poc.html</td></tr>
+        <tr><td>범용 사전 · 시험</td><td class="mono">spec/generic_spec.json · tests/generic_test.html · docs/06_범용데이터_변환시험.md · samples/generic/</td></tr>
         <tr><td>LLM 연동본 실행기</td><td class="mono">dist/LLM연동_실행.bat · tools/serve_llm.py</td></tr>
         <tr><td>가명처리 규칙 · 매핑 수정안</td><td class="mono">spec/deid_rules.json · spec/corrections.json</td></tr>
         <tr><td>자동 테스트 · 실행 검증 도구</td><td class="mono">tests/test.html · tools/verify_generated.py · tools/verify_dicom.py</td></tr>
@@ -374,8 +404,8 @@ const DATA = /*__DATA__*/null;
   const $ = function (s) { return document.querySelector(s); };
 
   /* 단계별 테스트 수 */
-  const steps = [['v0.1', 125], ['S0', 125], ['S1', 139], ['S2', 169], ['S3', 184], ['S4', 195], ['S5', 198]];
-  const max = 198;
+  const steps = [['v0.1', 125], ['S0', 125], ['S1', 139], ['S2', 169], ['S3', 184], ['S4', 195], ['S5', 198], ['범용', 209]];
+  const max = 209;
   $('#growth').innerHTML = steps.map(function (s, i) {
     return '<div class="col' + (i === steps.length - 1 ? ' new' : '') + '"><span class="n">' + s[1] + '</span><span class="colbar" style="height:' + Math.round(s[1] / max * 90) + 'px"></span><span class="c">' + s[0] + '</span></div>';
   }).join('');
