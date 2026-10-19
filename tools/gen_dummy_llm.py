@@ -64,8 +64,48 @@ PROMPT_C = """[System Context]
 1. CSV Data Format (UTF-8 encoded string)
 2. Clinical Notes Text Samples"""
 
+PROMPT_D = """[System Context]
+당신은 의료 데이터 연구용 가상 합성 데이터(Synthetic Data) 생성기입니다.
+
+[Task]
+프로토타입 검증을 위해 실제 환자 정보가 포함되지 않은 가상의 의료 데이터셋을 생성하세요.
+1. 정형 데이터: 응급실 내원 기록 30건의 CSV 텍스트. 한 행은 응급실 방문 1건.
+   환자번호, 환자 이름, 나이, 성별, 도착 일시, 내원 경로, 내원 수단, 주호소, 증상 발생 일시, KTAS 중증도, 수축기 혈압, 맥박, 호흡수, 체온, 산소포화도, 퇴실 결과 컬럼을 포함하고,
+   컬럼명은 실제 병원 EMR 추출본처럼 영문 약어로 자유롭게 정하세요.
+
+[Output Format]
+1. CSV Data Format (UTF-8 encoded string)"""
+
+PROMPT_E = """[System Context]
+당신은 의료 데이터 연구용 가상 합성 데이터(Synthetic Data) 생성기입니다.
+
+[Task]
+프로토타입 검증을 위해 실제 환자 정보가 포함되지 않은 가상의 의료 데이터셋을 생성하세요.
+1. 정형 데이터: 병리·영상 검사 기록 30건의 CSV 텍스트. 한 행은 검사 1건.
+   등록번호, 병리번호, 검사 종류(병리/CT/MRI 등), 검사 부위, 검사일, 판독일, 판독의, 병리 진단명, 판독 소견(서술) 컬럼을 포함하고,
+   컬럼명은 실제 병원 EMR 추출본처럼 한글과 영문을 섞어 자유롭게 정하세요.
+
+[Output Format]
+1. CSV Data Format (UTF-8 encoded string)"""
+
+PROMPT_F = """[System Context]
+당신은 의료 데이터 연구용 가상 합성 데이터(Synthetic Data) 생성기입니다.
+
+[Task]
+프로토타입 검증을 위해 실제 환자 정보가 포함되지 않은 가상의 의료 데이터셋을 생성하세요.
+1. 정형 데이터: 입원 병동 간호기록 30건의 CSV 텍스트. 한 행은 측정 1회.
+   환자번호, 병동, 측정 일시, 체온, 맥박, 호흡수, 혈압, 산소포화도, 통증 점수, 의식 상태, 섭취량, 배설량, 간호사 이름, 간호 기록(서술) 컬럼을 포함하고,
+   컬럼명은 실제 병원 EMR 추출본처럼 한글로 자유롭게 정하세요.
+2. 비정형 데이터: 가상의 한글 간호기록 서술 샘플 2건
+
+[Output Format]
+1. CSV Data Format (UTF-8 encoded string)
+2. Clinical Notes Text Samples"""
+
 SETS = {"A": ("Drive 원문 · 입원 진단", PROMPT_A, 50), "B": ("변형 · 외래 혈액검사(영문 약어)", PROMPT_B, 30),
-        "C": ("변형 · 만성질환 처방(한글)", PROMPT_C, 30)}
+        "C": ("변형 · 만성질환 처방(한글)", PROMPT_C, 30),
+        "D": ("변형 · 응급실 내원(영문 약어)", PROMPT_D, 30), "E": ("변형 · 병리·영상(한영 혼합)", PROMPT_E, 30),
+        "F": ("변형 · 병동 간호기록(한글)", PROMPT_F, 30)}
 
 
 def ask(model, prompt):

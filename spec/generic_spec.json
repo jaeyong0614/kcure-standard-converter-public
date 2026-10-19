@@ -1,5 +1,5 @@
 {
- "version": "0.1.1",
+ "version": "0.2.1",
  "context": [
   [
    "GEN-G035",
@@ -10,6 +10,21 @@
    "GEN-G027",
    "GEN-G034",
    "GEN-G035"
+  ],
+  [
+   "GEN-G038",
+   {
+    "present": [
+     "GEN-G055",
+     "GEN-G041",
+     "GEN-G040",
+     "GEN-G056"
+    ],
+    "absent": [
+     "GEN-G034"
+    ]
+   },
+   "GEN-G053"
   ]
  ],
  "note": "범용(비 K-CURE) 병원 데이터용 표준 사전 — KR CDI V3 기반, 규칙 후보",
@@ -749,7 +764,7 @@
    "cat2": "기본정보",
    "tier": "범용",
    "domain": "Patient",
-   "role": "기타내용",
+   "role": "명칭",
    "cancers": [],
    "type": "CODE",
    "len": null,
@@ -1193,7 +1208,7 @@
    "cat2": "기관",
    "tier": "범용",
    "domain": "Patient",
-   "role": "기타내용",
+   "role": "명칭",
    "cancers": [],
    "type": "VARCHAR",
    "len": null,
@@ -1284,7 +1299,7 @@
    "cat2": "내원",
    "tier": "범용",
    "domain": "Patient",
-   "role": "기타내용",
+   "role": "상태",
    "cancers": [],
    "type": "CODE",
    "len": null,
@@ -1470,6 +1485,30 @@
     ],
     [
      "IN_DT",
+     []
+    ],
+    [
+     "도착일시",
+     []
+    ],
+    [
+     "도착시간",
+     []
+    ],
+    [
+     "내원일시",
+     []
+    ],
+    [
+     "ARRIVAL_DT",
+     []
+    ],
+    [
+     "ARRIVAL_TIME",
+     []
+    ],
+    [
+     "ER_IN_DT",
      []
     ]
    ],
@@ -3673,6 +3712,14 @@
      []
     ],
     [
+     "검사종류",
+     []
+    ],
+    [
+     "검사구분",
+     []
+    ],
+    [
      "IMG_NM",
      []
     ],
@@ -3682,6 +3729,18 @@
     ],
     [
      "MODALITY",
+     []
+    ],
+    [
+     "EXAM_TYPE",
+     []
+    ],
+    [
+     "STUDY_TYPE",
+     []
+    ],
+    [
+     "MODALITY_CD",
      []
     ]
    ],
@@ -4633,6 +4692,10 @@
      []
     ],
     [
+     "간호기록",
+     []
+    ],
+    [
      "메모",
      []
     ],
@@ -4654,6 +4717,14 @@
     ],
     [
      "PROGRESS_NOTE",
+     []
+    ],
+    [
+     "NURSING_NOTE",
+     []
+    ],
+    [
+     "NURSE_NOTE",
      []
     ],
     [
@@ -4680,6 +4751,2097 @@
     "concept": "note_class_concept_id",
     "date": "note_date",
     "source": "note_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G053",
+   "name": "영상검사일시",
+   "def": "영상 촬영(검사) 일자·일시",
+   "cat1": "검사",
+   "cat2": "영상검사",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "일자",
+   "cancers": [],
+   "type": "DATE",
+   "len": null,
+   "dec": null,
+   "storage": "DATE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core DiagnosticReport Profile for Diagnostic Imaging",
+    "path": "DiagnosticReport.effectiveDateTime",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-diagnosticreport-diagnostic-imaging",
+    "urlSrc": "KR Core(추정)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "촬영일",
+     []
+    ],
+    [
+     "촬영일시",
+     []
+    ],
+    [
+     "영상검사일",
+     []
+    ],
+    [
+     "영상검사일시",
+     []
+    ],
+    [
+     "SCAN_DT",
+     []
+    ],
+    [
+     "IMG_DT",
+     []
+    ],
+    [
+     "STUDY_DT",
+     []
+    ],
+    [
+     "STUDY_DATE",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "procedure_occurrence",
+    "field": "procedure_date",
+    "concept": "procedure_concept_id",
+    "date": "procedure_date",
+    "source": "procedure_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G054",
+   "name": "검사 부위",
+   "def": "검사·촬영 부위",
+   "cat1": "검사",
+   "cat2": "검사부위",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "부위",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.bodySite",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "검사부위",
+     []
+    ],
+    [
+     "촬영부위",
+     []
+    ],
+    [
+     "부위",
+     []
+    ],
+    [
+     "BODY_SITE",
+     []
+    ],
+    [
+     "BODYPART",
+     []
+    ],
+    [
+     "BODY_PART",
+     []
+    ],
+    [
+     "SITE",
+     []
+    ],
+    [
+     "EXAM_SITE",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "procedure_occurrence",
+    "field": "procedure_source_value",
+    "concept": "procedure_concept_id",
+    "date": "procedure_date",
+    "source": "procedure_source_value",
+    "vocab": "SNOMED",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G055",
+   "name": "판독일시",
+   "def": "판독(보고) 일자·일시",
+   "cat1": "검사",
+   "cat2": "영상검사",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "일자",
+   "cancers": [],
+   "type": "DATE",
+   "len": null,
+   "dec": null,
+   "storage": "DATE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {
+    "cls": "검체검사",
+    "el": "보고일시",
+    "req": "R2",
+    "match": "직접대응",
+    "no": 48
+   },
+   "core": {
+    "profile": "KR Core DiagnosticReport Profile for Diagnostic Imaging",
+    "path": "DiagnosticReport.issued",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-diagnosticreport-diagnostic-imaging",
+    "urlSrc": "KR Core(추정)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "판독일",
+     []
+    ],
+    [
+     "판독일시",
+     []
+    ],
+    [
+     "판독일자",
+     []
+    ],
+    [
+     "보고일",
+     []
+    ],
+    [
+     "보고일시",
+     []
+    ],
+    [
+     "READ_DT",
+     []
+    ],
+    [
+     "READING_DT",
+     []
+    ],
+    [
+     "REPORT_DT",
+     []
+    ],
+    [
+     "RPT_DT",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "note",
+    "field": "note_date",
+    "concept": "note_class_concept_id",
+    "date": "note_date",
+    "source": "note_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G056",
+   "name": "판독의",
+   "def": "판독한 의사 이름",
+   "cat1": "진료",
+   "cat2": "판독의",
+   "tier": "범용",
+   "domain": "Patient",
+   "role": "식별·인구학",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {
+    "cls": "진료의 정보 및 역할 정보",
+    "el": "성명",
+    "req": "R",
+    "match": "직접대응",
+    "no": 11
+   },
+   "core": {
+    "profile": "KR Core Practitioner Profile for Medical Doctor",
+    "path": "Practitioner.name",
+    "judge": "직접재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "판독의",
+     []
+    ],
+    [
+     "판독의사",
+     []
+    ],
+    [
+     "판독의명",
+     []
+    ],
+    [
+     "판독자",
+     []
+    ],
+    [
+     "READ_DR",
+     []
+    ],
+    [
+     "READER",
+     []
+    ],
+    [
+     "RADIOLOGIST",
+     []
+    ],
+    [
+     "PATHOLOGIST",
+     []
+    ],
+    [
+     "READ_DOC",
+     []
+    ]
+   ],
+   "argo": {},
+   "directId": true
+  },
+  {
+   "id": "GEN-G057",
+   "name": "병리번호",
+   "def": "병리(검체) 접수번호",
+   "cat1": "검사",
+   "cat2": "병리검사",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "식별·인구학",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core Specimen Profile",
+    "path": "Specimen.accessionIdentifier",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-specimen",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "병리번호",
+     []
+    ],
+    [
+     "병리검사번호",
+     []
+    ],
+    [
+     "검체번호",
+     []
+    ],
+    [
+     "PATH_NO",
+     []
+    ],
+    [
+     "PATHO_NO",
+     []
+    ],
+    [
+     "ACC_NO",
+     []
+    ],
+    [
+     "ACCESSION_NO",
+     []
+    ],
+    [
+     "SPCM_NO",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "specimen",
+    "field": "specimen_source_id",
+    "concept": "specimen_concept_id",
+    "date": "specimen_date",
+    "source": "specimen_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G058",
+   "name": "병리진단명",
+   "def": "조직병리 진단명",
+   "cat1": "검사",
+   "cat2": "병리검사",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "결과",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueCodeableConcept",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "병리진단",
+     []
+    ],
+    [
+     "병리진단명",
+     []
+    ],
+    [
+     "조직진단",
+     []
+    ],
+    [
+     "조직학적진단",
+     []
+    ],
+    [
+     "PATH_DX",
+     []
+    ],
+    [
+     "PATHO_DX",
+     []
+    ],
+    [
+     "HISTOLOGY",
+     []
+    ],
+    [
+     "PATHOLOGY_DX",
+     []
+    ],
+    [
+     "PATH_DIAG",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "observation",
+    "field": "value_as_string",
+    "concept": "observation_concept_id",
+    "date": "observation_date",
+    "source": "observation_source_value",
+    "vocab": "ICD-O-3",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G059",
+   "name": "통증 점수",
+   "def": "통증 척도 점수(NRS 등)",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "수치",
+   "cancers": [],
+   "type": "INTEGER",
+   "len": null,
+   "dec": null,
+   "storage": "INTEGER",
+   "unit": "{score}",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueQuantity",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "통증",
+     []
+    ],
+    [
+     "통증점수",
+     []
+    ],
+    [
+     "통증척도",
+     []
+    ],
+    [
+     "NRS",
+     []
+    ],
+    [
+     "VAS",
+     []
+    ],
+    [
+     "PAIN",
+     []
+    ],
+    [
+     "PAIN_SCORE",
+     []
+    ],
+    [
+     "PAIN_SCR",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "value_as_number",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "LOINC 72514-3",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G060",
+   "name": "의식 상태",
+   "def": "의식 수준(AVPU·GCS 등)",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "등급",
+   "cancers": [],
+   "type": "CODE",
+   "len": null,
+   "dec": null,
+   "storage": "CODE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueCodeableConcept",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "의식",
+     []
+    ],
+    [
+     "의식상태",
+     []
+    ],
+    [
+     "의식수준",
+     []
+    ],
+    [
+     "MENTAL",
+     []
+    ],
+    [
+     "MENTALITY",
+     []
+    ],
+    [
+     "LOC",
+     []
+    ],
+    [
+     "AVPU",
+     []
+    ],
+    [
+     "GCS",
+     []
+    ],
+    [
+     "CONSCIOUSNESS",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "value_source_value",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "LOINC 80288-4",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G061",
+   "name": "섭취량",
+   "def": "수분 섭취량",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "수치",
+   "cancers": [],
+   "type": "NUMERIC",
+   "len": null,
+   "dec": null,
+   "storage": "NUMERIC",
+   "unit": "mL",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueQuantity",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "섭취량",
+     []
+    ],
+    [
+     "섭취",
+     []
+    ],
+    [
+     "INTAKE",
+     []
+    ],
+    [
+     "IN_QTY",
+     []
+    ],
+    [
+     "IO_IN",
+     []
+    ],
+    [
+     "FLUID_IN",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "value_as_number",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "LOINC 9108-2",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G062",
+   "name": "배설량",
+   "def": "배설(배출)량",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "수치",
+   "cancers": [],
+   "type": "NUMERIC",
+   "len": null,
+   "dec": null,
+   "storage": "NUMERIC",
+   "unit": "mL",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueQuantity",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "배설량",
+     []
+    ],
+    [
+     "배출량",
+     []
+    ],
+    [
+     "소변량",
+     []
+    ],
+    [
+     "OUTPUT",
+     []
+    ],
+    [
+     "OUT_QTY",
+     []
+    ],
+    [
+     "IO_OUT",
+     []
+    ],
+    [
+     "URINE_OUT",
+     []
+    ],
+    [
+     "FLUID_OUT",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "value_as_number",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "LOINC 9187-6",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G063",
+   "name": "병동",
+   "def": "입원 병동·병실",
+   "cat1": "진료",
+   "cat2": "내원",
+   "tier": "범용",
+   "domain": "Patient",
+   "role": "명칭",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core Encounter Profile",
+    "path": "Encounter.location",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-encounter",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "병동",
+     []
+    ],
+    [
+     "병실",
+     []
+    ],
+    [
+     "병동명",
+     []
+    ],
+    [
+     "WARD",
+     []
+    ],
+    [
+     "WARD_CD",
+     []
+    ],
+    [
+     "WARD_NM",
+     []
+    ],
+    [
+     "ROOM",
+     []
+    ],
+    [
+     "UNIT_NM",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "care_site",
+    "field": "care_site_source_value",
+    "concept": "place_of_service_concept_id",
+    "date": "",
+    "source": "care_site_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G064",
+   "name": "내원 경로",
+   "def": "내원(입원) 경로",
+   "cat1": "진료",
+   "cat2": "내원",
+   "tier": "범용",
+   "domain": "Patient",
+   "role": "방법",
+   "cancers": [],
+   "type": "CODE",
+   "len": null,
+   "dec": null,
+   "storage": "CODE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core Encounter Profile",
+    "path": "Encounter.hospitalization.admitSource",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-encounter",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "내원경로",
+     []
+    ],
+    [
+     "입원경로",
+     []
+    ],
+    [
+     "ARRIVAL_ROUTE",
+     []
+    ],
+    [
+     "ADM_ROUTE",
+     []
+    ],
+    [
+     "ADMIT_SOURCE",
+     []
+    ],
+    [
+     "VISIT_ROUTE",
+     []
+    ],
+    [
+     "ADM_SRC",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "visit_occurrence",
+    "field": "admitted_from_source_value",
+    "concept": "visit_concept_id",
+    "date": "visit_start_date",
+    "source": "visit_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G065",
+   "name": "내원 수단",
+   "def": "내원(이송) 수단",
+   "cat1": "진료",
+   "cat2": "응급",
+   "tier": "범용",
+   "domain": "Patient",
+   "role": "방법",
+   "cancers": [],
+   "type": "CODE",
+   "len": null,
+   "dec": null,
+   "storage": "CODE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueCodeableConcept",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "내원수단",
+     []
+    ],
+    [
+     "이송수단",
+     []
+    ],
+    [
+     "ARRIVAL_MODE",
+     []
+    ],
+    [
+     "ARRIVAL_MEANS",
+     []
+    ],
+    [
+     "TRANSPORT",
+     []
+    ],
+    [
+     "TRANS_MODE",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "observation",
+    "field": "value_as_string",
+    "concept": "observation_concept_id",
+    "date": "observation_date",
+    "source": "observation_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G066",
+   "name": "주호소",
+   "def": "주호소(주증상)",
+   "cat1": "진단",
+   "cat2": "주호소",
+   "tier": "범용",
+   "domain": "Disease",
+   "role": "명칭",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {
+    "cls": "진단 및 주호소 정보",
+    "el": "주호소명",
+    "req": "O",
+    "match": "직접대응",
+    "no": 27
+   },
+   "core": {
+    "profile": "KR Core Condition Profile for Chief Complaint",
+    "path": "Condition.code",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-condition-chief-complaint",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "주호소",
+     []
+    ],
+    [
+     "주증상",
+     []
+    ],
+    [
+     "CC",
+     []
+    ],
+    [
+     "C_C",
+     []
+    ],
+    [
+     "CHIEF_COMPLAINT",
+     []
+    ],
+    [
+     "CHIEF_COMP",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "condition_occurrence",
+    "field": "condition_source_value",
+    "concept": "condition_concept_id",
+    "date": "condition_start_date",
+    "source": "condition_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G067",
+   "name": "증상 발생일시",
+   "def": "주호소(증상) 발생 일시",
+   "cat1": "진단",
+   "cat2": "주호소",
+   "tier": "범용",
+   "domain": "Disease",
+   "role": "일자",
+   "cancers": [],
+   "type": "DATE",
+   "len": null,
+   "dec": null,
+   "storage": "DATE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {
+    "cls": "진단 및 주호소 정보",
+    "el": "주호소 발생일자",
+    "req": "O",
+    "match": "직접대응",
+    "no": 26
+   },
+   "core": {
+    "profile": "KR Core Condition Profile for Chief Complaint",
+    "path": "Condition.onsetDateTime",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-condition-chief-complaint",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "발생일",
+     []
+    ],
+    [
+     "발생일시",
+     []
+    ],
+    [
+     "증상발생일시",
+     []
+    ],
+    [
+     "ONSET_DT",
+     []
+    ],
+    [
+     "ONSET_TIME",
+     []
+    ],
+    [
+     "ONSET",
+     []
+    ],
+    [
+     "SX_ONSET",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "condition_occurrence",
+    "field": "condition_start_date",
+    "concept": "condition_concept_id",
+    "date": "condition_start_date",
+    "source": "condition_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G068",
+   "name": "중증도(KTAS)",
+   "def": "응급 중증도 분류",
+   "cat1": "진료",
+   "cat2": "응급",
+   "tier": "범용",
+   "domain": "Patient",
+   "role": "등급",
+   "cancers": [],
+   "type": "INTEGER",
+   "len": null,
+   "dec": null,
+   "storage": "INTEGER",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueQuantity",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "KTAS",
+     []
+    ],
+    [
+     "KTAS_LV",
+     []
+    ],
+    [
+     "KTAS_LEVEL",
+     []
+    ],
+    [
+     "중증도",
+     []
+    ],
+    [
+     "중증도분류",
+     []
+    ],
+    [
+     "TRIAGE",
+     []
+    ],
+    [
+     "TRIAGE_LV",
+     []
+    ],
+    [
+     "ESI",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "observation",
+    "field": "value_as_number",
+    "concept": "observation_concept_id",
+    "date": "observation_date",
+    "source": "observation_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G069",
+   "name": "퇴실 결과",
+   "def": "응급실 퇴실·퇴원 형태",
+   "cat1": "진료",
+   "cat2": "내원",
+   "tier": "범용",
+   "domain": "Patient",
+   "role": "상태",
+   "cancers": [],
+   "type": "CODE",
+   "len": null,
+   "dec": null,
+   "storage": "CODE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core Encounter Profile",
+    "path": "Encounter.hospitalization.dischargeDisposition",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-encounter",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "퇴실결과",
+     []
+    ],
+    [
+     "진료결과",
+     []
+    ],
+    [
+     "퇴원형태",
+     []
+    ],
+    [
+     "퇴실형태",
+     []
+    ],
+    [
+     "DISPOSITION",
+     []
+    ],
+    [
+     "DISP",
+     []
+    ],
+    [
+     "ER_RESULT",
+     []
+    ],
+    [
+     "DISCH_TYPE",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "visit_occurrence",
+    "field": "discharged_to_source_value",
+    "concept": "visit_concept_id",
+    "date": "visit_start_date",
+    "source": "visit_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G070",
+   "name": "호흡수",
+   "def": "호흡수",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "수치",
+   "cancers": [],
+   "type": "NUMERIC",
+   "len": null,
+   "dec": null,
+   "storage": "NUMERIC",
+   "unit": "/min",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {
+    "cls": "활력징후 및 신체 계측 정보",
+    "el": "호흡수",
+    "req": "R2",
+    "match": "직접대응",
+    "no": 65
+   },
+   "core": {
+    "profile": "KR Core Observation Profile for Vital Signs: Respiratory Rate",
+    "path": "Observation.valueQuantity",
+    "judge": "직접재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "호흡수",
+     []
+    ],
+    [
+     "호흡",
+     []
+    ],
+    [
+     "RR",
+     []
+    ],
+    [
+     "RESP",
+     []
+    ],
+    [
+     "RESP_RATE",
+     []
+    ],
+    [
+     "BREATH",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "value_as_number",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "LOINC 9279-1",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G071",
+   "name": "산소포화도",
+   "def": "말초 산소포화도",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "수치",
+   "cancers": [],
+   "type": "NUMERIC",
+   "len": null,
+   "dec": null,
+   "storage": "NUMERIC",
+   "unit": "%",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {
+    "cls": "활력징후 및 신체 계측 정보",
+    "el": "산소포화도",
+    "req": "R2",
+    "match": "직접대응",
+    "no": 67
+   },
+   "core": {
+    "profile": "KR Core Observation Profile for Vital Signs: Pulse Oximetry",
+    "path": "Observation.valueQuantity",
+    "judge": "직접재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "산소포화도",
+     []
+    ],
+    [
+     "SPO2",
+     []
+    ],
+    [
+     "SP_O2",
+     []
+    ],
+    [
+     "O2SAT",
+     []
+    ],
+    [
+     "O2_SAT",
+     []
+    ],
+    [
+     "SAT",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "value_as_number",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "LOINC 59408-5",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G072",
+   "name": "혈압(수축기/이완기)",
+   "def": "혈압 합본 표기(예: 120/80)",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "수치",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "mmHg",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueString",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "혈압",
+     []
+    ],
+    [
+     "BP",
+     []
+    ],
+    [
+     "BLOOD_PRESSURE",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "value_source_value",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "LOINC 85354-9",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G073",
+   "name": "마취 방법",
+   "def": "마취 방법",
+   "cat1": "치료",
+   "cat2": "수술",
+   "tier": "범용",
+   "domain": "Treatment",
+   "role": "방법",
+   "cancers": [],
+   "type": "CODE",
+   "len": null,
+   "dec": null,
+   "storage": "CODE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {
+    "cls": "수술 및 처치 정보",
+    "el": "마취방법",
+    "req": "O",
+    "match": "직접대응",
+    "no": 31
+   },
+   "core": {
+    "profile": "KR Core Procedure Profile",
+    "path": "Procedure.code",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-procedure",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "마취",
+     []
+    ],
+    [
+     "마취방법",
+     []
+    ],
+    [
+     "마취종류",
+     []
+    ],
+    [
+     "ANES",
+     []
+    ],
+    [
+     "ANES_TP",
+     []
+    ],
+    [
+     "ANESTHESIA",
+     []
+    ],
+    [
+     "ANES_TYPE",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "procedure_occurrence",
+    "field": "procedure_source_value",
+    "concept": "procedure_concept_id",
+    "date": "procedure_date",
+    "source": "procedure_source_value",
+    "vocab": "SNOMED",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G074",
+   "name": "진단 구분(주/부상병)",
+   "def": "주진단·부진단 구분",
+   "cat1": "진단",
+   "cat2": "진단",
+   "tier": "범용",
+   "domain": "Disease",
+   "role": "상태",
+   "cancers": [],
+   "type": "CODE",
+   "len": null,
+   "dec": null,
+   "storage": "CODE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core Condition Profile for Encounter Diagnosis",
+    "path": "Condition.category",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-condition-encounter-diagnosis",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "상병구분",
+     []
+    ],
+    [
+     "진단구분",
+     []
+    ],
+    [
+     "주부상병",
+     []
+    ],
+    [
+     "주부상병구분",
+     []
+    ],
+    [
+     "DX_TP",
+     []
+    ],
+    [
+     "DIAG_TYPE",
+     []
+    ],
+    [
+     "DX_TYPE",
+     []
+    ],
+    [
+     "MAIN_YN",
+     []
+    ],
+    [
+     "PRIMARY_YN",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "condition_occurrence",
+    "field": "condition_status_source_value",
+    "concept": "condition_concept_id",
+    "date": "condition_start_date",
+    "source": "condition_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G075",
+   "name": "간호사 성명",
+   "def": "기록·측정한 간호사 이름",
+   "cat1": "진료",
+   "cat2": "간호사",
+   "tier": "범용",
+   "domain": "Patient",
+   "role": "식별·인구학",
+   "cancers": [],
+   "type": "VARCHAR",
+   "len": null,
+   "dec": null,
+   "storage": "VARCHAR",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core Practitioner Profile for Medical Doctor",
+    "path": "Practitioner.name",
+    "judge": "직접재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "간호사",
+     []
+    ],
+    [
+     "간호사명",
+     []
+    ],
+    [
+     "담당간호사",
+     []
+    ],
+    [
+     "작성간호사",
+     []
+    ],
+    [
+     "기록자",
+     []
+    ],
+    [
+     "작성자",
+     []
+    ],
+    [
+     "NURSE",
+     []
+    ],
+    [
+     "NURSE_NM",
+     []
+    ],
+    [
+     "RN_NM",
+     []
+    ],
+    [
+     "RECORDER",
+     []
+    ]
+   ],
+   "argo": {},
+   "directId": true
+  },
+  {
+   "id": "GEN-G076",
+   "name": "측정일시",
+   "def": "활력징후·간호 측정(기록) 일시",
+   "cat1": "검사",
+   "cat2": "활력징후",
+   "tier": "범용",
+   "domain": "Assessment",
+   "role": "일자",
+   "cancers": [],
+   "type": "DATE",
+   "len": null,
+   "dec": null,
+   "storage": "DATE",
+   "unit": "",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core Observation Profile for Laboratory Result",
+    "path": "Observation.effectiveDateTime",
+    "judge": "직접재사용",
+    "url": "http://www.hl7korea.or.kr/fhir/krcore/StructureDefinition/krcore-observation-laboratory-result",
+    "urlSrc": "KR Core(확인)"
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "측정일",
+     []
+    ],
+    [
+     "측정일시",
+     []
+    ],
+    [
+     "기록일시",
+     []
+    ],
+    [
+     "MEASURE_DT",
+     []
+    ],
+    [
+     "RECORD_DT",
+     []
+    ],
+    [
+     "VS_DT",
+     []
+    ],
+    [
+     "CHART_DT",
+     []
+    ],
+    [
+     "MSR_DT",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "measurement",
+    "field": "measurement_date",
+    "concept": "measurement_concept_id",
+    "date": "measurement_date",
+    "source": "measurement_source_value",
+    "vocab": "-",
+    "note": "",
+    "conf": "중간",
+    "basis": "범용 사전"
+   }
+  },
+  {
+   "id": "GEN-G077",
+   "name": "수술 시간",
+   "def": "수술 소요 시간(분)",
+   "cat1": "치료",
+   "cat2": "수술",
+   "tier": "범용",
+   "domain": "Treatment",
+   "role": "기간",
+   "cancers": [],
+   "type": "INTEGER",
+   "len": null,
+   "dec": null,
+   "storage": "INTEGER",
+   "unit": "min",
+   "codeYN": "N",
+   "codeName": "",
+   "allowed": "",
+   "req": "",
+   "generic": true,
+   "cdi": {},
+   "core": {
+    "profile": "KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생",
+    "path": "Observation.valueQuantity",
+    "judge": "제약재사용",
+    "url": "",
+    "urlSrc": ""
+   },
+   "mcode": {
+    "profile": "해당 없음",
+    "path": "해당 없음",
+    "level": "미대응"
+   },
+   "prf": "",
+   "grade": "",
+   "stage": "범용 사전(후보)",
+   "gap": "",
+   "examples": [],
+   "aliases": [
+    [
+     "수술시간",
+     []
+    ],
+    [
+     "소요시간",
+     []
+    ],
+    [
+     "OP_TIME",
+     []
+    ],
+    [
+     "OP_DURATION",
+     []
+    ],
+    [
+     "SURG_TIME",
+     []
+    ]
+   ],
+   "argo": {},
+   "omop": {
+    "table": "observation",
+    "field": "value_as_number",
+    "concept": "observation_concept_id",
+    "date": "observation_date",
+    "source": "observation_source_value",
     "vocab": "-",
     "note": "",
     "conf": "중간",
@@ -4835,6 +6997,126 @@
   [
    "(visit|enc|io)_?(type|tp|gb)|구분$",
    "GEN-G015"
+  ],
+  [
+   "arriv.*(dt|date|time|tm)$|도착",
+   "GEN-G016"
+  ],
+  [
+   "(read|판독).*(dr|doc|의$|의사|er$)|radiolog|patholog.*(dr|doc|ist)|판독의",
+   "GEN-G056"
+  ],
+  [
+   "(nurse|(^|_)rn(_|$)|간호사|작성자|기록자)",
+   "GEN-G075"
+  ],
+  [
+   "(measure|record|msr|(^|_)vs|vital|측정|기록).*(dt|date|time|tm|일시|일자)$",
+   "GEN-G076"
+  ],
+  [
+   "(read|rpt|report|판독|보고).*(dt|date|time|tm|일|일시|일자)$",
+   "GEN-G055"
+  ],
+  [
+   "(scan|img|image|study|촬영|영상).*(dt|date|time|tm|일|일시|일자)$",
+   "GEN-G053"
+  ],
+  [
+   "onset|발생",
+   "GEN-G067"
+  ],
+  [
+   "(patho|path|병리|검체|acc).*(no|num|번호)$",
+   "GEN-G057"
+  ],
+  [
+   "(patho|path|병리|조직).*(dx|diag|진단)|histolog",
+   "GEN-G058"
+  ],
+  [
+   "(body|exam)?_?(site|part)|부위",
+   "GEN-G054"
+  ],
+  [
+   "pain|통증|(^|_)nrs(_|$)",
+   "GEN-G059"
+  ],
+  [
+   "mental|consc|(^|_)(loc|avpu|gcs)(_|$)|의식",
+   "GEN-G060"
+  ],
+  [
+   "intake|섭취",
+   "GEN-G061"
+  ],
+  [
+   "(^|_)output|urine|배설|배출|소변",
+   "GEN-G062"
+  ],
+  [
+   "ward|병동|병실",
+   "GEN-G063"
+  ],
+  [
+   "(arriv|admit|adm|visit|내원|입원).*(route|path|src|source|경로)",
+   "GEN-G064"
+  ],
+  [
+   "(arriv|trans).*(mode|means|method)|수단",
+   "GEN-G065"
+  ],
+  [
+   "chief|(^|_)cc(_|$)|주호소|주증상",
+   "GEN-G066"
+  ],
+  [
+   "ktas|triage|(^|_)esi(_|$)|중증도",
+   "GEN-G068"
+  ],
+  [
+   "dispo|퇴실|(er|ed)_?(result|rslt)|^outcome$",
+   "GEN-G069"
+  ],
+  [
+   "systolic|(^|_)sbp(_|$)|수축기",
+   "GEN-G044"
+  ],
+  [
+   "diastolic|(^|_)dbp(_|$)|이완기",
+   "GEN-G045"
+  ],
+  [
+   "temp|체온",
+   "GEN-G047"
+  ],
+  [
+   "heart_?rate|pulse|(^|_)(hr|pr)(_|$)|맥박|심박",
+   "GEN-G046"
+  ],
+  [
+   "(^|_)(rr|resp)(_|$)|resp(iratory)?_?rate|breath|호흡",
+   "GEN-G070"
+  ],
+  [
+   "spo2|o2_?sat|(^|_)sat(_|$)|산소포화",
+   "GEN-G071"
+  ],
+  [
+   "(^|_)bp(_|$)|blood_?press|혈압",
+   "GEN-G072"
+  ],
+  [
+   "anes|마취",
+   "GEN-G073"
+  ],
+  [
+   "(dx|diag|진단|상병).*(type|tp|구분)|주부상병|main_?yn",
+   "GEN-G074"
+  ],
+  [
+   "(op|surg|수술).*(time|duration|시간)",
+   "GEN-G077"
   ],
   [
    "note|memo|remark|rmk|comment|기록|메모|비고|소견|서술",

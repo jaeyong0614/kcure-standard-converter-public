@@ -355,17 +355,18 @@
     tampered.deid_rules.rules[0].technique = 'KEEP';
     ok('규칙팩 변조 탐지', !KC.rulepack.validate(tampered).ok && /SHA-256/.test(KC.rulepack.validate(tampered).errors.join()));
     const next = JSON.parse(JSON.stringify(window.KCURE_DEID));
-    next.version = '0.2.1';
+    const baseVer = window.KCURE_DEID.version;
+    next.version = baseVer + '-next';
     next.rules.splice(next.rules.length - 1, 0, { id: 'DR-50', when: { name: '^보험번호$' }, technique: 'DELETE', reason: '보험번호', confidence: '높음' });
     next.rules = next.rules.filter(function (r) { return r.id !== 'DR-09'; });
     const np = KC.rulepack.exportPack(next, 'central');
     const df = KC.rulepack.diff(window.KCURE_DEID, next);
-    eq('규칙팩 비교(추가·삭제)', df.added.join() + '|' + df.removed.join() + '|' + df.from + '→' + df.to, 'DR-50|DR-09|0.2.0→0.2.1');
+    eq('규칙팩 비교(추가·삭제)', df.added.join() + '|' + df.removed.join() + '|' + df.from + '→' + df.to, 'DR-50|DR-09|' + baseVer + '→' + baseVer + '-next');
     const orig = window.KCURE_DEID;
     KC.rulepack.apply(np);
     eq('규칙팩 교체 후 새 규칙 적용', KC.deid.recommend({ col: '보험번호' }, []).ruleId, 'DR-50');
     window.KCURE_DEID = orig; KC.deid.reload();
-    eq('원래 규칙팩 복원', KC.deid.rules().src.version, '0.2.0');
+    eq('원래 규칙팩 복원', KC.deid.rules().src.version, baseVer);
     const badRule = JSON.parse(JSON.stringify(window.KCURE_DEID));
     badRule.rules.push({ id: 'DR-X', when: { name: 'a' }, technique: 'KEEP' });
     ok('규칙팩: 마지막 규칙이 기본 규칙이 아니면 거부', !KC.rulepack.validate(KC.rulepack.exportPack(badRule)).ok);
@@ -374,7 +375,14 @@
 
     /* 11. 범용(비 K-CURE) 데이터 */
     const GN = KC.spec.GENERIC;
-    ok('범용 사전 52항목·KR CDI 연결', KC.spec.generic.length === 52 && KC.spec.generic.filter(function (i) { return i.cdi && i.cdi.el; }).length >= 45, KC.spec.generic.length);
+    ok('범용 사전 77항목·KR CDI 연결 ≥ 54', KC.spec.generic.length === 77 && KC.spec.generic.filter(function (i) { return i.cdi && i.cdi.el; }).length >= 54, KC.spec.generic.length);
+    eq('범용: 단위 괄호 표기 제거 후 대조', KC.mapper.matchOne('체온(°C)', GN).itemId, 'GEN-G047');
+    eq('K-CURE 모드는 괄호 제거 안 함', KC.mapper.matchOne('체온(°C)', '대장암').itemId, '');
+    eq('범용: systolic_bp → 수축기 혈압(합본 혈압 아님)', KC.mapper.matchOne('systolic_bp', GN).itemId, 'GEN-G044');
+    eq('범용 데이터셋 문맥: 판독 컬럼만 있으면 검사일 → 영상검사일', KC.mapper.autoMap(['검사종류', '검사일', '판독일'], GN).map(function (m) { return m.itemId; }).join(','), 'GEN-G040,GEN-G053,GEN-G055');
+    eq('범용 데이터셋 문맥: 결과값이 있으면 검사일 유지', KC.mapper.autoMap(['검사일', '결과값', '판독일'], GN)[0].itemId, 'GEN-G038');
+    const dpN = KC.deid.plan(['간호사이름', 'onset_time', '병동'], [['이민수', '2023-04-15 10:28', '3B']], GN);
+    eq('가명처리: 직접식별자(간호사)=삭제·발생일시=날짜이동·병동=유지', dpN.columns.map(function (c) { return c.technique; }).join(','), 'DELETE,DATE_SHIFT,KEEP');
     eq('범용: PatientName(CamelCase) → 성명', KC.mapper.matchOne('PatientName', GN).itemId, 'GEN-G002');
     eq('K-CURE 모드는 범용 사전 미사용', KC.mapper.matchOne('PatientName', '대장암').itemId, '');
     eq('범용 문맥: 투여량 옆 단위 → 투여량 단위', KC.mapper.autoMap(['DOSE', '단위', 'RESULT', 'UNIT'], GN).map(function (m) { return m.itemId; }).join(','), 'GEN-G026,GEN-G027,GEN-G034,GEN-G035');

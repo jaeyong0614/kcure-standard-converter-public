@@ -1,0 +1,1515 @@
+[
+ {
+  "key": "A",
+  "encoding": "UTF-8(BOM)",
+  "rows": 50,
+  "headers": [
+   "PAT_ID",
+   "AGE",
+   "GENDER",
+   "DIAG_CODE",
+   "ADMIT_DATE"
+  ],
+  "mapping": [
+   {
+    "col": "PAT_ID",
+    "itemId": "GEN-G001",
+    "name": "환자ID",
+    "method": "범용 사전",
+    "want": "GEN-G001",
+    "ok": true
+   },
+   {
+    "col": "AGE",
+    "itemId": "GEN-G005",
+    "name": "나이",
+    "method": "범용 사전",
+    "want": "GEN-G005",
+    "ok": true
+   },
+   {
+    "col": "GENDER",
+    "itemId": "GEN-G004",
+    "name": "성별",
+    "method": "범용 사전",
+    "want": "GEN-G004",
+    "ok": true
+   },
+   {
+    "col": "DIAG_CODE",
+    "itemId": "GEN-G018",
+    "name": "진단코드",
+    "method": "범용 사전",
+    "want": "GEN-G018",
+    "ok": true
+   },
+   {
+    "col": "ADMIT_DATE",
+    "itemId": "GEN-G016",
+    "name": "입원(내원)일자",
+    "method": "범용 사전",
+    "want": "GEN-G016",
+    "ok": true
+   }
+  ],
+  "mapped": 5,
+  "correct": 5,
+  "labeled": 5,
+  "meta": {
+   "files": 24,
+   "dcatErrors": 0,
+   "krcdi": 4,
+   "krcdiElements": 4,
+   "krcore": [
+    4,
+    1,
+    0
+   ],
+   "omop": 5,
+   "mcode": 0,
+   "argo": 0
+  },
+  "fhir": {
+   "patients": 50,
+   "resources": 200,
+   "errors": 0,
+   "types": {
+    "Patient": 50,
+    "Observation": 50,
+    "Condition": 50,
+    "Encounter": 50
+   },
+   "labCoded": 0,
+   "withRange": 0,
+   "withInterp": 0,
+   "pidRaw": false,
+   "directLeak": 0,
+   "warns": 4,
+   "errorsLog": 0,
+   "sample": {
+    "code": {
+     "coding": [
+      {
+       "system": "http://khis.kr/fhir/kcure/CodeSystem/kcure-item",
+       "code": "GEN-G005",
+       "display": "나이"
+      }
+     ],
+     "text": "나이"
+    },
+    "value": {
+     "value": 28,
+     "unit": "a"
+    }
+   }
+  },
+  "krcdiValues": 200,
+  "deid": [
+   {
+    "col": "PAT_ID",
+    "technique": "HASH_SALT",
+    "rule": "DR-12",
+    "conf": "중간",
+    "item": "환자ID"
+   },
+   {
+    "col": "AGE",
+    "technique": "TOP_BOTTOM",
+    "rule": "DR-14",
+    "conf": "중간",
+    "item": "나이"
+   },
+   {
+    "col": "GENDER",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "성별"
+   },
+   {
+    "col": "DIAG_CODE",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "진단코드"
+   },
+   {
+    "col": "ADMIT_DATE",
+    "technique": "DATE_SHIFT",
+    "rule": "DR-15",
+    "conf": "중간",
+    "item": "입원(내원)일자"
+   }
+  ],
+  "deidFiles": 8,
+  "notes": {
+   "chars": 249,
+   "counts": {},
+   "redacted": "- 환자 P001: 흉부 X-ray에서 폐렴 증상 확인. 2주간 호흡곤란 및 기침 증상을 보였으며, 항생제 치료 후 증상 개선.\r\n- 환자 P002: 심전도 검사에서 심장 리듬 이상으로 의심되어 심장 내시경 검사 실시. 결과로 부정맥 진단. 칼슘-channel 억제제 사용.\r\n- 환자 P003: 신장 기능 검사에서 소변 중 루비스 레디스 검사에서 혈뇨 확인. 페니실린 항생제 치료로 혈뇨 증상 완화. 추가적인 소변 검사로 소변 중 단백질 확인.",
+   "original": "- 환자 P001: 흉부 X-ray에서 폐렴 증상 확인. 2주간 호흡곤란 및 기침 증상을 보였으며, 항생제 치료 후 증상 개선.\r\n- 환자 P002: 심전도 검사에서 심장 리듬 이상으로 의심되어 심장 내시경 검사 실시. 결과로 부정맥 진단. 칼슘-channel 억제제 사용.\r\n- 환자 P003: 신장 기능 검사에서 소변 중 루비스 레디스 검사에서 혈뇨 확인. 페니실린 항생제 치료로 혈뇨 증상 완화. 추가적인 소변 검사로 소변 중 단백질 확인."
+  }
+ },
+ {
+  "key": "B",
+  "encoding": "UTF-8(BOM)",
+  "rows": 30,
+  "headers": [
+   "ID",
+   "PatientName",
+   "TestTime",
+   "TestCode",
+   "TestName",
+   "Result",
+   "Unit",
+   "RefRange",
+   "Interpretation"
+  ],
+  "mapping": [
+   {
+    "col": "ID",
+    "itemId": "GEN-G001",
+    "name": "환자ID",
+    "method": "범용 패턴",
+    "want": "GEN-G001",
+    "ok": true
+   },
+   {
+    "col": "PatientName",
+    "itemId": "GEN-G002",
+    "name": "성명",
+    "method": "범용 사전",
+    "want": "GEN-G002",
+    "ok": true
+   },
+   {
+    "col": "TestTime",
+    "itemId": "GEN-G038",
+    "name": "검사일시",
+    "method": "범용 패턴",
+    "want": "GEN-G038",
+    "ok": true
+   },
+   {
+    "col": "TestCode",
+    "itemId": "GEN-G032",
+    "name": "검사코드",
+    "method": "범용 사전",
+    "want": "GEN-G032",
+    "ok": true
+   },
+   {
+    "col": "TestName",
+    "itemId": "GEN-G033",
+    "name": "검사명",
+    "method": "범용 사전",
+    "want": "GEN-G033",
+    "ok": true
+   },
+   {
+    "col": "Result",
+    "itemId": "GEN-G034",
+    "name": "검사결과",
+    "method": "범용 사전",
+    "want": "GEN-G034",
+    "ok": true
+   },
+   {
+    "col": "Unit",
+    "itemId": "GEN-G035",
+    "name": "결과 단위",
+    "method": "범용 사전",
+    "want": "GEN-G035",
+    "ok": true
+   },
+   {
+    "col": "RefRange",
+    "itemId": "GEN-G036",
+    "name": "참고치",
+    "method": "범용 사전",
+    "want": "GEN-G036",
+    "ok": true
+   },
+   {
+    "col": "Interpretation",
+    "itemId": "GEN-G037",
+    "name": "판정",
+    "method": "범용 패턴",
+    "want": "GEN-G037",
+    "ok": true
+   }
+  ],
+  "mapped": 9,
+  "correct": 9,
+  "labeled": 9,
+  "meta": {
+   "files": 24,
+   "dcatErrors": 0,
+   "krcdi": 8,
+   "krcdiElements": 7,
+   "krcore": [
+    9,
+    0,
+    0
+   ],
+   "omop": 8,
+   "mcode": 0,
+   "argo": 0
+  },
+  "fhir": {
+   "patients": 30,
+   "resources": 60,
+   "errors": 0,
+   "types": {
+    "Patient": 30,
+    "Observation": 30
+   },
+   "labCoded": 30,
+   "withRange": 30,
+   "withInterp": 30,
+   "pidRaw": false,
+   "directLeak": 0,
+   "warns": 2,
+   "errorsLog": 0,
+   "sample": {
+    "code": {
+     "coding": [
+      {
+       "system": "http://khis.kr/fhir/kcure/CodeSystem/local-test-code",
+       "code": "BG",
+       "display": "血糖"
+      }
+     ],
+     "text": "血糖"
+    },
+    "value": {
+     "value": 7.5,
+     "unit": "mmol/L"
+    },
+    "ref": [
+     {
+      "low": {
+       "value": 3.9,
+       "unit": "mmol/L"
+      },
+      "high": {
+       "value": 6.1,
+       "unit": "mmol/L"
+      },
+      "text": "3.9-6.1"
+     }
+    ],
+    "interp": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "H"
+       }
+      ],
+      "text": "H"
+     }
+    ]
+   }
+  },
+  "krcdiValues": 210,
+  "deid": [
+   {
+    "col": "ID",
+    "technique": "HASH_SALT",
+    "rule": "DR-12",
+    "conf": "중간",
+    "item": "환자ID"
+   },
+   {
+    "col": "PatientName",
+    "technique": "DELETE",
+    "rule": "DR-01",
+    "conf": "높음",
+    "item": "성명"
+   },
+   {
+    "col": "TestTime",
+    "technique": "DATE_SHIFT",
+    "rule": "DR-15",
+    "conf": "중간",
+    "item": "검사일시"
+   },
+   {
+    "col": "TestCode",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "검사코드"
+   },
+   {
+    "col": "TestName",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "검사명"
+   },
+   {
+    "col": "Result",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "검사결과"
+   },
+   {
+    "col": "Unit",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "결과 단위"
+   },
+   {
+    "col": "RefRange",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "참고치"
+   },
+   {
+    "col": "Interpretation",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "판정"
+   }
+  ],
+  "deidFiles": 8,
+  "notes": {
+   "chars": 57,
+   "counts": {},
+   "redacted": "请注意，这些数据是虚构的，仅用于测试和原型验证目的。实际医疗数据处理时应确保遵守所有相关的隐私保护和数据安全法规。",
+   "original": "请注意，这些数据是虚构的，仅用于测试和原型验证目的。实际医疗数据处理时应确保遵守所有相关的隐私保护和数据安全法规。"
+  }
+ },
+ {
+  "key": "C",
+  "encoding": "UTF-8(BOM)",
+  "rows": 30,
+  "headers": [
+   "등록번호",
+   "성명",
+   "생년월일",
+   "성별",
+   "연락처",
+   "처방일",
+   "진단코드",
+   "약품코드",
+   "약품명",
+   "1회투여량",
+   "단위",
+   "투여경로",
+   "1일투여횟수",
+   "처방일수",
+   "처방의 이름"
+  ],
+  "mapping": [
+   {
+    "col": "등록번호",
+    "itemId": "GEN-G001",
+    "name": "환자ID",
+    "method": "범용 사전",
+    "want": "GEN-G001",
+    "ok": true
+   },
+   {
+    "col": "성명",
+    "itemId": "GEN-G002",
+    "name": "성명",
+    "method": "범용 사전",
+    "want": "GEN-G002",
+    "ok": true
+   },
+   {
+    "col": "생년월일",
+    "itemId": "GEN-G003",
+    "name": "생년월일",
+    "method": "범용 사전",
+    "want": "GEN-G003",
+    "ok": true
+   },
+   {
+    "col": "성별",
+    "itemId": "GEN-G004",
+    "name": "성별",
+    "method": "범용 사전",
+    "want": "GEN-G004",
+    "ok": true
+   },
+   {
+    "col": "연락처",
+    "itemId": "GEN-G006",
+    "name": "전화번호",
+    "method": "범용 사전",
+    "want": "GEN-G006",
+    "ok": true
+   },
+   {
+    "col": "처방일",
+    "itemId": "GEN-G031",
+    "name": "처방일시",
+    "method": "범용 사전",
+    "want": "GEN-G031",
+    "ok": true
+   },
+   {
+    "col": "진단코드",
+    "itemId": "GEN-G018",
+    "name": "진단코드",
+    "method": "범용 사전",
+    "want": "GEN-G018",
+    "ok": true
+   },
+   {
+    "col": "약품코드",
+    "itemId": "GEN-G023",
+    "name": "약품코드",
+    "method": "범용 사전",
+    "want": "GEN-G023",
+    "ok": true
+   },
+   {
+    "col": "약품명",
+    "itemId": "GEN-G024",
+    "name": "약품명",
+    "method": "범용 사전",
+    "want": "GEN-G024",
+    "ok": true
+   },
+   {
+    "col": "1회투여량",
+    "itemId": "GEN-G026",
+    "name": "1회 투여량",
+    "method": "범용 사전",
+    "want": "GEN-G026",
+    "ok": true
+   },
+   {
+    "col": "단위",
+    "itemId": "GEN-G027",
+    "name": "투여량 단위",
+    "method": "범용 문맥",
+    "want": "GEN-G027",
+    "ok": true
+   },
+   {
+    "col": "투여경로",
+    "itemId": "GEN-G029",
+    "name": "투여경로",
+    "method": "범용 사전",
+    "want": "GEN-G029",
+    "ok": true
+   },
+   {
+    "col": "1일투여횟수",
+    "itemId": "GEN-G028",
+    "name": "1일 투여횟수",
+    "method": "범용 사전",
+    "want": "GEN-G028",
+    "ok": true
+   },
+   {
+    "col": "처방일수",
+    "itemId": "GEN-G030",
+    "name": "처방일수",
+    "method": "범용 사전",
+    "want": "GEN-G030",
+    "ok": true
+   },
+   {
+    "col": "처방의 이름",
+    "itemId": "GEN-G012",
+    "name": "진료의 성명",
+    "method": "범용 패턴",
+    "want": "GEN-G012",
+    "ok": true
+   }
+  ],
+  "mapped": 15,
+  "correct": 15,
+  "labeled": 15,
+  "meta": {
+   "files": 24,
+   "dcatErrors": 0,
+   "krcdi": 15,
+   "krcdiElements": 14,
+   "krcore": [
+    15,
+    0,
+    0
+   ],
+   "omop": 12,
+   "mcode": 0,
+   "argo": 0
+  },
+  "fhir": {
+   "patients": 30,
+   "resources": 90,
+   "errors": 0,
+   "types": {
+    "Patient": 30,
+    "MedicationRequest": 30,
+    "Condition": 30
+   },
+   "labCoded": 0,
+   "withRange": 0,
+   "withInterp": 0,
+   "pidRaw": false,
+   "directLeak": 0,
+   "warns": 4,
+   "errorsLog": 1,
+   "sample": null
+  },
+  "krcdiValues": 360,
+  "deid": [
+   {
+    "col": "등록번호",
+    "technique": "HASH_SALT",
+    "rule": "DR-11",
+    "conf": "높음",
+    "item": "환자ID"
+   },
+   {
+    "col": "성명",
+    "technique": "DELETE",
+    "rule": "DR-01",
+    "conf": "높음",
+    "item": "성명"
+   },
+   {
+    "col": "생년월일",
+    "technique": "YEAR_ONLY",
+    "rule": "DR-13",
+    "conf": "높음",
+    "item": "생년월일"
+   },
+   {
+    "col": "성별",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "성별"
+   },
+   {
+    "col": "연락처",
+    "technique": "DELETE",
+    "rule": "DR-04",
+    "conf": "높음",
+    "item": "전화번호"
+   },
+   {
+    "col": "처방일",
+    "technique": "DATE_SHIFT",
+    "rule": "DR-15",
+    "conf": "중간",
+    "item": "처방일시"
+   },
+   {
+    "col": "진단코드",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "진단코드"
+   },
+   {
+    "col": "약품코드",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "약품코드"
+   },
+   {
+    "col": "약품명",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "약품명"
+   },
+   {
+    "col": "1회투여량",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "1회 투여량"
+   },
+   {
+    "col": "단위",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "투여량 단위"
+   },
+   {
+    "col": "투여경로",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "투여경로"
+   },
+   {
+    "col": "1일투여횟수",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "1일 투여횟수"
+   },
+   {
+    "col": "처방일수",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "처방일수"
+   },
+   {
+    "col": "처방의 이름",
+    "technique": "DELETE",
+    "rule": "DR-10",
+    "conf": "중간",
+    "item": "진료의 성명"
+   }
+  ],
+  "deidFiles": 8,
+  "notes": {
+   "chars": 243,
+   "counts": {
+    "DATE": 2
+   },
+   "redacted": "환자는 [ANONYMIZED:DATE] 고혈압으로 내원하였습니다. 혈압 측정 결과 150/100mmHg로 고혈압 관리를 위해 아스피린 처방하였습니다. 3일 동안 하루 3회 각 300mg 투여하며 약물을 관리하도록 안내하였습니다.\r\n\r\n환자는 [ANONYMIZED:DATE] 당뇨병으로 내원하였습니다. HbA1c 검사 결과 8.5%로 당뇨병 관리를 위해 인슐린 처방하였습니다. 30일 동안 하루 4회 각 10ml 투여하며 약물을 관리하도록 안내하였습니다.",
+   "original": "환자는 2023년 1월 15일 고혈압으로 내원하였습니다. 혈압 측정 결과 150/100mmHg로 고혈압 관리를 위해 아스피린 처방하였습니다. 3일 동안 하루 3회 각 300mg 투여하며 약물을 관리하도록 안내하였습니다.\r\n\r\n환자는 2023년 2월 20일 당뇨병으로 내원하였습니다. HbA1c 검사 결과 8.5%로 당뇨병 관리를 위해 인슐린 처방하였습니다. 30일 동안 하루 4회 각 10ml 투여하며 약물을 관리하도록 안내하였습니다."
+  }
+ },
+ {
+  "key": "D",
+  "encoding": "UTF-8(BOM)",
+  "rows": 30,
+  "headers": [
+   "patient_id",
+   "patient_name",
+   "age",
+   "gender",
+   "arrival_time",
+   "admission_path",
+   "transport_method",
+   "chief_complaint",
+   "onset_time",
+   "severity_ktas",
+   "systolic_bp",
+   "heart_rate",
+   "respiratory_rate",
+   "body_temperature",
+   "sp_o2",
+   "outcome"
+  ],
+  "mapping": [
+   {
+    "col": "patient_id",
+    "itemId": "GEN-G001",
+    "name": "환자ID",
+    "method": "범용 사전",
+    "want": "GEN-G001",
+    "ok": true
+   },
+   {
+    "col": "patient_name",
+    "itemId": "GEN-G002",
+    "name": "성명",
+    "method": "범용 사전",
+    "want": "GEN-G002",
+    "ok": true
+   },
+   {
+    "col": "age",
+    "itemId": "KCURE-PAT-000017",
+    "name": "age",
+    "method": "표준명",
+    "want": "GEN-G005",
+    "ok": false
+   },
+   {
+    "col": "gender",
+    "itemId": "GEN-G004",
+    "name": "성별",
+    "method": "범용 사전",
+    "want": "GEN-G004",
+    "ok": true
+   },
+   {
+    "col": "arrival_time",
+    "itemId": "GEN-G016",
+    "name": "입원(내원)일자",
+    "method": "범용 사전",
+    "want": "GEN-G016",
+    "ok": true
+   },
+   {
+    "col": "admission_path",
+    "itemId": "GEN-G064",
+    "name": "내원 경로",
+    "method": "범용 패턴",
+    "want": "GEN-G064",
+    "ok": true
+   },
+   {
+    "col": "transport_method",
+    "itemId": "GEN-G065",
+    "name": "내원 수단",
+    "method": "범용 패턴",
+    "want": "GEN-G065",
+    "ok": true
+   },
+   {
+    "col": "chief_complaint",
+    "itemId": "GEN-G066",
+    "name": "주호소",
+    "method": "범용 사전",
+    "want": "GEN-G066",
+    "ok": true
+   },
+   {
+    "col": "onset_time",
+    "itemId": "GEN-G067",
+    "name": "증상 발생일시",
+    "method": "범용 사전",
+    "want": "GEN-G067",
+    "ok": true
+   },
+   {
+    "col": "severity_ktas",
+    "itemId": "GEN-G068",
+    "name": "중증도(KTAS)",
+    "method": "범용 패턴",
+    "want": "GEN-G068",
+    "ok": true
+   },
+   {
+    "col": "systolic_bp",
+    "itemId": "GEN-G072",
+    "name": "혈압(수축기/이완기)",
+    "method": "범용 패턴",
+    "want": "GEN-G044",
+    "ok": false
+   },
+   {
+    "col": "heart_rate",
+    "itemId": "GEN-G046",
+    "name": "맥박수",
+    "method": "범용 사전",
+    "want": "GEN-G046",
+    "ok": true
+   },
+   {
+    "col": "respiratory_rate",
+    "itemId": "",
+    "name": "",
+    "method": "미매핑",
+    "want": "GEN-G070",
+    "ok": false
+   },
+   {
+    "col": "body_temperature",
+    "itemId": "",
+    "name": "",
+    "method": "미매핑",
+    "want": "GEN-G047",
+    "ok": false
+   },
+   {
+    "col": "sp_o2",
+    "itemId": "GEN-G071",
+    "name": "산소포화도",
+    "method": "범용 사전",
+    "want": "GEN-G071",
+    "ok": true
+   },
+   {
+    "col": "outcome",
+    "itemId": "",
+    "name": "",
+    "method": "미매핑",
+    "want": "GEN-G069",
+    "ok": false
+   }
+  ],
+  "mapped": 13,
+  "correct": 11,
+  "labeled": 16,
+  "meta": {
+   "files": 25,
+   "dcatErrors": 0,
+   "krcdi": 8,
+   "krcdiElements": 8,
+   "krcore": [
+    9,
+    4,
+    0
+   ],
+   "omop": 12,
+   "mcode": 1,
+   "argo": 1
+  },
+  "fhir": {
+   "patients": 30,
+   "resources": 240,
+   "errors": 0,
+   "types": {
+    "Patient": 30,
+    "Encounter": 30,
+    "Observation": 150,
+    "Condition": 30
+   },
+   "labCoded": 0,
+   "withRange": 0,
+   "withInterp": 0,
+   "pidRaw": false,
+   "directLeak": 0,
+   "warns": 35,
+   "errorsLog": 0,
+   "sample": {
+    "code": {
+     "coding": [
+      {
+       "system": "http://khis.kr/fhir/kcure/CodeSystem/kcure-item",
+       "code": "GEN-G065",
+       "display": "내원 수단"
+      }
+     ],
+     "text": "내원 수단"
+    },
+    "value": {
+     "text": "Private car"
+    }
+   }
+  },
+  "krcdiValues": 210,
+  "deid": [
+   {
+    "col": "patient_id",
+    "technique": "HASH_SALT",
+    "rule": "DR-11",
+    "conf": "높음",
+    "item": "환자ID"
+   },
+   {
+    "col": "patient_name",
+    "technique": "DELETE",
+    "rule": "DR-01",
+    "conf": "높음",
+    "item": "성명"
+   },
+   {
+    "col": "age",
+    "technique": "TOP_BOTTOM",
+    "rule": "DR-14",
+    "conf": "중간",
+    "item": "age"
+   },
+   {
+    "col": "gender",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "성별"
+   },
+   {
+    "col": "arrival_time",
+    "technique": "DATE_SHIFT",
+    "rule": "DR-15",
+    "conf": "중간",
+    "item": "입원(내원)일자"
+   },
+   {
+    "col": "admission_path",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "내원 경로"
+   },
+   {
+    "col": "transport_method",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "내원 수단"
+   },
+   {
+    "col": "chief_complaint",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "주호소"
+   },
+   {
+    "col": "onset_time",
+    "technique": "YEAR_ONLY",
+    "rule": "DR-13",
+    "conf": "높음",
+    "item": "증상 발생일시"
+   },
+   {
+    "col": "severity_ktas",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "중증도(KTAS)"
+   },
+   {
+    "col": "systolic_bp",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "혈압(수축기/이완기)"
+   },
+   {
+    "col": "heart_rate",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "맥박수"
+   },
+   {
+    "col": "respiratory_rate",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "낮음",
+    "item": ""
+   },
+   {
+    "col": "body_temperature",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "낮음",
+    "item": ""
+   },
+   {
+    "col": "sp_o2",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "산소포화도"
+   },
+   {
+    "col": "outcome",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "낮음",
+    "item": ""
+   }
+  ],
+  "deidFiles": 8,
+  "notes": {
+   "chars": 41,
+   "counts": {},
+   "redacted": "请注意，这些数据是随机生成的，并且没有真实的患者信息。您可以根据需要调整这些数据。",
+   "original": "请注意，这些数据是随机生成的，并且没有真实的患者信息。您可以根据需要调整这些数据。"
+  }
+ },
+ {
+  "key": "E",
+  "encoding": "UTF-8(BOM)",
+  "rows": 30,
+  "headers": [
+   "등록번호",
+   "병리번호",
+   "검사종류",
+   "검사부위",
+   "검사일",
+   "판독일",
+   "판독의",
+   "병리진단명",
+   "판독소견"
+  ],
+  "mapping": [
+   {
+    "col": "등록번호",
+    "itemId": "GEN-G001",
+    "name": "환자ID",
+    "method": "범용 사전",
+    "want": "GEN-G001",
+    "ok": true
+   },
+   {
+    "col": "병리번호",
+    "itemId": "GEN-G057",
+    "name": "병리번호",
+    "method": "범용 사전",
+    "want": "GEN-G057",
+    "ok": true
+   },
+   {
+    "col": "검사종류",
+    "itemId": "GEN-G040",
+    "name": "영상검사명",
+    "method": "범용 사전",
+    "want": "GEN-G040",
+    "ok": true
+   },
+   {
+    "col": "검사부위",
+    "itemId": "GEN-G054",
+    "name": "검사 부위",
+    "method": "범용 사전",
+    "want": "GEN-G054",
+    "ok": true
+   },
+   {
+    "col": "검사일",
+    "itemId": "GEN-G038",
+    "name": "검사일시",
+    "method": "범용 사전",
+    "want": "GEN-G053",
+    "ok": false
+   },
+   {
+    "col": "판독일",
+    "itemId": "GEN-G055",
+    "name": "판독일시",
+    "method": "범용 사전",
+    "want": "GEN-G055",
+    "ok": true
+   },
+   {
+    "col": "판독의",
+    "itemId": "GEN-G056",
+    "name": "판독의",
+    "method": "범용 사전",
+    "want": "GEN-G056",
+    "ok": true
+   },
+   {
+    "col": "병리진단명",
+    "itemId": "GEN-G058",
+    "name": "병리진단명",
+    "method": "범용 사전",
+    "want": "GEN-G058",
+    "ok": true
+   },
+   {
+    "col": "판독소견",
+    "itemId": "GEN-G041",
+    "name": "판독소견",
+    "method": "범용 사전",
+    "want": "GEN-G041",
+    "ok": true
+   }
+  ],
+  "mapped": 9,
+  "correct": 8,
+  "labeled": 9,
+  "meta": {
+   "files": 24,
+   "dcatErrors": 0,
+   "krcdi": 6,
+   "krcdiElements": 6,
+   "krcore": [
+    7,
+    2,
+    0
+   ],
+   "omop": 8,
+   "mcode": 0,
+   "argo": 0
+  },
+  "fhir": {
+   "patients": 30,
+   "resources": 180,
+   "errors": 0,
+   "types": {
+    "Patient": 30,
+    "Specimen": 30,
+    "DiagnosticReport": 30,
+    "Observation": 90
+   },
+   "labCoded": 0,
+   "withRange": 0,
+   "withInterp": 0,
+   "pidRaw": false,
+   "directLeak": 0,
+   "warns": 3,
+   "errorsLog": 0,
+   "sample": {
+    "code": {
+     "coding": [
+      {
+       "system": "http://khis.kr/fhir/kcure/CodeSystem/kcure-item",
+       "code": "GEN-G054",
+       "display": "검사 부위"
+      }
+     ],
+     "text": "검사 부위"
+    },
+    "value": {
+     "text": "폐"
+    }
+   }
+  },
+  "krcdiValues": 150,
+  "deid": [
+   {
+    "col": "등록번호",
+    "technique": "HASH_SALT",
+    "rule": "DR-11",
+    "conf": "높음",
+    "item": "환자ID"
+   },
+   {
+    "col": "병리번호",
+    "technique": "HASH_SALT",
+    "rule": "DR-12",
+    "conf": "중간",
+    "item": "병리번호"
+   },
+   {
+    "col": "검사종류",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "영상검사명"
+   },
+   {
+    "col": "검사부위",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "검사 부위"
+   },
+   {
+    "col": "검사일",
+    "technique": "DATE_SHIFT",
+    "rule": "DR-15",
+    "conf": "중간",
+    "item": "검사일시"
+   },
+   {
+    "col": "판독일",
+    "technique": "DATE_SHIFT",
+    "rule": "DR-15",
+    "conf": "중간",
+    "item": "판독일시"
+   },
+   {
+    "col": "판독의",
+    "technique": "DELETE",
+    "rule": "DR-10",
+    "conf": "중간",
+    "item": "판독의"
+   },
+   {
+    "col": "병리진단명",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "병리진단명"
+   },
+   {
+    "col": "판독소견",
+    "technique": "REGEX_PII",
+    "rule": "DR-18",
+    "conf": "중간",
+    "item": "판독소견"
+   }
+  ],
+  "deidFiles": 8,
+  "notes": {
+   "chars": 129,
+   "counts": {},
+   "redacted": "이 데이터셋은 각 검사에 대한 등록번호, 병리번호, 검사 종류, 검사 부위, 검사일, 판독일, 판독의, 병리 진단명, 판독 소견을 포함하고 있습니다. 각 컬럼명은 한글과 영문을 섞어 실제 EMR의 형식에 맞추어 자유롭게 정했습니다.",
+   "original": "이 데이터셋은 각 검사에 대한 등록번호, 병리번호, 검사 종류, 검사 부위, 검사일, 판독일, 판독의, 병리 진단명, 판독 소견을 포함하고 있습니다. 각 컬럼명은 한글과 영문을 섞어 실제 EMR의 형식에 맞추어 자유롭게 정했습니다."
+  }
+ },
+ {
+  "key": "F",
+  "encoding": "UTF-8(BOM)",
+  "rows": 30,
+  "headers": [
+   "환자번호",
+   "병동",
+   "측정일시",
+   "체온(°C)",
+   "맥박(회/분)",
+   "호흡수(회/분)",
+   "혈압(mmHg)",
+   "산소포화도(%)",
+   "통증점수(0-10)",
+   "의식상태",
+   "섭취량(mL)",
+   "배설량(mL)",
+   "간호사이름",
+   "간호기록"
+  ],
+  "mapping": [
+   {
+    "col": "환자번호",
+    "itemId": "GEN-G001",
+    "name": "환자ID",
+    "method": "범용 사전",
+    "want": "GEN-G001",
+    "ok": true
+   },
+   {
+    "col": "병동",
+    "itemId": "GEN-G063",
+    "name": "병동",
+    "method": "범용 사전",
+    "want": "GEN-G063",
+    "ok": true
+   },
+   {
+    "col": "측정일시",
+    "itemId": "GEN-G076",
+    "name": "측정일시",
+    "method": "범용 사전",
+    "want": "GEN-G076",
+    "ok": true
+   },
+   {
+    "col": "체온(°C)",
+    "itemId": "",
+    "name": "",
+    "method": "미매핑",
+    "want": "GEN-G047",
+    "ok": false
+   },
+   {
+    "col": "맥박(회/분)",
+    "itemId": "",
+    "name": "",
+    "method": "미매핑",
+    "want": "GEN-G046",
+    "ok": false
+   },
+   {
+    "col": "호흡수(회/분)",
+    "itemId": "GEN-G070",
+    "name": "호흡수",
+    "method": "범용 패턴",
+    "want": "GEN-G070",
+    "ok": true
+   },
+   {
+    "col": "혈압(mmHg)",
+    "itemId": "GEN-G072",
+    "name": "혈압(수축기/이완기)",
+    "method": "범용 패턴",
+    "want": "GEN-G072",
+    "ok": true
+   },
+   {
+    "col": "산소포화도(%)",
+    "itemId": "GEN-G071",
+    "name": "산소포화도",
+    "method": "범용 패턴",
+    "want": "GEN-G071",
+    "ok": true
+   },
+   {
+    "col": "통증점수(0-10)",
+    "itemId": "GEN-G059",
+    "name": "통증 점수",
+    "method": "범용 패턴",
+    "want": "GEN-G059",
+    "ok": true
+   },
+   {
+    "col": "의식상태",
+    "itemId": "GEN-G060",
+    "name": "의식 상태",
+    "method": "범용 사전",
+    "want": "GEN-G060",
+    "ok": true
+   },
+   {
+    "col": "섭취량(mL)",
+    "itemId": "GEN-G061",
+    "name": "섭취량",
+    "method": "범용 패턴",
+    "want": "GEN-G061",
+    "ok": true
+   },
+   {
+    "col": "배설량(mL)",
+    "itemId": "GEN-G062",
+    "name": "배설량",
+    "method": "범용 패턴",
+    "want": "GEN-G062",
+    "ok": true
+   },
+   {
+    "col": "간호사이름",
+    "itemId": "GEN-G075",
+    "name": "간호사 성명",
+    "method": "범용 패턴",
+    "want": "GEN-G075",
+    "ok": true
+   },
+   {
+    "col": "간호기록",
+    "itemId": "GEN-G052",
+    "name": "진료기록(자유문)",
+    "method": "범용 사전",
+    "want": "GEN-G052",
+    "ok": true
+   }
+  ],
+  "mapped": 12,
+  "correct": 12,
+  "labeled": 14,
+  "meta": {
+   "files": 24,
+   "dcatErrors": 0,
+   "krcdi": 3,
+   "krcdiElements": 3,
+   "krcore": [
+    6,
+    6,
+    0
+   ],
+   "omop": 11,
+   "mcode": 0,
+   "argo": 0
+  },
+  "fhir": {
+   "patients": 30,
+   "resources": 300,
+   "errors": 0,
+   "types": {
+    "Patient": 30,
+    "Encounter": 30,
+    "Observation": 240
+   },
+   "labCoded": 0,
+   "withRange": 0,
+   "withInterp": 0,
+   "pidRaw": false,
+   "directLeak": 0,
+   "warns": 2,
+   "errorsLog": 0,
+   "sample": {
+    "code": {
+     "coding": [
+      {
+       "system": "http://khis.kr/fhir/kcure/CodeSystem/kcure-item",
+       "code": "GEN-G070",
+       "display": "호흡수"
+      }
+     ],
+     "text": "호흡수"
+    },
+    "value": {
+     "value": 18,
+     "unit": "/min"
+    }
+   }
+  },
+  "krcdiValues": 90,
+  "deid": [
+   {
+    "col": "환자번호",
+    "technique": "HASH_SALT",
+    "rule": "DR-11",
+    "conf": "높음",
+    "item": "환자ID"
+   },
+   {
+    "col": "병동",
+    "technique": "REGEX_PII",
+    "rule": "DR-18",
+    "conf": "중간",
+    "item": "병동"
+   },
+   {
+    "col": "측정일시",
+    "technique": "DATE_SHIFT",
+    "rule": "DR-15",
+    "conf": "중간",
+    "item": "측정일시"
+   },
+   {
+    "col": "체온(°C)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "낮음",
+    "item": ""
+   },
+   {
+    "col": "맥박(회/분)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "낮음",
+    "item": ""
+   },
+   {
+    "col": "호흡수(회/분)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "호흡수"
+   },
+   {
+    "col": "혈압(mmHg)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "혈압(수축기/이완기)"
+   },
+   {
+    "col": "산소포화도(%)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "산소포화도"
+   },
+   {
+    "col": "통증점수(0-10)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "통증 점수"
+   },
+   {
+    "col": "의식상태",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "의식 상태"
+   },
+   {
+    "col": "섭취량(mL)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "섭취량"
+   },
+   {
+    "col": "배설량(mL)",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "배설량"
+   },
+   {
+    "col": "간호사이름",
+    "technique": "KEEP",
+    "rule": "DR-99",
+    "conf": "중간",
+    "item": "간호사 성명"
+   },
+   {
+    "col": "간호기록",
+    "technique": "REGEX_PII",
+    "rule": "DR-18",
+    "conf": "중간",
+    "item": "진료기록(자유문)"
+   }
+  ],
+  "deidFiles": 8,
+  "notes": {
+   "chars": 430,
+   "counts": {},
+   "redacted": "환자는 오늘 아침에 체온이 36.5°C, 맥박이 78회/분, 호흡수가 18회/분, 혈압이 120/80 mmHg, 산소포화도가 98%로 정상 범위 안에 있으며, 통증점수는 2점으로 경미한 통증이 느껴진다고 하였습니다. 의식상태는 정상으로, 섭취량은 500mL, 배설량은 300mL로 관찰되었습니다. 간호사는 환자의 상태가 안정적이라고 판단하였으며, 정기적으로 체온을 측정하겠습니다.\r\n\r\n오늘 아침에 체온이 36.8°C, 맥박이 82회/분, 호흡수가 20회/분, 혈압이 118/78 mmHg, 산소포화도가 97%로 정상 범위 안에 있으며, 통증점수는 1점으로 경미한 통증이 느껴진다고 하였습니다. 의식상태는 정상으로, 섭취량은 600mL, 배설량은 450mL로 관찰되었습니다. 간호사는 환자의 체온이 정상범위에 있다는 것을 확인하였으며, 정기적으로 체온을 측정하겠습니다.",
+   "original": "환자는 오늘 아침에 체온이 36.5°C, 맥박이 78회/분, 호흡수가 18회/분, 혈압이 120/80 mmHg, 산소포화도가 98%로 정상 범위 안에 있으며, 통증점수는 2점으로 경미한 통증이 느껴진다고 하였습니다. 의식상태는 정상으로, 섭취량은 500mL, 배설량은 300mL로 관찰되었습니다. 간호사는 환자의 상태가 안정적이라고 판단하였으며, 정기적으로 체온을 측정하겠습니다.\r\n\r\n오늘 아침에 체온이 36.8°C, 맥박이 82회/분, 호흡수가 20회/분, 혈압이 118/78 mmHg, 산소포화도가 97%로 정상 범위 안에 있으며, 통증점수는 1점으로 경미한 통증이 느껴진다고 하였습니다. 의식상태는 정상으로, 섭취량은 600mL, 배설량은 450mL로 관찰되었습니다. 간호사는 환자의 체온이 정상범위에 있다는 것을 확인하였으며, 정기적으로 체온을 측정하겠습니다."
+  }
+ }
+]

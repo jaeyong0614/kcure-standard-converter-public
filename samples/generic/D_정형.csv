@@ -1,0 +1,31 @@
+﻿patient_id,patient_name,age,gender,arrival_time,admission_path,transport_method,chief_complaint,onset_time,severity_ktas,systolic_bp,heart_rate,respiratory_rate,body_temperature,sp_o2,outcome
+P001,John Doe,32,M,2023-04-15 10:30:00,Injury at home,Private car,Chest pain,2023-04-15 10:28:00,3,140,78,20,36.5,95,Ambulance
+P002,Sarah Lee,56,F,2023-04-16 14:45:00,Patient self,Public transport,Fall at home,2023-04-16 14:43:00,4,120,82,16,37.0,92,Discharged
+P003,Michael Smith,29,M,2023-04-17 09:00:00,Workplace accident,Private car,Bleeding wound,2023-04-17 08:55:00,2,130,75,22,36.7,94,Admitted
+P004,Linda Green,45,F,2023-04-18 15:30:00,Patient self,Private car,Fainting,2023-04-18 15:27:00,1,110,80,18,36.8,96,Discharged
+P005,David Brown,60,M,2023-04-19 11:00:00,Injury at home,Private car,Fever,2023-04-19 10:58:00,5,135,72,15,37.2,93,Admitted
+P006,Emily White,31,F,2023-04-20 08:30:00,Injury at work,Public transport,Headache,2023-04-20 08:27:00,2,125,76,21,36.9,95,Ambulance
+P007,James Wilson,48,M,2023-04-21 12:45:00,Injury at home,Private car,Vomiting,2023-04-21 12:42:00,3,130,78,16,37.0,94,Discharged
+P008,Kate Adams,22,F,2023-04-22 16:00:00,Patient self,Private car,Shortness of breath,2023-04-22 15:57:00,4,120,85,20,36.6,92,Ambulance
+P009,Robert Taylor,55,M,2023-04-23 10:00:00,Injury at home,Public transport,Blurred vision,2023-04-23 09:58:00,3,135,82,17,36.7,93,Discharged
+P010,Julia Martin,37,F,2023-04-24 14:30:00,Injury at work,Private car,Abdominal pain,2023-04-24 14:27:00,2,130,75,18,36.8,95,Admitted
+P011,Thomas King,62,M,2023-04-25 09:00:00,Injury at home,Private car,Fatigue,2023-04-25 08:58:00,5,125,78,16,37.0,94,Ambulance
+P012,Victoria Hill,29,F,2023-04-26 12:30:00,Injury at work,Public transport,Difficulty breathing,2023-04-26 12:27:00,4,130,80,17,36.6,92,Discharged
+P013,William Baker,50,M,2023-04-27 16:00:00,Injury at home,Private car,Headache,2023-04-27 15:58:00,2,125,76,21,36.9,95,Ambulance
+P014,Emma Green,33,F,2023-04-28 10:00:00,Injury at work,Private car,Swelling,2023-04-28 09:57:00,3,130,78,16,36.7,93,Discharged
+P015,James Carter,45,M,2023-04-29 14:30:00,Injury at home,Public transport,Fainting,2023-04-29 14:27:00,1,110,85,18,36.6,92,Ambulance
+P016,Kate Taylor,37,F,2023-04-30 09:00:00,Injury at home,Private car,Back pain,2023-04-30 08:58:00,2,125,76,21,36.9,95,Discharged
+P017,Thomas Hill,52,M,2023-05-01 12:30:00,Injury at work,Public transport,Fever,2023-05-01 12:27:00,5,135,82,17,36.7,93,Admitted
+P018,Victoria King,30,F,2023-05-02 16:00:00,Injury at home,Private car,Shortness of breath,2023-05-02 15:58:00,4,130,80,17,36.6,92,Ambulance
+P019,William Baker,48,M,2023-05-03 10:00:00,Injury at work,Public transport,Headache,2023-05-03 09:57:00,2,125,76,21,36.9,95,Discharged
+P020,Emma Carter,32,F,2023-05-04 14:30:00,Injury at home,Private car,Swelling,2023-05-04 14:27:00,3,130,78,16,36.7,93,Admitted
+P021,James Taylor,45,M,2023-05-05 09:00:00,Injury at work,Public transport,Fainting,2023-05-05 08:58:00,1,110,85,18,36.6,92,Ambulance
+P022,Victoria King,35,F,2023-05-06 12:30:00,Injury at home,Private car,Back pain,2023-05-06 12:27:00,2,125,76,21,36.9,95,Discharged
+P023,William Baker,42,M,2023-05-07 16:00:00,Injury at work,Public transport,Fever,2023-05-07 15:58:00,5,135,82,17,36.7,93,Admitted
+P024,Emma Carter,30,F,2023-05-08 10:00:00,Injury at home,Private car,Shortness of breath,2023-05-08 09:57:00,4,130,80,17,36.6,92,Ambulance
+P025,James Taylor,45,M,2023-05-09 14:30:00,Injury at work,Public transport,Headache,2023-05-09 14:27:00,2,125,76,21,36.9,95,Discharged
+P026,Victoria King,33,F,2023-05-10 09:00:00,Injury at home,Private car,Swelling,2023-05-10 08:58:00,3,130,78,16,36.7,93,Admitted
+P027,William Baker,48,M,2023-05-11 12:30:00,Injury at work,Public transport,Fainting,2023-05-11 12:27:00,1,110,85,18,36.6,92,Ambulance
+P028,Emma Carter,32,F,2023-05-12 16:00:00,Injury at home,Private car,Back pain,2023-05-12 15:58:00,2,125,76,21,36.9,95,Discharged
+P029,James Taylor,45,M,2023-05-13 10:00:00,Injury at work,Public transport,Fever,2023-05-13 09:57:00,5,135,82,17,36.7,93,Admitted
+P030,Victoria King,35,F,2023-05-14 14:30:00,Injury at home,Private car,Shortness of breath,2023-05-14 14:27:00,4,130,80,17,36.6,92,Ambulance

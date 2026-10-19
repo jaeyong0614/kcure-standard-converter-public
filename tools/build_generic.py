@@ -32,7 +32,7 @@ G = [
      ["전화번호", "연락처", "휴대폰", "휴대전화", "TEL", "TEL_NO", "PHONE", "PHONE_NO", "HP", "HP_NO", "MOBILE", "CELL"], {}),
     ("G007", "이메일", "환자 이메일", "환자", "연락처", "Patient", "식별·인구학", "VARCHAR", "", 6, None, None, "-", ["이메일", "EMAIL", "E_MAIL", "EMAIL_ADDR"], {}),
     ("G008", "주소", "환자 주소", "환자", "연락처", "Patient", "식별·인구학", "VARCHAR", "", 7, None, "location.address_1", "-", ["주소", "거주지", "ADDR", "ADDRESS", "ADDR1", "HOME_ADDR"], {}),
-    ("G009", "건강보험유형", "건강보험 자격 구분", "환자", "기본정보", "Patient", "기타내용", "CODE", "", 8, None, "observation.value_source_value", "-",
+    ("G009", "건강보험유형", "건강보험 자격 구분", "환자", "기본정보", "Patient", "명칭", "CODE", "", 8, None, "observation.value_source_value", "-",
      ["건강보험유형", "보험유형", "급여구분", "보험구분", "INS_TYPE", "INS_TP", "PAYER"], {}),
     ("G010", "사망일자", "사망 일자", "환자", "사망", "Patient", "일자", "DATE", "", None, ("KR Core Patient Profile", "Patient.deceasedDateTime"), "death.death_date", "-",
      ["사망일", "사망일자", "DEATH_DT", "DEATH_DATE", "DOD"], {}),
@@ -42,12 +42,12 @@ G = [
      ["진료의", "진료의명", "처방의", "처방의사", "처방의명", "담당의", "담당의사", "주치의", "의사명", "DR_NM", "DOC_NM", "DOCTOR", "PHYSICIAN", "ATTEND_DR"], {}),
     ("G013", "진료과", "진료과목", "진료", "내원", "Patient", "명칭", "CODE", "", 12, None, "visit_occurrence.visit_source_value", "-",
      ["진료과", "진료과목", "진료과명", "DEPT", "DEPT_CD", "DEPT_NM", "DEPARTMENT", "MED_DEPT"], {}),
-    ("G014", "의료기관ID", "요양기관번호 등 기관 식별자", "진료", "기관", "Patient", "기타내용", "VARCHAR", "", 13, None, "care_site.care_site_source_value", "-",
+    ("G014", "의료기관ID", "요양기관번호 등 기관 식별자", "진료", "기관", "Patient", "명칭", "VARCHAR", "", 13, None, "care_site.care_site_source_value", "-",
      ["의료기관ID", "요양기관번호", "기관코드", "병원코드", "HOSP_CD", "INST_CD", "ORG_CD", "FACILITY_ID"], {}),
-    ("G015", "진료구분", "외래·입원·응급 구분", "진료", "내원", "Patient", "기타내용", "CODE", "", 19, None, "visit_occurrence.visit_concept_id", "Visit",
+    ("G015", "진료구분", "외래·입원·응급 구분", "진료", "내원", "Patient", "상태", "CODE", "", 19, None, "visit_occurrence.visit_concept_id", "Visit",
      ["진료구분", "내원구분", "외래입원구분", "입원외래구분", "VISIT_TYPE", "ENC_TYPE", "IO_TP", "IO_GB", "PAT_TYPE"], {}),
     ("G016", "입원(내원)일자", "입원 또는 내원 시작 일자", "진료", "내원", "Patient", "일자", "DATE", "", 21, None, "visit_occurrence.visit_start_date", "-",
-     ["입원일", "입원일자", "내원일", "내원일자", "진료일", "진료일자", "외래일자", "ADMIT_DATE", "ADMIT_DT", "ADM_DT", "ADM_DATE", "VISIT_DT", "VISIT_DATE", "IN_DT"], {}),
+     ["입원일", "입원일자", "내원일", "내원일자", "진료일", "진료일자", "외래일자", "ADMIT_DATE", "ADMIT_DT", "ADM_DT", "ADM_DATE", "VISIT_DT", "VISIT_DATE", "IN_DT", "도착일시", "도착시간", "내원일시", "ARRIVAL_DT", "ARRIVAL_TIME", "ER_IN_DT"], {}),
     ("G017", "퇴원일자", "퇴원 또는 내원 종료 일자", "진료", "내원", "Patient", "일자", "DATE", "", 22, None, "visit_occurrence.visit_end_date", "-",
      ["퇴원일", "퇴원일자", "DISCH_DT", "DSCH_DT", "DISCHARGE_DATE", "DISCH_DATE", "OUT_DT"], {}),
     ("G018", "진단코드", "진단(상병) 코드(KCD-8/ICD-10)", "진단", "진단", "Disease", "명칭", "CODE", "", 24, None, "condition_occurrence.condition_concept_id", "KCD-8 → ICD10",
@@ -95,7 +95,7 @@ G = [
     ("G039", "검체 종류", "검체 종류", "검사", "검체검사", "Assessment", "명칭", "VARCHAR", "", 46, None, "specimen.specimen_source_value", "SNOMED",
      ["검체", "검체종류", "SPECIMEN", "SPCM", "SPCM_TP", "SAMPLE_TYPE"], {}),
     ("G040", "영상검사명", "진단영상검사 명칭", "검사", "영상검사", "Assessment", "명칭", "VARCHAR", "", 53, None, "procedure_occurrence.procedure_source_value", "EDI / LOINC",
-     ["영상검사명", "영상검사", "IMG_NM", "RAD_NM", "MODALITY"], {}),
+     ["영상검사명", "영상검사", "검사종류", "검사구분", "IMG_NM", "RAD_NM", "MODALITY", "EXAM_TYPE", "STUDY_TYPE", "MODALITY_CD"], {}),
     ("G041", "판독소견", "영상 판독 소견(자유문)", "검사", "영상검사", "Assessment", "소견", "VARCHAR", "", 54, None, "note.note_text", "-",
      ["판독소견", "판독결과", "판독", "READING", "RPT_TXT", "REPORT_TEXT", "IMPRESSION"], {}),
     ("G042", "키", "신장(키)", "검사", "신체계측", "Assessment", "수치", "NUMERIC", "cm", 68, None, "measurement.value_as_number", "LOINC 8302-2",
@@ -119,7 +119,58 @@ G = [
     ("G051", "음주상태", "음주 상태", "환자", "건강상태", "Patient", "여부", "CODE", "", 79, None, "observation.value_as_concept_id", "SNOMED",
      ["음주", "음주여부", "음주상태", "ALCOHOL", "ALC", "ALC_YN", "DRINKING"], {}),
     ("G052", "진료기록(자유문)", "경과기록·메모 등 자유문", "진료", "기록", "Patient", "소견", "VARCHAR", "", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueString"),
-     "note.note_text", "-", ["경과기록", "진료기록", "메모", "비고", "소견", "NOTE", "NOTES", "PROGRESS_NOTE", "MEMO", "REMARK", "RMK", "COMMENT"], {}),
+     "note.note_text", "-", ["경과기록", "진료기록", "간호기록", "메모", "비고", "소견", "NOTE", "NOTES", "PROGRESS_NOTE", "NURSING_NOTE", "NURSE_NOTE", "MEMO", "REMARK", "RMK", "COMMENT"], {}),
+    # ---- v0.2: 영상·병리·간호·응급·수술 상세·진단 구분 ----
+    ("G053", "영상검사일시", "영상 촬영(검사) 일자·일시", "검사", "영상검사", "Assessment", "일자", "DATE", "", None, ("KR Core DiagnosticReport Profile for Diagnostic Imaging", "DiagnosticReport.effectiveDateTime"),
+     "procedure_occurrence.procedure_date", "-", ["촬영일", "촬영일시", "영상검사일", "영상검사일시", "SCAN_DT", "IMG_DT", "STUDY_DT", "STUDY_DATE"], {}),
+    ("G054", "검사 부위", "검사·촬영 부위", "검사", "검사부위", "Assessment", "부위", "VARCHAR", "", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.bodySite"),
+     "procedure_occurrence.procedure_source_value", "SNOMED", ["검사부위", "촬영부위", "부위", "BODY_SITE", "BODYPART", "BODY_PART", "SITE", "EXAM_SITE"], {}),
+    ("G055", "판독일시", "판독(보고) 일자·일시", "검사", "영상검사", "Assessment", "일자", "DATE", "", 48, ("KR Core DiagnosticReport Profile for Diagnostic Imaging", "DiagnosticReport.issued"),
+     "note.note_date", "-", ["판독일", "판독일시", "판독일자", "보고일", "보고일시", "READ_DT", "READING_DT", "REPORT_DT", "RPT_DT"], {}),
+    ("G056", "판독의", "판독한 의사 이름", "진료", "판독의", "Patient", "식별·인구학", "VARCHAR", "", 11, None, None, "-",
+     ["판독의", "판독의사", "판독의명", "판독자", "READ_DR", "READER", "RADIOLOGIST", "PATHOLOGIST", "READ_DOC"], {}),
+    ("G057", "병리번호", "병리(검체) 접수번호", "검사", "병리검사", "Assessment", "식별·인구학", "VARCHAR", "", None, ("KR Core Specimen Profile", "Specimen.accessionIdentifier"),
+     "specimen.specimen_source_id", "-", ["병리번호", "병리검사번호", "검체번호", "PATH_NO", "PATHO_NO", "ACC_NO", "ACCESSION_NO", "SPCM_NO"], {}),
+    ("G058", "병리진단명", "조직병리 진단명", "검사", "병리검사", "Assessment", "결과", "VARCHAR", "", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueCodeableConcept"),
+     "observation.value_as_string", "ICD-O-3", ["병리진단", "병리진단명", "조직진단", "조직학적진단", "PATH_DX", "PATHO_DX", "HISTOLOGY", "PATHOLOGY_DX", "PATH_DIAG"], {}),
+    ("G059", "통증 점수", "통증 척도 점수(NRS 등)", "검사", "활력징후", "Assessment", "수치", "INTEGER", "{score}", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueQuantity"),
+     "measurement.value_as_number", "LOINC 72514-3", ["통증", "통증점수", "통증척도", "NRS", "VAS", "PAIN", "PAIN_SCORE", "PAIN_SCR"], {}),
+    ("G060", "의식 상태", "의식 수준(AVPU·GCS 등)", "검사", "활력징후", "Assessment", "등급", "CODE", "", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueCodeableConcept"),
+     "measurement.value_source_value", "LOINC 80288-4", ["의식", "의식상태", "의식수준", "MENTAL", "MENTALITY", "LOC", "AVPU", "GCS", "CONSCIOUSNESS"], {}),
+    ("G061", "섭취량", "수분 섭취량", "검사", "활력징후", "Assessment", "수치", "NUMERIC", "mL", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueQuantity"),
+     "measurement.value_as_number", "LOINC 9108-2", ["섭취량", "섭취", "INTAKE", "IN_QTY", "IO_IN", "FLUID_IN"], {}),
+    ("G062", "배설량", "배설(배출)량", "검사", "활력징후", "Assessment", "수치", "NUMERIC", "mL", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueQuantity"),
+     "measurement.value_as_number", "LOINC 9187-6", ["배설량", "배출량", "소변량", "OUTPUT", "OUT_QTY", "IO_OUT", "URINE_OUT", "FLUID_OUT"], {}),
+    ("G063", "병동", "입원 병동·병실", "진료", "내원", "Patient", "명칭", "VARCHAR", "", None, ("KR Core Encounter Profile", "Encounter.location"),
+     "care_site.care_site_source_value", "-", ["병동", "병실", "병동명", "WARD", "WARD_CD", "WARD_NM", "ROOM", "UNIT_NM"], {}),
+    ("G064", "내원 경로", "내원(입원) 경로", "진료", "내원", "Patient", "방법", "CODE", "", None, ("KR Core Encounter Profile", "Encounter.hospitalization.admitSource"),
+     "visit_occurrence.admitted_from_source_value", "-", ["내원경로", "입원경로", "ARRIVAL_ROUTE", "ADM_ROUTE", "ADMIT_SOURCE", "VISIT_ROUTE", "ADM_SRC"], {}),
+    ("G065", "내원 수단", "내원(이송) 수단", "진료", "응급", "Patient", "방법", "CODE", "", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueCodeableConcept"),
+     "observation.value_as_string", "-", ["내원수단", "이송수단", "ARRIVAL_MODE", "ARRIVAL_MEANS", "TRANSPORT", "TRANS_MODE"], {}),
+    ("G066", "주호소", "주호소(주증상)", "진단", "주호소", "Disease", "명칭", "VARCHAR", "", 27, None, "condition_occurrence.condition_source_value", "-",
+     ["주호소", "주증상", "CC", "C_C", "CHIEF_COMPLAINT", "CHIEF_COMP"], {}),
+    ("G067", "증상 발생일시", "주호소(증상) 발생 일시", "진단", "주호소", "Disease", "일자", "DATE", "", 26, None, "condition_occurrence.condition_start_date", "-",
+     ["발생일", "발생일시", "증상발생일시", "ONSET_DT", "ONSET_TIME", "ONSET", "SX_ONSET"], {}),
+    ("G068", "중증도(KTAS)", "응급 중증도 분류", "진료", "응급", "Patient", "등급", "INTEGER", "", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueQuantity"),
+     "observation.value_as_number", "-", ["KTAS", "KTAS_LV", "KTAS_LEVEL", "중증도", "중증도분류", "TRIAGE", "TRIAGE_LV", "ESI"], {}),
+    ("G069", "퇴실 결과", "응급실 퇴실·퇴원 형태", "진료", "내원", "Patient", "상태", "CODE", "", None, ("KR Core Encounter Profile", "Encounter.hospitalization.dischargeDisposition"),
+     "visit_occurrence.discharged_to_source_value", "-", ["퇴실결과", "진료결과", "퇴원형태", "퇴실형태", "DISPOSITION", "DISP", "ER_RESULT", "DISCH_TYPE"], {}),
+    ("G070", "호흡수", "호흡수", "검사", "활력징후", "Assessment", "수치", "NUMERIC", "/min", 65, None, "measurement.value_as_number", "LOINC 9279-1",
+     ["호흡수", "호흡", "RR", "RESP", "RESP_RATE", "BREATH"], {}),
+    ("G071", "산소포화도", "말초 산소포화도", "검사", "활력징후", "Assessment", "수치", "NUMERIC", "%", 67, None, "measurement.value_as_number", "LOINC 59408-5",
+     ["산소포화도", "SPO2", "SP_O2", "O2SAT", "O2_SAT", "SAT"], {}),
+    ("G072", "혈압(수축기/이완기)", "혈압 합본 표기(예: 120/80)", "검사", "활력징후", "Assessment", "수치", "VARCHAR", "mmHg", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueString"),
+     "measurement.value_source_value", "LOINC 85354-9", ["혈압", "BP", "BLOOD_PRESSURE"], {}),
+    ("G073", "마취 방법", "마취 방법", "치료", "수술", "Treatment", "방법", "CODE", "", 31, None, "procedure_occurrence.procedure_source_value", "SNOMED",
+     ["마취", "마취방법", "마취종류", "ANES", "ANES_TP", "ANESTHESIA", "ANES_TYPE"], {}),
+    ("G074", "진단 구분(주/부상병)", "주진단·부진단 구분", "진단", "진단", "Disease", "상태", "CODE", "", None, ("KR Core Condition Profile for Encounter Diagnosis", "Condition.category"),
+     "condition_occurrence.condition_status_source_value", "-", ["상병구분", "진단구분", "주부상병", "주부상병구분", "DX_TP", "DIAG_TYPE", "DX_TYPE", "MAIN_YN", "PRIMARY_YN"], {}),
+    ("G075", "간호사 성명", "기록·측정한 간호사 이름", "진료", "간호사", "Patient", "식별·인구학", "VARCHAR", "", None, ("KR Core Practitioner Profile for Medical Doctor", "Practitioner.name"), None, "-",
+     ["간호사", "간호사명", "담당간호사", "작성간호사", "기록자", "작성자", "NURSE", "NURSE_NM", "RN_NM", "RECORDER"], {}),
+    ("G076", "측정일시", "활력징후·간호 측정(기록) 일시", "검사", "활력징후", "Assessment", "일자", "DATE", "", None, ("KR Core Observation Profile for Laboratory Result", "Observation.effectiveDateTime"),
+     "measurement.measurement_date", "-", ["측정일", "측정일시", "기록일시", "MEASURE_DT", "RECORD_DT", "VS_DT", "CHART_DT", "MSR_DT"], {}),
+    ("G077", "수술 시간", "수술 소요 시간(분)", "치료", "수술", "Treatment", "기간", "INTEGER", "min", None, ("KR Core 미정의 — FHIR R4 Observation 기본 리소스 파생", "Observation.valueQuantity"),
+     "observation.value_as_number", "-", ["수술시간", "소요시간", "OP_TIME", "OP_DURATION", "SURG_TIME"], {}),
 ]
 
 # 별칭 사전에 없는 컬럼명 → 정규식(소문자, 공백·기호는 '_' 로 바꾼 뒤 대조). 위에서부터 처음 일치.
@@ -161,6 +212,36 @@ PATTERNS = [
     (r"dept|진료과", "G013"),
     (r"(hosp|inst|org|facility|기관|요양)", "G014"),
     (r"(visit|enc|io)_?(type|tp|gb)|구분$", "G015"),
+    (r"arriv.*(dt|date|time|tm)$|도착", "G016"),
+    (r"(read|판독).*(dr|doc|의$|의사|er$)|radiolog|patholog.*(dr|doc|ist)|판독의", "G056"),
+    (r"(nurse|(^|_)rn(_|$)|간호사|작성자|기록자)", "G075"),
+    (r"(measure|record|msr|(^|_)vs|vital|측정|기록).*(dt|date|time|tm|일시|일자)$", "G076"),
+    (r"(read|rpt|report|판독|보고).*(dt|date|time|tm|일|일시|일자)$", "G055"),
+    (r"(scan|img|image|study|촬영|영상).*(dt|date|time|tm|일|일시|일자)$", "G053"),
+    (r"onset|발생", "G067"),
+    (r"(patho|path|병리|검체|acc).*(no|num|번호)$", "G057"),
+    (r"(patho|path|병리|조직).*(dx|diag|진단)|histolog", "G058"),
+    (r"(body|exam)?_?(site|part)|부위", "G054"),
+    (r"pain|통증|(^|_)nrs(_|$)", "G059"),
+    (r"mental|consc|(^|_)(loc|avpu|gcs)(_|$)|의식", "G060"),
+    (r"intake|섭취", "G061"),
+    (r"(^|_)output|urine|배설|배출|소변", "G062"),
+    (r"ward|병동|병실", "G063"),
+    (r"(arriv|admit|adm|visit|내원|입원).*(route|path|src|source|경로)", "G064"),
+    (r"(arriv|trans).*(mode|means|method)|수단", "G065"),
+    (r"chief|(^|_)cc(_|$)|주호소|주증상", "G066"),
+    (r"ktas|triage|(^|_)esi(_|$)|중증도", "G068"),
+    (r"dispo|퇴실|(er|ed)_?(result|rslt)|^outcome$", "G069"),
+    (r"systolic|(^|_)sbp(_|$)|수축기", "G044"),
+    (r"diastolic|(^|_)dbp(_|$)|이완기", "G045"),
+    (r"temp|체온", "G047"),
+    (r"heart_?rate|pulse|(^|_)(hr|pr)(_|$)|맥박|심박", "G046"),
+    (r"(^|_)(rr|resp)(_|$)|resp(iratory)?_?rate|breath|호흡", "G070"),
+    (r"spo2|o2_?sat|(^|_)sat(_|$)|산소포화", "G071"),
+    (r"(^|_)bp(_|$)|blood_?press|혈압", "G072"),
+    (r"anes|마취", "G073"),
+    (r"(dx|diag|진단|상병).*(type|tp|구분)|주부상병|main_?yn", "G074"),
+    (r"(op|surg|수술).*(time|duration|시간)", "G077"),
     (r"note|memo|remark|rmk|comment|기록|메모|비고|소견|서술", "G052"),
 ]
 
@@ -203,7 +284,7 @@ def main():
             it["omop"] = {"table": t, "field": f, "concept": c, "date": d, "source": s, "vocab": vocab, "note": "", "conf": "중간", "basis": "범용 사전"}
         if "codes" in extra:
             it["codes"] = extra["codes"]
-        if gid in ("G002", "G006", "G007", "G008", "G011", "G012"):
+        if gid in ("G002", "G006", "G007", "G008", "G011", "G012", "G056", "G075"):
             it["directId"] = True  # 가명처리 ON 이면 FHIR·KR CDI 결과에서 제외
         if extra.get("ccText"):
             it["ccText"] = True  # 같은 행의 코드 항목과 같은 CodeableConcept 의 text 로 합친다
@@ -214,8 +295,11 @@ def main():
     for _rx, gid in PATTERNS:
         assert "GEN-" + gid in known, gid
     # 앞 컬럼 문맥으로 뜻을 정하는 항목: [모호 항목, 앞 컬럼 항목, 바꿀 항목]
-    context = [["GEN-G035", "GEN-G026", "GEN-G027"], ["GEN-G027", "GEN-G034", "GEN-G035"]]
-    data = {"version": "0.1.1", "context": context, "note": "범용(비 K-CURE) 병원 데이터용 표준 사전 — KR CDI V3 기반, 규칙 후보",
+    # 앞 컬럼 문맥 [모호 항목, 앞 컬럼 항목, 바꿀 항목] 또는 데이터셋 문맥 [모호 항목, {present, absent}, 바꿀 항목]
+    context = [["GEN-G035", "GEN-G026", "GEN-G027"], ["GEN-G027", "GEN-G034", "GEN-G035"],
+               # 판독 관련 컬럼이 있고 검사결과 값 컬럼이 없으면 '검사일'은 영상·병리 검사일
+               ["GEN-G038", {"present": ["GEN-G055", "GEN-G041", "GEN-G040", "GEN-G056"], "absent": ["GEN-G034"]}, "GEN-G053"]]
+    data = {"version": "0.2.1", "context": context, "note": "범용(비 K-CURE) 병원 데이터용 표준 사전 — KR CDI V3 기반, 규칙 후보",
             "items": items, "patterns": [[rx, "GEN-" + gid] for rx, gid in PATTERNS]}
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     (OUT.with_suffix(".js")).write_text("window.KCURE_GENERIC=" + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8", newline="\n")

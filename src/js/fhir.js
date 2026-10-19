@@ -323,6 +323,22 @@ KC.fhir = (function () {
         }
         case 'Organization.identifier':
           return arr('identifier', { system: SYS.krnpi, value: n.str });
+        // 범용 사전(응급·병동·진단 구분·병리) 경로
+        case 'Encounter.hospitalization.admitSource': case 'Encounter.hospitalization.dischargeDisposition': {
+          const k = f.split('.')[1];
+          res.hospitalization = res.hospitalization || {};
+          if (res.hospitalization[k]) return 'occupied';
+          res.hospitalization[k] = ccFromNorm(n, it); return 'ok';
+        }
+        case 'Encounter.location':
+          return arr('location', { location: { display: n.str } });
+        case 'Condition.category':
+          return arr('category', ccFromNorm(n, it));
+        case 'Specimen.accessionIdentifier': {
+          // 병리(검체) 번호는 간접식별자 → 가명처리 ON 이면 가명키로
+          const val = opts.pseudonymize ? KC.sha256(opts.salt + '|' + n.str).slice(0, 32) : n.str;
+          return single('accessionIdentifier', { system: base + 'Identifier/' + it.id + (opts.pseudonymize ? '-pseudonym' : ''), value: val });
+        }
         default:
           return 'unsupported';
       }

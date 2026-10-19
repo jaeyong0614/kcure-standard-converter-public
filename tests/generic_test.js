@@ -105,7 +105,7 @@
   // 정답: 컬럼 의미에 맞는 범용 사전 항목ID (사람이 지정). '' 은 대응 항목이 없어야 맞음
   const TRUTH = await (await fetch('generic_truth.json', { cache: 'no-store' })).json();
   const res = [];
-  for (const k of ['A', 'B', 'C']) res.push(await runSet(k, TRUTH[k] || {}));
+  for (const k of ['A', 'B', 'C', 'D', 'E', 'F']) res.push(await runSet(k, TRUTH[k] || {}));
   render(res);
   window.GENERIC_RESULT = res;
   try { await fetch('/__save/generic_results.json', { method: 'POST', body: JSON.stringify(res, null, 1) }); } catch (e) { /* 정적 서버 */ }

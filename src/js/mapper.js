@@ -17,7 +17,8 @@ KC.mapper = (function () {
     if (cand.std) s -= 10;
     s += (TIER_RANK[it.tier] == null ? 3 : TIER_RANK[it.tier]);
     // 범용 데이터면 범용 사전 항목을, K-CURE 암종이면 K-CURE 항목을 앞에 둔다
-    if (it.generic) s -= 500;
+    // matchOne 은 범용 모드에서만 범용 항목을 후보로 넣으므로, 여기 오면 범용 항목을 원문 일치(-1000)보다 앞에 둔다
+    if (it.generic) s -= 5000;
     return s;
   }
 
@@ -27,6 +28,10 @@ KC.mapper = (function () {
     if (/^KCURE-[A-Z]{3}-\d{6}$/.test(h) && KC.spec.byId[h]) return { itemId: h, method: '항목ID', alternatives: [] };
     const k = U.normKey(h);
     if (!k) return { itemId: '', method: '미매핑', alternatives: [] };
+    // '체온(°C)'·'맥박 [회/분]'처럼 끝에 붙은 단위·범위 표기는 떼고 대조한다
+    const bare = h.replace(/\s*[\(\[][^\)\]]*[\)\]]\s*$/, '');
+    // (범용 모드만: K-CURE 는 'ER(%)'와 'ER'처럼 괄호가 뜻을 바꾸는 항목이 있다)
+    if (cancer === KC.spec.GENERIC && bare && bare !== h && !(KC.spec.aliasIndex.get(k) || []).length) return Object.assign(matchOne(bare, cancer), { stripped: true });
     // 범용 사전은 '범용' 데이터를 고른 경우에만 쓴다(K-CURE 암종 모드의 매핑 결과는 바꾸지 않음)
     const generic = cancer === KC.spec.GENERIC;
     const cands = (KC.spec.aliasIndex.get(k) || []).filter(function (c) { return generic || !KC.spec.byId[c.id].generic; });
@@ -49,6 +54,14 @@ KC.mapper = (function () {
       if (!m.itemId || m.method === '설정파일' || m.method === '수동') return;
       const rule = rules.find(function (r) { return r[0] === m.itemId; });
       if (!rule) return;
+      if (typeof rule[1] === 'object') {
+        // 데이터셋 문맥: 함께 있는 컬럼들로 뜻을 정한다
+        const ids = list.map(function (x) { return x.itemId; });
+        const hasAny = (rule[1].present || []).some(function (x) { return ids.indexOf(x) >= 0; });
+        const hasNone = (rule[1].absent || []).every(function (x) { return ids.indexOf(x) < 0; });
+        if (hasAny && hasNone) { m.itemId = rule[2]; m.method = '범용 문맥'; }
+        return;
+      }
       for (let j = i - 1; j >= 0; j--) {
         if (!list[j].itemId) continue;
         if (list[j].itemId === rule[1]) { m.itemId = rule[2]; m.method = '범용 문맥'; }

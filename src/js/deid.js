@@ -73,6 +73,7 @@ KC.deid = (function () {
   /* ---------- 기법 추천 ---------- */
   function matchRule(r, ctx) {
     const w = r.when;
+    if (w.directId && !(ctx.item && ctx.item.directId)) return false;
     if (w.name && !(r.nameRx.test(ctx.col) || (ctx.item && r.nameRx.test(ctx.item.name)))) return false;
     if (w.role && !(ctx.item && w.role.indexOf(ctx.item.role) >= 0)) return false;
     if (w.type && !(ctx.item && w.type.indexOf(ctx.item.type) >= 0)) return false;
