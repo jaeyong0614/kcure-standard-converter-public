@@ -364,6 +364,7 @@ KC.match = (function () {
     '미대응': '미매칭', '대응없음': '미매칭', '대응 없음': '미매칭',
     '수집범위외': '범위외', '미매핑': '항목 미인식', '대응': '매칭'
   };
+  const STD_LABEL = { krcdi: 'KR CDI', krcore: 'KR Core', mcode: 'mCODE', nbb: '국가바이오빅데이터', dcat: 'DCAT' };
   const RE = /구조참조\(KR-mCODE 자체정의\)|직접대응|직접재사용|제약재사용|부분대응|부분참조|개념참조|구조참조|대응 없음|대응없음|미대응|수집범위외|미매핑/g;
   const LEGEND = [
     ['직접매칭', '그대로 사용', '직접대응 · 직접재사용'],
@@ -396,6 +397,8 @@ KC.match = (function () {
   /** 항목의 원래 판정 요약: 'KR CDI 부분대응 · KR Core 제약재사용 · mCODE 개념참조' */
   function orig(it) {
     if (!it) return '미매핑';
+    // 담당자가 고친 항목: 항목정의서의 원래 판정 + 고친 표준
+    if (it._orig) return it._orig + ' · 수동 수정: ' + (it._manual || []).map(function (k) { return STD_LABEL[k] || k; }).join(', ');
     const p = [];
     if (it.cdi && it.cdi.el) p.push('KR CDI ' + (it.cdi.match || '대응(유형 미상)'));
     if (it.core && it.core.judge) p.push('KR Core ' + it.core.judge);
@@ -1482,7 +1485,7 @@ KC.meta = (function () {
     const head = ['No', '원천 컬럼', '항목ID', '표준항목명', '표준정의', '대분류', '중분류', 'mCODE 도메인', '데이터타입', '길이', '단위', '허용값', '필수여부',
       'KR CDI 분류', 'KR CDI 항목', 'KR CDI 필수', 'KR CDI 매칭유형',
       'KR Core 프로파일', 'KR Core 프로파일 URL', 'KR Core FHIR 경로', 'KR Core 판정',
-      'DCAT 변수 자료형',
+      'DCAT 변수 자료형', '국가바이오빅데이터 항목ID', '국가바이오빅데이터 항목명',
       'mCODE 프로파일', 'mCODE 프로파일 URL', 'mCODE FHIR 경로', 'mCODE 데이터요소', 'mCODE 매칭유형',
       'OMOP 테이블', 'OMOP 필드', 'OMOP 개념 필드', 'OMOP 일자 필드', 'OMOP 원천값 필드', 'OMOP 어휘', 'OMOP 변환·주의', 'OMOP 신뢰도',
       'ARGO 스키마', 'ARGO 필드', 'ARGO 표시명', 'ARGO Tier', 'ARGO 필수조건', 'ARGO 유형', 'ARGO 허용값', 'ARGO 변환·주의', 'ARGO 신뢰도',
@@ -1491,11 +1494,11 @@ KC.meta = (function () {
     entries.forEach(function (e, i) {
       const it = e.item;
       if (!it) { rows.push([i + 1, e.col, '', '(항목 미인식)']); return; }
-      const c = it.cdi || {}, a = argoOf(e), o = omopOf(e), m = it.mcode;
+      const c = it.cdi || {}, a = argoOf(e), o = omopOf(e), m = it.mcode, nb = KC.ov ? KC.ov.nbbOf(e) : null;
       rows.push([i + 1, e.col, it.id, it.name, it.def, it.cat1, it.cat2, it.domain, it.type, it.len || '', it.unit, it.allowed, it.req,
         c.cls || '', c.el || '', c.req || '', c.el ? KC.match.label(c.match || '대응') : '',
         it.core.profile, it.core.url, it.core.path, KC.match.label(it.core.judge),
-        KC.dcat.xsdType(it.type),
+        it.xsd || KC.dcat.xsdType(it.type), nb ? nb.id : '', nb ? nb.name : '',
         m.title || m.profile, m.url || '', m.path, m.element || '', KC.match.label(m.level),
         o ? o.table : '', o ? o.field : '', o ? o.concept : '', o ? o.date : '', o ? o.source : '', o ? o.vocab : '', o ? o.note : '', o ? o.conf : '',
         a ? a.schema : '', a ? a.field : '', a ? a.label : '', a ? a.tier : '', a ? a.req : '', a ? a.type : '', a ? argoValues(a) : '', a ? a.note : '', a ? a.conf : '',
@@ -1513,7 +1516,7 @@ KC.meta = (function () {
       const m = e.item.mcode;
       rows.push([e.col, e.item.id, e.item.name, m.title || m.profile, m.url || '', m.path, m.element || '', m.elRequired || '', KC.match.label(m.level), e.item.core.path,
         m.resConflict ? '상이' : (m.path && m.path !== '해당 없음' ? '일치' : ''), m.resConflict ? m.primary : '',
-        /미정의/.test(m.profile) ? 'mCODE STU4에 매칭 프로파일 없음 — KR-mCODE 신규 후보(' + e.item.prf + ')' : (m.level === '구조참조(KR-mCODE 자체정의)' ? 'mCODE Draft 구조 참조, KR-mCODE에서 자체 정의' : ''), m.level]);
+        /미정의/.test(m.profile) ? 'mCODE STU4에 매칭 프로파일 없음 — KR-mCODE 신규 후보(' + e.item.prf + ')' : (m.level === '구조참조(KR-mCODE 자체정의)' ? 'mCODE Draft 구조 참조, KR-mCODE에서 자체 정의' : ''), e.item._orig ? KC.match.orig(e.item) : m.level]);
     });
     return rows;
   }
@@ -1771,7 +1774,7 @@ KC.meta = (function () {
     const W = function (n) { return new Array(n).fill(18); };
     add('00_통합_메타데이터.xlsx', '통합', '통합 메타데이터 정의서 (엑셀 12개 시트)', KC.writers.xlsx([
       { name: '00_요약', title: 'K-CURE ' + label + ' 컬럼 메타데이터 변환 요약', rows: summaryRows, widths: [24, 36, 70] },
-      { name: '01_항목메타데이터_통합', title: '컬럼별 KR CDI · KR Core · mCODE · OMOP · DCAT · ARGO 메타데이터', rows: integratedRows(entries), widths: [6, 22, 18, 22, 36].concat(W(44), [50]) },
+      { name: '01_항목메타데이터_통합', title: '컬럼별 K-CURE · KR CDI · KR Core · 국가바이오빅데이터 · mCODE · OMOP · DCAT · ARGO 메타데이터', rows: integratedRows(entries), widths: [6, 22, 18, 22, 36].concat(W(46), [50]) },
       { name: '02_KR_CDI', title: 'KR CDI V3 80항목 매칭 (이 암종 컬럼 기준)', rows: krcdiRows(entries), widths: [6, 18, 18, 22, 8, 12, 20, 34, 50, 8, 26] },
       { name: '03_KR_Core', title: 'KR Core V2 프로파일·경로별 컬럼', rows: krcoreRows(entries), widths: [40, 50, 16, 40, 18, 10, 60, 24] },
       { name: '04_mCODE_매핑', title: 'mCODE STU4 매칭 (항목정의서 v2.4 기준)', rows: mcodeMapRows(entries), widths: [22, 18, 22, 32, 50, 34, 26, 14, 14, 34, 10, 20, 40, 24] },
@@ -1785,7 +1788,7 @@ KC.meta = (function () {
     ]), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
     add('KR_CDI/KRCDI_컬럼대응.csv', 'KR CDI V3', 'KR CDI 컬럼 매칭표', csv([['원천 컬럼', '항목ID', '표준항목명', 'KR CDI 분류', 'KR CDI 항목', '필수여부', '매칭유형', '원래 판정']].concat(
-      entries.filter(function (e) { return e.item && e.item.cdi && e.item.cdi.el; }).map(function (e) { const c = e.item.cdi; return [e.col, e.item.id, e.item.name, c.cls, c.el, c.req, KC.match.label(c.match || '대응'), c.match || '']; }))), 'text/csv');
+      entries.filter(function (e) { return e.item && e.item.cdi && e.item.cdi.el; }).map(function (e) { const c = e.item.cdi; return [e.col, e.item.id, e.item.name, c.cls, c.el, c.req, KC.match.label(c.match || '대응'), e.item._orig ? KC.match.orig(e.item) : c.match || '']; }))), 'text/csv');
     add('KR_CDI/KRCDI_80항목_커버리지.csv', 'KR CDI V3', 'KR CDI 80항목 커버리지', csv(krcdiRows(entries)), 'text/csv');
     add('KR_CDI/ConceptMap_KCURE-KRCDI.json', 'KR CDI V3', 'FHIR ConceptMap (K-CURE→KR CDI)', JSON.stringify(KC.artifacts.toKrcdi(conf, items), null, 2), 'application/fhir+json');
 

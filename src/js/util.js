@@ -107,6 +107,7 @@ KC.match = (function () {
     '미대응': '미매칭', '대응없음': '미매칭', '대응 없음': '미매칭',
     '수집범위외': '범위외', '미매핑': '항목 미인식', '대응': '매칭'
   };
+  const STD_LABEL = { krcdi: 'KR CDI', krcore: 'KR Core', mcode: 'mCODE', nbb: '국가바이오빅데이터', dcat: 'DCAT' };
   const RE = /구조참조\(KR-mCODE 자체정의\)|직접대응|직접재사용|제약재사용|부분대응|부분참조|개념참조|구조참조|대응 없음|대응없음|미대응|수집범위외|미매핑/g;
   const LEGEND = [
     ['직접매칭', '그대로 사용', '직접대응 · 직접재사용'],
@@ -139,6 +140,8 @@ KC.match = (function () {
   /** 항목의 원래 판정 요약: 'KR CDI 부분대응 · KR Core 제약재사용 · mCODE 개념참조' */
   function orig(it) {
     if (!it) return '미매핑';
+    // 담당자가 고친 항목: 항목정의서의 원래 판정 + 고친 표준
+    if (it._orig) return it._orig + ' · 수동 수정: ' + (it._manual || []).map(function (k) { return STD_LABEL[k] || k; }).join(', ');
     const p = [];
     if (it.cdi && it.cdi.el) p.push('KR CDI ' + (it.cdi.match || '대응(유형 미상)'));
     if (it.core && it.core.judge) p.push('KR Core ' + it.core.judge);

@@ -400,15 +400,25 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
   /* ================= 메타데이터 변환 (주 기능) ================= */
   /* st.msel = {cancer, source, fileName, entries:[{col,item,method,include,argoKey?}]} */
 
+  /* 데이터사업: kcure(암종 하위 선택) · nbb(국가바이오빅데이터) · generic(범용) */
+  function projOf(cancer) { return cancer === KC.spec.GENERIC ? 'generic' : 'kcure'; }
+
   function renderSelCancers() {
-    const G = KC.spec.GENERIC;
-    $('#selCancers').innerHTML = KC.spec.data.meta.cancers.concat([G]).map(function (c) {
-      const n = c === G ? KC.spec.generic.length : KC.spec.items.filter(function (it) { return it.cancers.indexOf(c) >= 0; }).length;
-      return '<label class="chip' + (c === G ? ' generic' : '') + '" title="' + (c === G ? 'K-CURE 가 아닌 일반 병원 데이터(입원·외래·검사·처방 등) — KR CDI V3 기반 범용 사전' : '') + '"><input type="radio" name="mcancer" value="' + esc(c) + '"' +
-        (st.msel && st.msel.source === 'cancer' && st.msel.cancer === c ? ' checked' : '') + '>' + esc(c === G ? '범용(비 K-CURE)' : c) + ' <small>' + n + '</small></label>';
+    const G = KC.spec.GENERIC, NB = KC.nbb.state;
+    const cnt = { kcure: KC.spec.items.length, nbb: NB.loaded ? NB.items.length : '미적재', generic: KC.spec.generic.length };
+    $('#selProjects').innerHTML = KC.projects.LIST.map(function (p) {
+      return '<label class="chip' + (p.id === 'generic' ? ' generic' : '') + '" title="' + esc(p.desc) + '"><input type="radio" name="mproj" value="' + p.id + '"' +
+        (st.proj === p.id ? ' checked' : '') + '>' + esc(p.label) + ' <small>' + cnt[p.id] + '</small></label>';
     }).join('');
+    $('#selCancers').innerHTML = [''].concat(KC.spec.data.meta.cancers).map(function (c) {
+      const n = c ? KC.spec.items.filter(function (it) { return it.cancers.indexOf(c) >= 0; }).length : KC.spec.items.length;
+      return '<label class="chip"><input type="radio" name="mcancer" value="' + esc(c) + '"' + ((st.kcCancer || '') === c ? ' checked' : '') + '>' + esc(c || '전체') + ' <small>' + n + '</small></label>';
+    }).join('');
+    $('#selCancerRow').classList.toggle('hidden', st.proj !== 'kcure');
+    $('#selNbbRow').classList.toggle('hidden', st.proj !== 'nbb');
+    $('#nbbInfo').textContent = NB.loaded ? '사전: ' + NB.source + ' · ' + NB.items.length + '항목' : '국가바이오빅데이터 항목정의서가 아직 없습니다(자리만 준비). 불러오면 ② 의 국가바이오빅데이터 칸이 자동으로 채워집니다.';
     $('#selCancerLabel').innerHTML = KC.spec.data.meta.cancers.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') +
-      '<option value="' + G + '">범용(비 K-CURE)</option><option value="">(암종 미지정)</option>';
+      '<option value="' + G + '">범용(비 K-CURE)</option><option value="국가바이오빅데이터">국가바이오빅데이터</option><option value="">(구분 미지정)</option>';
     $('#argoList').innerHTML = (KC.spec.data.argo ? Object.keys(KC.spec.data.argo.fields) : []).map(function (k) {
       const f = KC.spec.data.argo.fields[k];
       return '<option value="' + esc(k + ' — ' + f.label + ' [' + f.tier + ']') + '">';
@@ -417,12 +427,61 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       const f = KC.spec.data.omop.fields[k];
       return '<option value="' + esc(k + ' — ' + f.type + (f.required ? ' [필수]' : '')) + '">';
     }).join('');
+    $('#krcdiList').innerHTML = KC.spec.krcdi.map(function (k) { return '<option value="' + esc(KC.ov.krcdiKey(k)) + '">'; }).join('');
+    $('#coreList').innerHTML = KC.ov.coreCatalog().map(function (c) { return '<option value="' + esc(c.key) + '">'; }).join('');
+    $('#mcodeList').innerHTML = KC.ov.mcodeCatalog().map(function (c) { return '<option value="' + esc(c.key) + '">'; }).join('');
+    $('#nbbList').innerHTML = NB.items.map(function (it) { return '<option value="' + esc(it.id + ' ' + it.name) + '">' + esc(it.type || '') + '</option>'; }).join('');
+    $('#stdItemList').innerHTML = KC.spec.items.concat(KC.spec.generic).map(function (it) { return '<option value="' + esc(it.id + ' ' + it.name) + '">'; }).join('');
   }
 
+  /** 현재 데이터사업·암종 기준으로 매핑할 때 쓸 암종 값 (범용 = KC.spec.GENERIC) */
+  function mapCancer(cols) {
+    if (st.proj === 'generic') return KC.spec.GENERIC;
+    if (st.proj === 'kcure') return st.kcCancer || '';
+    return cols ? guessCancer(cols) : '';   // 국가바이오빅데이터: 사전이 없으므로 K-CURE·범용 중 맞는 쪽으로 기본 연결
+  }
+  function labelOf() { return st.proj === 'nbb' ? '국가바이오빅데이터' : st.proj === 'generic' ? KC.spec.GENERIC : (st.kcCancer || ''); }
+
+  /** 데이터사업(·암종)이 바뀌면: 불러온 파일이 있으면 그 컬럼을 다시 연결, 없으면 사업 항목 목록을 보여 준다 */
+  function applyProject() {
+    renderSelCancers();
+    $('#selMsg').innerHTML = '';
+    if (st.msel && st.msel.source === 'file' && st.msel.cols) {
+      const inc = {};
+      st.msel.entries.forEach(function (x) { inc[x.col] = x.include; });
+      st.msel.entries = KC.meta.entriesFromColumns(st.msel.cols, mapCancer(st.msel.cols)).map(function (e) { e.include = inc[e.col] !== false; return e; });
+      st.msel.cancer = labelOf();
+      st.msel.project = st.proj;
+      afterSelection('파일 「' + st.msel.fileName + '」 · ' + st.msel.how + ' · ' + KC.projects.byId[st.proj].label + (st.proj === 'kcure' && st.kcCancer ? ' ' + st.kcCancer : ''));
+      return;
+    }
+    if (st.proj === 'nbb') {
+      const NB = KC.nbb.state;
+      if (!NB.loaded) {
+        st.msel = null;
+        $('#selCard').classList.add('hidden');
+        $('#selSource').textContent = '';
+        $('#selMsg').innerHTML = note('국가바이오빅데이터 항목정의서가 아직 없습니다. 데이터 파일을 불러오거나, 위의 버튼으로 항목정의서를 불러오세요.', 'warn');
+        return;
+      }
+      st.msel = { cancer: labelOf(), project: 'nbb', source: 'project', entries: NB.items.map(function (n) {
+        const m = KC.mapper.matchOne(n.name, '');
+        return KC.ov.set({ col: n.name, item: m.itemId ? KC.spec.byId[m.itemId] : null, method: m.itemId ? m.method : '미매핑', include: true }, 'nbb', { id: n.id, name: n.name, type: n.type });
+      }) };
+      afterSelection('국가바이오빅데이터 항목 전체 (' + NB.source + ')');
+      return;
+    }
+    const c = st.proj === 'generic' ? KC.spec.GENERIC : (st.kcCancer || '');
+    st.msel = { cancer: labelOf(), project: st.proj, source: 'cancer', entries: KC.meta.entriesForCancer(c).map(function (e) { e.include = true; return e; }) };
+    afterSelection(st.proj === 'generic' ? '범용 사전 전체(비 K-CURE · KR CDI V3 기반)' : 'K-CURE ' + (st.kcCancer ? '「' + st.kcCancer + '」' : '전체') + ' 항목');
+  }
+
+  /** (호환) 암종 또는 범용을 바로 선택 — 바로가기 #view=…&cancer=… · 자체 점검에서 사용 */
   function selectCancer(c) {
-    st.msel = { cancer: c, source: 'cancer', entries: KC.meta.entriesForCancer(c).map(function (e) { e.include = true; return e; }) };
-    $$('#selCancers input').forEach(function (i) { i.checked = i.value === c; });
-    afterSelection(c === KC.spec.GENERIC ? '범용 사전 전체(비 K-CURE · KR CDI V3 기반)' : '암종 「' + c + '」의 K-CURE 항목 전체');
+    st.proj = projOf(c);
+    st.kcCancer = st.proj === 'kcure' ? c : '';
+    if (st.msel && st.msel.source === 'file') st.msel = null;
+    applyProject();
   }
 
   async function selectFromFile(file) {
@@ -431,34 +490,47 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       const f = await KC.readers.readFile(file);
       const sheet = f.sheets.find(function (s) { return s.rows.some(function (r) { return nonEmpty(r); }); });
       if (!sheet) throw new Error('읽을 수 있는 행이 없습니다.');
-      let entries = KC.meta.entriesFromSpecSheet(sheet.rows), how, cancer;
+      let entries = KC.meta.entriesFromSpecSheet(sheet.rows), how, cols = null;
       if (entries) {
-        // 항목정의서 형식: 행마다 항목ID/표준항목명 → 항목. 암종은 선택 항목이 가장 많이 속한 암종
         how = '항목정의서 형식 — 행(항목) ' + entries.length + '개';
-        const counts = {};
-        entries.forEach(function (e) { if (e.item) e.item.cancers.forEach(function (c) { counts[c] = (counts[c] || 0) + 1; }); });
-        const best = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || '';
-        // 9개 암종 전 항목이면 특정 암종으로 볼 수 없음
-        cancer = entries.length > 400 ? '' : best;
+        if (!st.proj) st.proj = 'kcure';
       } else {
         const rows = sheet.rows.filter(function (r) { return nonEmpty(r); });
         const hr = guessHeaderRow(rows);
-        let cols = rows[hr - 1].map(function (v) { return String(v == null ? '' : v).trim(); }).filter(Boolean);
+        cols = rows[hr - 1].map(function (v) { return String(v == null ? '' : v).trim(); }).filter(Boolean);
         // 한 열짜리 목록(컬럼명을 세로로 나열)이면 각 행을 컬럼명으로 본다
         if (cols.length === 1 && rows.length > 1 && rows.every(function (r) { return nonEmpty(r) <= 1; })) {
           cols = rows.map(function (r) { return String(r.find(function (v) { return String(v == null ? '' : v).trim(); })).trim(); });
           how = '세로 목록 — 컬럼 ' + cols.length + '개';
         } else how = hr + '행을 헤더로 사용 — 컬럼 ' + cols.length + '개';
-        cancer = guessCancer(cols);
-        entries = KC.meta.entriesFromColumns(cols, cancer);
+        // 사업을 아직 고르지 않았으면 컬럼으로 추정 (K-CURE 암종 또는 범용)
+        if (!st.proj) {
+          const g = guessCancer(cols);
+          st.proj = projOf(g);
+          st.kcCancer = st.proj === 'kcure' ? g : '';
+        }
+        entries = KC.meta.entriesFromColumns(cols, mapCancer(cols));
       }
       entries.forEach(function (e) { e.include = true; });
-      st.msel = { cancer: cancer, source: 'file', fileName: file.name, entries: entries };
-      $$('#selCancers input').forEach(function (i) { i.checked = false; });
-      afterSelection('파일 「' + file.name + '」 · ' + how + (f.truncated ? ' · 대용량이라 앞부분만 읽음' : ''));
+      st.msel = { cancer: labelOf(), project: st.proj, source: 'file', fileName: file.name, how: how + (f.truncated ? ' · 대용량이라 앞부분만 읽음' : ''), cols: cols, entries: entries };
+      renderSelCancers();
+      afterSelection('파일 「' + file.name + '」 · ' + st.msel.how + ' · ' + KC.projects.byId[st.proj].label + (st.proj === 'kcure' && st.kcCancer ? ' ' + st.kcCancer : ''));
     } catch (err) {
       $('#selMsg').innerHTML = note('파일을 읽지 못했습니다: ' + esc(err.message), 'err');
     }
+  }
+
+  async function loadNbbDict(file) {
+    try {
+      const f = await KC.readers.readFile(file);
+      const sheet = f.sheets.find(function (s) { return s.rows.some(function (r) { return nonEmpty(r); }); });
+      const n = KC.nbb.fromRows(sheet ? sheet.rows : [], file.name);
+      KC.audit.log('nbb.dict', { file: file.name, items: n });
+      if (st.msel) st.msel.entries.forEach(function (e) { KC.ov.apply(e); });
+      st.mpkg = null;
+      applyProject();
+      $('#selMsg').innerHTML = note('국가바이오빅데이터 항목정의서를 불러왔습니다: ' + n + '항목 (이 창에서만 사용)', 'ok');
+    } catch (err) { $('#selMsg').innerHTML = note('국가바이오빅데이터 항목정의서를 읽지 못했습니다: ' + esc(err.message), 'err'); }
   }
 
   function afterSelection(sourceText) {
@@ -466,6 +538,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     st.mmPage = 0;
     $('#selSource').textContent = '현재 선택: ' + sourceText;
     $('#selCancerLabel').value = st.msel.cancer || '';
+    if ($('#selCancerLabel').value !== (st.msel.cancer || '')) $('#selCancerLabel').value = '';
     const doms = Object.keys(U.groupCount(st.msel.entries, function (e) { return e.item ? e.item.domain : '(항목 미인식)'; })).sort();
     $('#selDomain').innerHTML = '<option value="">도메인 전체</option>' + doms.map(function (d) { return '<option>' + esc(d) + '</option>'; }).join('');
     $('#selCard').classList.remove('hidden');
@@ -486,26 +559,30 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     });
   }
 
+  /** ① 표의 표준항목명·자료형태: 국가바이오빅데이터 사업이면 그 사전의 항목을 먼저 보여 준다 */
+  function selStd(e) {
+    const nb = st.msel.project === 'nbb' ? KC.ov.nbbOf(e) : null;
+    if (nb && nb.name) return { name: nb.name, type: nb.type || (e.item ? e.item.type : ''), note: nb.id || '' };
+    const it = e.item;
+    return it ? { name: it.name, type: it.type + (it.unit ? ' · ' + it.unit : ''), note: it.id } : null;
+  }
+
   function renderSel() {
     if (!st.msel) return;
     const all = st.msel.entries, used = usedEntries();
-    const s = KC.meta.summarize(used);
-    $('#selTitle').textContent = '선택 항목 — ' + (st.msel.cancer || '암종 미지정');
-    $('#selStats').innerHTML = stat('선택 컬럼', used.length + ' / ' + all.length) +
-      stat('표준항목 연결', s.mapped, s.unmapped ? '항목 미인식 ' + s.unmapped : '', s.unmapped ? 'warn' : 'ok') +
-      stat('KR CDI 매칭', s.krcdi, '80항목 중 ' + s.krcdiElements + '개 · 범위외 ' + s.krcdiOutOfScope) +
-      stat('KR Core', s.krcoreDirect + ' / ' + s.krcoreConstrained + ' / ' + s.krcoreExtension, '직접매칭 / 조건부매칭 / 확장필요') +
-      stat('mCODE 매칭', s.mcode, '프로파일 ' + s.mcodeProfiles + '/' + s.mcodeProfilesTotal) +
-      stat('OMOP 매칭(후보)', s.omop, '테이블 ' + Object.keys(s.omopTables).length + '개') +
-      stat('ARGO 매칭(후보)', s.argo, 'Core 필드 ' + s.argoCoreHit + '/' + s.argoCore + ' (+파생 ' + s.argoCoreDerived + ')');
+    const linked = used.filter(function (e) { return selStd(e); }).length;
+    const pj = KC.projects.byId[st.msel.project || st.proj] || {};
+    $('#selTitle').textContent = '선택 항목 — ' + (pj.label || '') + (st.msel.project === 'kcure' && st.kcCancer ? ' · ' + st.kcCancer : '');
+    $('#selStats').innerHTML = stat('데이터사업', pj.label || '-', st.msel.project === 'kcure' ? (st.kcCancer || '암종 전체') : '') +
+      stat('선택 컬럼', used.length + ' / ' + all.length) +
+      stat('표준항목 연결', linked + ' / ' + used.length, used.length - linked ? '항목 미인식 ' + (used.length - linked) : '', used.length - linked ? 'warn' : 'ok');
     const rows = selFiltered();
-    $('#selTable').innerHTML = '<table><thead><tr><th>포함</th><th>원천 컬럼</th><th>항목ID</th><th>표준항목명</th><th>도메인</th><th>분류</th><th>자료형</th><th>선택 방식</th></tr></thead><tbody>' +
+    $('#selTable').innerHTML = '<table><thead><tr><th>포함</th><th>원천컬럼</th><th>표준항목명</th><th>자료형태</th></tr></thead><tbody>' +
       rows.map(function (e) {
-        const i = st.msel.entries.indexOf(e), it = e.item;
+        const i = st.msel.entries.indexOf(e), sd = selStd(e);
         return '<tr><td><input type="checkbox" data-sel="' + i + '"' + (e.include ? ' checked' : '') + '></td><td><b>' + esc(e.col) + '</b></td>' +
-          '<td class="mono small">' + (it ? it.id : '') + '</td><td>' + (it ? esc(it.name) : '<span class="pill warn">항목 미인식</span>') + '</td><td>' + (it ? esc(it.domain) : '') +
-          '</td><td class="small">' + (it ? esc(it.cat1 + ' / ' + it.cat2) : '') + '</td><td class="small">' + (it ? esc(it.type + (it.unit ? ' · ' + it.unit : '')) : '') +
-          '</td><td><span class="pill ' + (it ? 'ok' : 'warn') + '">' + esc(KC.match.label(e.method)) + '</span></td></tr>';
+          '<td>' + (sd ? esc(sd.name) + ' <span class="muted mono small">' + esc(sd.note) + '</span>' : '<span class="pill warn">항목 미인식</span>') + '</td>' +
+          '<td class="small">' + (sd ? esc(sd.type) : '') + '</td></tr>';
       }).join('') + '</tbody></table>';
   }
 
@@ -533,29 +610,78 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     });
   }
 
+  /* ② 표의 칸: 모든 표준을 목록에서 골라 고칠 수 있다 (KC.ov) */
+  function manual(e, std) { return e.ov && e.ov[std] !== undefined ? ' <span class="pill info" title="담당자가 고친 값">수동</span>' : ''; }
+  function stdInput(i, std, list, value, ph) {
+    return '<input type="text" class="argo" list="' + list + '" data-std="' + std + '" data-i="' + i + '" value="' + esc(value) + '" placeholder="' + esc(ph) + '">';
+  }
+  function coreKey(c) { return c && c.path && c.path !== '해당 없음' ? c.path + ' — ' + c.profile : ''; }
+  function mcodeKey(m) { return m && m.title && m.element ? m.title + ' · ' + m.element + ' — ' + m.path : ''; }
+
   function mmRowHtml(e) {
     const i = st.msel.entries.indexOf(e), it = e.item;
-    if (!it) return '<tr><td><b>' + esc(e.col) + '</b><div class="small muted">항목 미인식 — DCAT 변수로만 기술</div></td><td colspan="6" class="muted small">K-CURE 표준항목이 없어 KR CDI·KR Core·mCODE·OMOP·ARGO 매칭을 정할 수 없습니다.</td></tr>';
-    const c = it.cdi || {}, a = KC.meta.argoOf(e), o = KC.meta.omopOf(e), mc = KC.meta.mcodeOf(e);
-    const jc = KC.match.cls(it.core.judge);
+    const head = '<td class="std"><div class="l1"><b>' + esc(e.col) + '</b></div></td>';
+    const itemCell = '<td class="std">' + stdInput(i, 'item', 'stdItemList', it ? it.id + ' ' + it.name : '', '항목 미인식 — 항목ID·이름') +
+      (it ? '<div class="l2">' + esc(it.type + (it.unit ? ' · ' + it.unit : '')) + ' · ' + esc(it.domain) + '</div>' : '') +
+      '<span class="pill ' + (it ? 'ok' : 'warn') + '">' + esc(KC.match.label(e.method)) + '</span></td>';
+    if (!it) return '<tr data-mi="' + i + '">' + head + itemCell + '<td colspan="8" class="muted small">K-CURE 칸에 표준항목을 지정하면 KR CDI·KR Core·국가바이오빅데이터·mCODE·OMOP·DCAT·ARGO 매칭이 채워집니다. 지금은 DCAT 변수로만 기술됩니다.</td></tr>';
+    const c = it.cdi || {}, a = KC.meta.argoOf(e), o = KC.meta.omopOf(e), mc = KC.meta.mcodeOf(e), nb = KC.ov.nbbOf(e);
     const ac = !a ? '' : a.conf === '높음' || a.conf === '수동' ? 'ok' : a.conf === '낮음' ? 'warn' : 'info';
     const oc = !o ? '' : o.conf === '높음' || o.conf === '수동' ? 'ok' : o.conf === '낮음' ? 'warn' : 'info';
-    const mlc = !mc ? 'warn' : KC.match.cls(mc.level);
-    return '<tr data-mi="' + i + '">' +
-      '<td class="std"><div class="l1">' + esc(e.col) + '</div><div class="l2">' + it.id + (e.col !== it.name ? ' · ' + esc(it.name) : '') + '</div><div class="l2">' + esc(it.type + (it.unit ? ' · ' + it.unit : '')) + '</div></td>' +
-      '<td class="std">' + (c.el ? '<div class="l1">' + esc(c.el) + ' <span class="pill">' + esc(c.req) + '</span></div><div class="l2">' + esc(c.cls) + ' · ' + esc(KC.match.label(c.match || '대응')) + '</div>' : '<span class="muted small">미매칭</span>') + '</td>' +
-      '<td class="std"><div class="l1 mono small">' + esc(it.core.path) + '</div><div class="l2">' + esc(it.core.profile) + '</div><span class="pill ' + jc + '" title="원래 판정: ' + esc(it.core.judge) + '">' + esc(KC.match.label(it.core.judge)) + '</span></td>' +
-      '<td class="std">' + (mc ? '<div class="l1 mono small">' + esc(mc.path) + '</div><div class="l2">' + esc(mc.title || mc.profile) + (mc.element ? ' · ' + esc(mc.element) : '') + '</div>' :
-        '<div class="l2">STU4 매칭 없음 → KR-mCODE 후보 ' + esc(it.prf) + '</div>') + '<span class="pill ' + mlc + '" title="원래 판정: ' + esc(it.mcode.level) + '">' + esc(KC.match.label(it.mcode.level)) + '</span></td>' +
-      '<td class="std"><input type="text" class="argo" list="omopList" data-omop="' + i + '" value="' + esc(o ? o.key : '') + '" placeholder="미매칭 — table.field 입력">' +
-      (o ? '<div class="l2">' + (o.concept ? '개념 ' + esc(o.concept) : 'person 필드') + (o.vocab && o.vocab !== '-' ? ' · ' + esc(o.vocab) : '') + ' <span class="pill ' + oc + '">' + esc(o.conf) + '</span></div>' +
-        (o.note ? '<div class="l2">ETL: ' + esc(o.note) + '</div>' : '') : '') + '</td>' +
-      '<td class="std"><div class="l1 mono small">' + KC.dcat.xsdType(it.type) + '</div><div class="l2">ndi:profile 변수</div></td>' +
-      '<td class="std"><input type="text" class="argo" list="argoList" data-argo="' + i + '" value="' + esc(a ? a.key : '') + '" placeholder="미매칭 — schema.field 입력">' +
-      (a ? '<div class="l2">' + esc(a.label) + ' · ' + esc(a.tier + (a.req ? '·' + a.req : '')) + ' · ' + esc(a.type) + ' <span class="pill ' + ac + '">' + esc(a.conf) + '</span></div>' +
-        (a.note ? '<div class="l2">변환: ' + esc(a.note) + '</div>' : '') : '') + '</td>' +
+    const NB = KC.nbb.state;
+    const xsd = it.xsd || KC.dcat.xsdType(it.type);
+    return '<tr data-mi="' + i + '">' + head + itemCell +
+      '<td class="std">' + stdInput(i, 'krcdi', 'krcdiList', c.el ? KC.ov.krcdiKey(c) : '', '미매칭 — 분류 / 항목') +
+        (c.el ? '<span class="pill ' + KC.match.cls(c.match || '대응') + '">' + esc(KC.match.label(c.match || '대응')) + '</span>' : '') + manual(e, 'krcdi') + '</td>' +
+      '<td class="std">' + stdInput(i, 'krcore', 'coreList', coreKey(it.core), '미매칭 — FHIR 경로') +
+        '<span class="pill ' + KC.match.cls(it.core.judge) + '" title="원래 판정: ' + esc(e.base ? e.base.core.judge : it.core.judge) + '">' + esc(KC.match.label(it.core.judge)) + '</span>' + manual(e, 'krcore') + '</td>' +
+      '<td class="std">' + stdInput(i, 'nbb', 'nbbList', nb ? (nb.id ? nb.id + ' ' : '') + nb.name : '', NB.loaded ? '미매칭 — 항목ID·이름' : '사전 미적재 — 직접 입력') +
+        (nb && nb.type ? '<div class="l2">' + esc(nb.type) + '</div>' : '') + manual(e, 'nbb') + '</td>' +
+      '<td class="std">' + stdInput(i, 'mcode', 'mcodeList', mcodeKey(mc), mc ? '' : '미매칭 — KR-mCODE 후보 ' + (it.prf || '')) +
+        '<span class="pill ' + (mc ? KC.match.cls(it.mcode.level) : 'warn') + '">' + esc(KC.match.label(it.mcode.level)) + '</span>' + manual(e, 'mcode') + '</td>' +
+      '<td class="std"><input type="text" class="argo" list="omopList" data-omop="' + i + '" value="' + esc(o ? o.key : '') + '" placeholder="미매칭 — table.field">' +
+        (o ? '<div class="l2">' + (o.concept ? '개념 ' + esc(o.concept) : 'person 필드') + (o.vocab && o.vocab !== '-' ? ' · ' + esc(o.vocab) : '') + ' <span class="pill ' + oc + '">' + esc(o.conf) + '</span></div>' : '') + '</td>' +
+      '<td class="std"><select data-std="dcat" data-i="' + i + '">' + KC.ov.XSD.map(function (x) { return '<option' + (x === xsd ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select>' +
+        '<div class="l2">ndi:profile 변수</div>' + manual(e, 'dcat') + '</td>' +
+      '<td class="std"><input type="text" class="argo" list="argoList" data-argo="' + i + '" value="' + esc(a ? a.key : '') + '" placeholder="미매칭 — schema.field">' +
+        (a ? '<div class="l2">' + esc(a.label) + ' · ' + esc(a.tier + (a.req ? '·' + a.req : '')) + ' <span class="pill ' + ac + '">' + esc(a.conf) + '</span></div>' : '') + '</td>' +
       '<td><select data-rv="' + i + '">' + ['후보', '승인', '수정', '반려'].map(function (s) { return '<option' + (s === (e.rv || '후보') ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
       (it.review && it.review.length ? '<div class="l2">수정안 ' + it.review.length + '건</div>' : '') + '</td></tr>';
+  }
+
+  /** ② 칸 수정 처리 — 성공하면 true */
+  function onStdEdit(t) {
+    const en = st.msel.entries[+t.dataset.i], std = t.dataset.std, v = t.value.trim();
+    const bad = function (msg) { t.style.borderColor = 'var(--err)'; t.title = msg; return false; };
+    if (std === 'item') {
+      let it = null;
+      if (v) {
+        const id = v.split(/\s+/)[0];
+        it = KC.spec.byId[id] || null;
+        if (!it) { const m = KC.mapper.matchOne(v, st.msel.project === 'generic' ? KC.spec.GENERIC : ''); it = m.itemId ? KC.spec.byId[m.itemId] : null; }
+        if (!it) return bad('표준항목을 목록에서 고르세요(항목ID 또는 이름)');
+      }
+      KC.ov.setItem(en, it);
+      KC.audit.log('map.item', { col: en.col, to: it ? it.id : '(미매핑)' });
+    } else {
+      const base = en.base !== undefined ? en.base : en.item;
+      let val = KC.ov.parse(std, v);
+      if (val === null) return bad('목록에서 고르세요');
+      // 원래 값과 같으면 수정 해제
+      const same = std === 'krcdi' ? (val === KC.ov.NONE ? !(base.cdi && base.cdi.el) : base.cdi && val === base.cdi.cls + '|' + base.cdi.el)
+        : std === 'krcore' ? val !== KC.ov.NONE && val.path === base.core.path && val.profile === base.core.profile
+        : std === 'mcode' ? (val === KC.ov.NONE ? !KC.meta.mcodeOf({ item: base }) : base.mcode && val.path === base.mcode.path && val.title === (base.mcode.title || base.mcode.profile) && val.element === base.mcode.element)
+        : std === 'dcat' ? val === KC.dcat.xsdType(base.type)
+        : std === 'nbb' ? (val === KC.ov.NONE ? !KC.nbb.match(en.col, base) : (function () { const m = KC.nbb.match(en.col, base); return m && m.id === val.id; })())
+        : false;
+      KC.ov.set(en, std, same ? undefined : val);
+      KC.audit.log('map.' + std, { col: en.col, itemId: base.id, to: v || '(미매칭)', manual: !same });
+    }
+    en.rv = '수정';
+    st.mpkg = null;
+    renderMm();
+    markDone('mmap');
+    return true;
   }
 
   /** 행 전체가 '신뢰도 높음'인지: OMOP 높음, ARGO 없음·높음, 매핑 수정안 없음 */
@@ -589,7 +715,7 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       .concat(tables.map(function (t) { return ['omop:' + t, 'OMOP ' + t + ' (' + s.omopTables[t] + ')']; }))
       .map(function (o) { return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('');
     $('#mmView').value = cur && $('#mmView').querySelector('option[value="' + cur + '"]') ? cur : 'all';
-    $('#mmTable').innerHTML = '<table><thead><tr><th>컬럼 · K-CURE 항목</th><th>KR CDI V3</th><th>KR Core V2 (FHIR)</th><th>mCODE STU4</th><th>OMOP CDM v5.4 (수정 가능)</th><th>DCAT</th><th>ICGC ARGO v1.34 (수정 가능)</th><th>검토</th></tr></thead><tbody>' +
+    $('#mmTable').innerHTML = '<table><thead><tr><th>원천컬럼</th><th>K-CURE·범용 표준항목</th><th>KR CDI V3</th><th>KR Core V2 (FHIR)</th><th>국가바이오빅데이터</th><th>mCODE STU4</th><th>OMOP CDM v5.4</th><th>DCAT</th><th>ICGC ARGO v1.34</th><th>검토</th></tr></thead><tbody>' +
       rows.slice(st.mmPage * per, st.mmPage * per + per).map(mmRowHtml).join('') + '</tbody></table>';
     $('#mmPager').innerHTML = rows.length + '개 · ' + (st.mmPage + 1) + ' / ' + pages + ' 쪽 <button class="btn sm" data-mp="-1"' + (st.mmPage ? '' : ' disabled') + '>이전</button><button class="btn sm" data-mp="1"' + (st.mmPage < pages - 1 ? '' : ' disabled') + '>다음</button>';
   }
@@ -799,22 +925,14 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
       if (e.target.id === 'dlAll') st.outputs.forEach(function (o, i) { setTimeout(function () { U.download(o.fileName, o.content, o.mime); }, i * 400); });
     });
     /* 메타데이터 변환 */
-    $('#selCancers').addEventListener('change', function (e) { if (e.target.name === 'mcancer') selectCancer(e.target.value); });
+    $('#selProjects').addEventListener('change', function (e) { if (e.target.name === 'mproj') { st.proj = e.target.value; applyProject(); } });
+    $('#selCancers').addEventListener('change', function (e) { if (e.target.name === 'mcancer') { st.kcCancer = e.target.value; applyProject(); } });
+    $('#nbbLoadBtn').addEventListener('click', function () { $('#nbbFile').click(); });
+    $('#nbbFile').addEventListener('change', function (e) { if (e.target.files[0]) loadNbbDict(e.target.files[0]); e.target.value = ''; });
     $('#selFileBtn').addEventListener('click', function () { $('#selFileInput').click(); });
     $('#selFileInput').addEventListener('change', function (e) { if (e.target.files[0]) selectFromFile(e.target.files[0]); e.target.value = ''; });
     $('#selCancerLabel').addEventListener('change', function (e) {
       st.msel.cancer = e.target.value;
-      // 컬럼 파일이면 암종 우선순위로 별칭을 다시 대조
-      if (st.msel.source === 'file' && st.msel.entries.some(function (x) { return x.method !== '항목ID'; })) {
-        const inc = {};
-        st.msel.entries.forEach(function (x) { inc[x.col] = x.include; });
-        st.msel.entries = st.msel.entries.map(function (x) {
-          if (x.method === '항목ID') return x;
-          const n = KC.meta.entriesFromColumns([x.col], st.msel.cancer)[0];
-          n.include = inc[x.col];
-          return n;
-        });
-      }
       st.mpkg = null;
       renderSel();
     });
@@ -834,6 +952,8 @@ KC.APP_VERSION = 'v0.2.0-dev (프로토타입)';
     $('#mmView').addEventListener('change', function () { st.mmPage = 0; renderMm(); });
     $('#mmPager').addEventListener('click', function (e) { const b = e.target.closest('[data-mp]'); if (b) { st.mmPage += +b.dataset.mp; renderMm(); } });
     $('#mmTable').addEventListener('change', function (e) {
+      const sd = e.target.closest('[data-std]');
+      if (sd) { onStdEdit(sd); return; }
       const rv = e.target.closest('[data-rv]');
       if (rv) {
         const en = st.msel.entries[+rv.dataset.rv];

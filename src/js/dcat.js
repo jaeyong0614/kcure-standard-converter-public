@@ -350,7 +350,7 @@ KC.dcat = (function () {
     const mc = KC.meta ? KC.meta.mcodeOf(e) : null;
     return {
       itemId: it.id, name: it.name, definition: it.def, domain: it.domain, category: it.cat1 + '/' + it.cat2,
-      datatype: xsdType(it.type), sourceType: it.type, length: it.len || undefined, unit: it.unit || undefined,
+      datatype: it.xsd || xsdType(it.type), sourceType: it.type, length: it.len || undefined, unit: it.unit || undefined,
       allowed: it.allowed || undefined, required: it.req,
       krcdi: it.cdi && it.cdi.el ? { class: it.cdi.cls, element: it.cdi.el, requirement: it.cdi.req, match: KC.match.label(it.cdi.match || '대응'), matchOriginal: it.cdi.match || undefined } : undefined,
       krcore: { profile: it.core.profile, profileUrl: it.core.url || undefined, path: it.core.path, judgement: KC.match.label(it.core.judge), judgementOriginal: it.core.judge },

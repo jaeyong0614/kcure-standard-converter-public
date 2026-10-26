@@ -13,7 +13,7 @@
   <div class="top-row">
     <div class="brand">
       <h1>K-CURE 표준변환기 <span class="muted small" id="appVersion"></span></h1>
-      <p>K-CURE 9개 암종 항목(컬럼) → KR CDI V3 · KR Core V2(FHIR) · mCODE STU4 · OMOP CDM v5.4 · DCAT 2.0(국가 데이터 카탈로그) · ICGC ARGO 메타데이터 변환</p>
+      <p>데이터 항목(컬럼) → K-CURE · KR CDI V3 · KR Core V2(FHIR) · 국가바이오빅데이터 · mCODE STU4 · OMOP CDM v5.4 · DCAT 2.0(국가 데이터 카탈로그) · ICGC ARGO 메타데이터 변환</p>
     </div>
     <div class="badges">
       <span class="badge ok" title="Content-Security-Policy connect-src 'none' — 네트워크 전송 차단">● 오프라인 실행 · 외부 전송 차단</span>
@@ -22,7 +22,7 @@
     </div>
   </div>
   <nav class="tabs" id="tabs">
-    <button class="tab active" data-tab="sel"><span class="n">1</span>암종·항목 선택</button>
+    <button class="tab active" data-tab="sel"><span class="n">1</span>데이터·사업 선택</button>
     <button class="tab" data-tab="mmap"><span class="n">2</span>메타데이터 매핑</button>
     <button class="tab" data-tab="mout"><span class="n">3</span>메타데이터 내려받기</button>
     <button class="tab" data-tab="deid"><span class="n">4</span>가명처리 코드</button>
@@ -42,20 +42,26 @@
   <!-- ① 암종·항목 선택 -->
   <section class="panel active" id="p-sel">
     <div class="card">
-      <h2>① 암종과 변환할 항목(컬럼) 선택</h2>
-      <p class="desc">암종을 고르면 그 암종의 K-CURE 항목 전체가 선택됩니다. K-CURE가 아닌 일반 병원 데이터는 <b>범용(비 K-CURE)</b>을 고르세요(KR CDI V3 기반 범용 사전으로 매핑). 특정 컬럼만 변환하려면 컬럼 목록 파일을 불러오세요. 원천 데이터의 헤더 행, 컬럼명 한 줄 목록, 항목정의서(항목ID·표준항목명 열) 모두 가능합니다.</p>
-      <div class="row" id="selCancers"></div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn sm" id="selFileBtn">컬럼 목록 파일 불러오기 (CSV·XLSX)</button>
+      <h2>① 데이터 불러오기 · 데이터사업 선택</h2>
+      <p class="desc">변환할 <b>데이터 파일(CSV·XLSX)</b>을 불러오면 컬럼을 고른 데이터사업의 표준항목에 자동으로 연결합니다. 원천 데이터의 헤더 행, 컬럼명 세로 목록, 항목정의서(항목ID·표준항목명 열) 모두 가능합니다. 데이터 없이 <b>데이터사업</b>만 고르면 그 사업의 항목 목록에서 변환할 항목을 고릅니다.</p>
+      <div class="row">
+        <button class="btn primary" id="selFileBtn">데이터 파일 불러오기 (CSV·XLSX)</button>
         <input type="file" id="selFileInput" accept=".csv,.tsv,.txt,.xlsx,.xlsm" hidden>
         <span class="muted small" id="selSource"></span>
+      </div>
+      <div class="row" style="margin-top:14px"><b class="small">데이터사업</b><span class="row" id="selProjects"></span></div>
+      <div class="row hidden" id="selCancerRow" style="margin-top:8px"><span class="muted small">K-CURE 암종</span><span class="row" id="selCancers"></span></div>
+      <div class="row hidden" id="selNbbRow" style="margin-top:8px">
+        <span class="muted small" id="nbbInfo"></span>
+        <button class="btn sm" id="nbbLoadBtn">국가바이오빅데이터 항목정의서 불러오기 (항목ID·항목명·자료형 열)</button>
+        <input type="file" id="nbbFile" accept=".csv,.tsv,.txt,.xlsx,.xlsm" hidden>
       </div>
       <div id="selMsg"></div>
     </div>
     <div class="card hidden" id="selCard">
       <div class="row">
         <h2 class="grow" id="selTitle">선택 항목</h2>
-        <label class="f" style="width:220px"><span>카탈로그·파일 이름에 쓸 암종</span><select id="selCancerLabel"></select></label>
+        <label class="f" style="width:220px"><span>카탈로그·파일 이름에 쓸 구분</span><select id="selCancerLabel"></select></label>
       </div>
       <div class="stats" id="selStats"></div>
       <div class="row" style="margin:10px 0">
@@ -74,8 +80,8 @@
   <!-- ② 메타데이터 매핑 -->
   <section class="panel" id="p-mmap">
     <div class="card">
-      <h2>② 컬럼별 메타데이터 매핑 (KR CDI · KR Core · mCODE · OMOP · DCAT · ARGO)</h2>
-      <p class="desc">KR CDI·KR Core·mCODE 매칭은 항목정의서(규칙승인)를 따릅니다. OMOP·ARGO 매칭은 규칙 기반 자동 후보이며 해당 칸에서 직접 고칠 수 있습니다(비우면 "미매칭"). 표가 넓으면 가로로 스크롤하세요.</p>
+      <h2>② 컬럼별 메타데이터 매핑 (K-CURE · KR CDI · KR Core · 국가바이오빅데이터 · mCODE · OMOP · DCAT · ARGO)</h2>
+      <p class="desc">불러온 컬럼마다 8개 표준의 매칭 결과를 보여 줍니다. <b>모든 칸을 고칠 수 있습니다</b> — 칸을 눌러 목록에서 검색해 고르고, 비우면 "미매칭"입니다. K-CURE 칸(표준항목)을 바꾸면 나머지 표준이 새 항목 기준으로 다시 채워지고, 직접 고친 칸은 유지됩니다. 고친 칸에는 <span class="pill info">수동</span>이 붙고, 원래 값은 ③ 산출물의 '원래 판정' 열에 남습니다. 표가 넓으면 가로로 스크롤하세요.</p>
       <p class="desc small"><b>매칭 용어</b> 직접매칭=그대로 사용 · 조건부매칭=제약 추가 필요 · 상위매칭=상위 항목으로만 담김 · 참조매칭=개념·구조만 참조 · 확장필요=확장 설계 대상 · 미매칭=대응 항목 없음 · 범위외=표준 수집범위 밖 · 항목 미인식=표준항목에 연결 안 된 컬럼. 배지에 마우스를 올리면 항목정의서의 원래 판정이 보입니다.</p>
       <div id="mmEmpty" class="note">먼저 ① 에서 암종이나 컬럼을 선택하세요.</div>
       <div class="stats" id="mmStats"></div>
@@ -89,6 +95,11 @@
       </div>
       <datalist id="argoList"></datalist>
       <datalist id="omopList"></datalist>
+      <datalist id="krcdiList"></datalist>
+      <datalist id="coreList"></datalist>
+      <datalist id="mcodeList"></datalist>
+      <datalist id="nbbList"></datalist>
+      <datalist id="stdItemList"></datalist>
       <div class="tbl-wrap" id="mmTable" style="max-height:640px"></div>
       <div class="pager" id="mmPager"></div>
       <div class="row" style="margin-top:14px; justify-content:flex-end">
@@ -397,6 +408,7 @@
 <script src="js/dcat.js"></script>
 <script src="js/artifacts.js"></script>
 <script src="js/writers.js"></script>
+<script src="js/overrides.js"></script>
 <script src="js/metadata.js"></script>
 <script src="js/sheetview.js"></script>
 <script src="js/deid.js"></script>

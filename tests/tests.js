@@ -415,6 +415,24 @@
     const gpkg = KC.meta.build(CONF, GN, KC.meta.entriesFromColumns(gt.headers, GN));
     eq('범용 메타데이터 패키지 DCAT 오류 0', gpkg.dcatIssues.filter(function (x) { return x.level === '오류'; }).length, 0);
 
+    /* ② 매핑 수동 수정(오버라이드) · 국가바이오빅데이터 사전 자리 */
+    const oe = KC.meta.entriesFromColumns(['sex', 'dt_birth', 'height'], '대장암');
+    const ob = oe[1].item;
+    KC.ov.set(oe[1], 'krcdi', KC.ov.parse('krcdi', '환자 정보 / 성별 [R]'));
+    KC.ov.set(oe[1], 'mcode', KC.ov.parse('mcode', ''));
+    KC.ov.set(oe[1], 'dcat', KC.ov.parse('dcat', 'xsd:string'));
+    ok('수정: 항목정의서 원래 항목은 그대로', oe[1].base === ob && ob.cdi.el !== '성별' && !ob.xsd);
+    eq('수정: KR CDI·mCODE·DCAT 반영', [oe[1].item.cdi.el, KC.meta.mcodeOf(oe[1]) === null, KC.dcat.variable(oe[1]).datatype].join('/'), '성별/true/xsd:string');
+    KC.ov.setItem(oe[1], KC.spec.byId['KCURE-PAT-000002']);
+    eq('표준항목을 바꿔도 다른 표준의 수동 수정 유지', oe[1].item.id + '/' + oe[1].item.cdi.el + '/' + oe[1].item.xsd, 'KCURE-PAT-000002/성별/xsd:string');
+    ok('원래 판정 열에 수동 수정 표시', /수동 수정: KR CDI, mCODE, DCAT/.test(KC.match.orig(oe[1].item)));
+    eq('KR Core: 목록 밖 값은 FHIR 경로 형식만 허용', KC.ov.parse('krcore', 'not a path'), null);
+    KC.nbb.fromRows([['항목ID', '항목명', '자료형', '별칭'], ['NBB-001', '성별', 'CODE', 'sex']], 'test');
+    eq('국가바이오빅데이터 사전: 별칭으로 자동 대조', (KC.ov.nbbOf(oe[0]) || {}).id, 'NBB-001');
+    const opk = KC.meta.build(CONF, '대장암', oe);
+    ok('수동 수정이 KR CDI 대응표에 반영', /dt_birth,KCURE-PAT-000002,성별,환자 정보,성별,R,수동,"KR CDI/.test(opk.files.find(function (f) { return f.path === 'KR_CDI/KRCDI_컬럼대응.csv'; }).content));
+    KC.nbb.set([], '');
+
     /* 변환코드생성기: 컬럼명 → 매핑 → Python 변환 패키지 */
     const cgRows = KC.readers.parseCsv((await (await fetch('../samples/' + encodeURIComponent('합성샘플_대장암_원천영문컬럼.csv'))).text()).replace(/^\uFEFF/, ''));
     const cgEnt = KC.meta.entriesFromColumns(cgRows[0], '대장암');
